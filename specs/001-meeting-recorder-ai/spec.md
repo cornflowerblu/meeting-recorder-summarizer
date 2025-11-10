@@ -149,10 +149,11 @@ failure status and can retry successfully.
 
 ### Functional Requirements
 
-- **FR-001**: User MUST acknowledge recording responsibility before first use
-  (one-time consent). A visible recording indicator MUST be shown on-screen
-  for the entire recording duration.
-- **FR-002a**: Recording MUST upload video segments to cloud storage in
+- **FR-001**: User MUST explicitly start each recording session (via "Start
+  Recording" button). A visible recording indicator MUST be shown on-screen
+  for the entire recording duration. On first launch, user MUST acknowledge
+  responsibility for recording usage.
+- **FR-002**: Recording MUST upload video segments to cloud storage in
   60-second chunks during capture. If upload fails, chunks MUST be queued for retry without blocking recording.
 - **FR-003**: Users MUST be able to review and edit meeting metadata (participants, title, tags)
   before processing.
@@ -184,12 +185,12 @@ failure status and can retry successfully.
   transcript display. Clicking transcript timestamps jumps video playback
   to that moment.
 
-Assumptions and Clarifications Needed:
+### Assumptions & Decisions
 
-- [Consent capture method] For MVP, just a one-time "I understand I'm responsible for how I use recordings" acknowledgment on first launch.
-  No per-session override needed - if you're starting the app, you intend to record.
-- [Default data residency] MVP is cloud-only. On-device storage would require major architecture changes (local processing, no Transcribe/Bedrock). Add this as a future consideration, not MVP.
-- [Catalog scope] Cross-device catalog access is in scope for MVP. We should be able to identify users with a unique ID tied to an email address.
+- **Consent model**: Explicit per-session start action (user clicks "Start Recording" button). One-time responsibility acknowledgment on first launch.
+- **Data residency**: Cloud storage (MVP scope). Local-only processing deferred to future.
+- **Cross-device access**: In scope for MVP to maximize utility.
+- **Speaker attribution**: Probabilistic AI mapping with manual correction capability for low-confidence cases.
 
 ### Key Entities _(include if feature involves data)_
 
@@ -201,37 +202,27 @@ Assumptions and Clarifications Needed:
 - **Meeting**: Logical container tying Recording, Transcript, Summary, participants, tags, and
   dates.
 - **Participant**: Person involved in the meeting; minimally name/label used for attribution.
-- **User**: Individual with authenticated access to the application; identified by email address from Firebase Auth.
+- **User**: Individual with authenticated access to the application; identified by email address.
 
-### Authentication & Authorization
+### Authentication (High-Level Requirement)
 
-**Auth Provider**: Firebase Authentication with Google Sign-In
+- **FR-014**: System MUST uniquely authenticate users via their email address to isolate their
+  catalog privately across devices. Multiple devices using the same user identity MUST share the
+  same catalog.
 
-**Credential Vending**: AWS Lambda exchanges Firebase ID token for temporary AWS credentials via STS AssumeRole
+Rationale: Cross-device access is in scope for MVP to support users accessing their meeting
+archive from MacBook, iMac, or future iOS devices.
 
-**Session Duration**: 1 hour (auto-refresh via Firebase SDK)
-
-**User Flow**:
-
-1. User launches app → sees "Sign in with Google" button
-2. Google OAuth flow → Firebase issues ID token
-3. macOS app calls Lambda with Firebase token
-4. Lambda verifies token and generates temporary AWS credentials (scoped to user)
-5. App uses AWS credentials for all S3/DynamoDB operations
-
-**Data Isolation**:
-
-- DynamoDB partition key: `user_id#recording_id` where `user_id` is Firebase UID
-- S3 object paths: `s3://bucket/users/{user_id}/recordings/...`
-- IAM policies enforce per-user access via `${aws:userid}` condition keys
-
-**Cross-Device Support**: Same Firebase account on multiple devices shares catalog automatically via shared `user_id` in DynamoDB queries
-
-**Cost**: $0 (within Firebase free tier for <50 users)
-
-**Implementation Scope**: Included in MVP to enable cross-device catalog access
+Implementation Details: Deferred to technical plan.
 
 ### Non-Functional Requirements
+
+- **NFR-001**: All data MUST remain within user's AWS account. No third-party services except AWS APIs and authentication provider.
+- **NFR-002**: Recordings, transcripts, and summaries MUST be encrypted at rest and in transit.
+- **NFR-003**: AWS credentials MUST never be logged or exposed in error messages.
+- **NFR-004**: Local temporary files MUST be securely deleted after successful upload.
+- **NFR-005**: System MUST maintain reliability: recording continuation MUST NOT be interrupted by transient network loss.
+- **NFR-006**: Catalog search MUST return initial results within 2 seconds for libraries up to 1000 sessions.
 
 ## Success Criteria _(mandatory)_
 
@@ -247,7 +238,6 @@ Assumptions and Clarifications Needed:
 - **SC-002**: 95% of processed sessions produce transcript, summary, actions, and decisions without
   requiring manual retries.
 - **SC-003**: Users can locate a target session in the catalog by participant
-  or date in under 5 seconds. Catalog design MUST support efficient queries
-  on date ranges and participant names using DynamoDB secondary indexes.
+  or date in under 5 seconds for libraries up to 1000 sessions.
 - **SC-004**: 100% of recordings enforce a consent checkpoint before capture and display the
   visible indicator continuously while recording.
