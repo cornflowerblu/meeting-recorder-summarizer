@@ -1,50 +1,108 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+Version change: 1.0.0 → 1.1.0
+Modified principles:
+  - I. Privacy & Consent First: clarified explicit consent and visible indicator requirements
+Added sections: —
+Removed sections: —
+Templates requiring updates:
+  ✅ .specify/templates/plan-template.md (remains aligned)
+  ✅ .specify/templates/spec-template.md (no changes required)
+  ✅ .specify/templates/tasks-template.md (no changes required)
+  ⚠ .github/prompts/speckit.plan.prompt.md (review for consistency; no change applied)
+Follow-up TODOs:
+  - Define and store baseline evaluation datasets and metrics in docs/eval.md (ROUGE-L, BERTScore, WER)
+  - Add a PR checklist that maps to the Constitution Gates in /.github/PULL_REQUEST_TEMPLATE.md
+-->
+
+# Meeting Recorder Summarizer Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Privacy & Consent First (NON-NEGOTIABLE)
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+Users MUST be able to pause, exclude parts of a meeting, or request redaction of specific
+segments. Data collection MUST follow data minimization: collect only what is strictly
+necessary for transcription and summarization.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+Rationale: Trust and regulatory compliance depend on transparent consent and control.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. Data Security & Retention
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+All content (audio, transcripts, summaries, metadata) MUST be encrypted in transit
+(TLS 1.2+) and at rest (AES‑256 or platform equivalent). Access MUST follow least
+privilege with role-based controls and audit trails. Retention MUST be configurable; the
+default retention is 30 days. Upon user deletion request, data MUST be hard‑deleted
+within 30 days. Logs and exports MUST redact PII by default.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+Rationale: Sensitive meeting data requires strong protection and predictable lifecycle.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. Test‑First & Quality Evaluation
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+All changes MUST follow test‑first discipline (unit + integration where applicable).
+The system MUST maintain an evaluation suite for speech recognition and summarization
+quality. Changes MUST not degrade baseline metrics (e.g., ROUGE‑L, BERTScore, WER)
+beyond a 2% relative drop without approved justification and documented mitigation.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+Rationale: Quality must be measurable and protected against regressions.
+
+### IV. Transparent Summaries & Provenance
+
+Summaries MUST link back to source segments with timestamps and speaker attribution.
+Each generated artifact MUST record the model/pipeline version used. Where supported,
+surface confidence or uncertainty cues and provide an in‑product feedback loop to
+correct errors.
+
+Rationale: Users need traceability to trust and correct the system.
+
+### V. Observability & Versioning Discipline
+
+Operational logs MUST be structured and PII‑redacted, supporting trace IDs and stable
+error codes. No raw audio or full transcripts are permitted in logs. Public contracts
+(APIs/CLIs/exports) and the ML pipeline MUST use semantic versioning. Releases MUST
+include change logs, rollout plans (e.g., A/B or staged), and rollback procedures.
+
+Rationale: Safe evolution requires visibility and controlled change.
+
+## Additional Constraints
+
+- Interface modality MAY be CLI, API, or UI, but contracts MUST be documented and
+  testable end‑to‑end.
+- Data residency requirements MUST be supported where demanded by customers or law.
+- Third‑party vendors (storage, transcription, LLMs) MUST pass a security and privacy
+  review prior to use; DPA/SCCs MUST be in place where applicable.
+- An offline/edge mode MAY be provided; when enabled, data MUST remain local unless
+  users explicitly opt‑in to cloud processing.
+
+## Development Workflow & Quality Gates
+
+Every PR MUST pass the Constitution Gates:
+
+1. Privacy & Consent: No collection without consent; redaction controls present; no
+   PII in logs.
+2. Security & Retention: Encryption configurations intact; retention honored; deletion
+   paths tested.
+3. Quality Evaluation: Tests added/updated; evaluation suite run; no >2% relative
+   regression without approval.
+4. Transparency: Summaries link to source timestamps/speakers; version metadata
+   present.
+5. Observability & Versioning: Structured, redacted logs; appropriate SemVer bump and
+   changelog entry.
+
+Release Process:
+
+- Use feature branches and PR reviews with at least one reviewer.
+- Require green CI for tests and evaluation checks before merge.
+- Record release notes and affected versions for contracts and ML pipeline.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- This constitution supersedes other practice guides where conflicts exist.
+- Amendments require a PR that includes: redlined changes, migration/impact analysis,
+  version bump proposal, and owner approval.
+- Versioning Policy: MAJOR for breaking governance changes; MINOR for new principles
+  or materially expanded guidance; PATCH for clarifications or non‑semantic edits.
+- Compliance: Each PR reviewer MUST verify gates. A quarterly review MUST reaffirm
+  compliance and update gates/metrics as needed.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.1.0 | **Ratified**: 2025-11-10 | **Last Amended**: 2025-11-10
