@@ -1,0 +1,5 @@
+# Python Lambda Requirements
+# Phase 1: Basic setup with core AWS dependencies
+
+boto3>=1.35.0
+jsonschema>=4.23.0

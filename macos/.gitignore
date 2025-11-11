@@ -1,0 +1,45 @@
+# macOS / Xcode / Swift
+
+## Build generated
+.DS_Store
+/.build
+build/
+/Packages
+DerivedData/
+xcuserdata/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+*.xccheckout
+*.moved-aside
+*.xcuserstate
+*.xcscmblueprint
+
+## Swift Package Manager
+.swiftpm/
+Package.resolved
+.netrc
+
+## Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+## App packaging
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+## macOS
+.AppleDouble
+.LSOverride
+
+## Test data / recordings (do not commit)
+*.mov
+*.mp4
+*.m4a
+test-recordings/
