@@ -4,6 +4,7 @@ This document defines storage layout, DynamoDB schema, and JSON contracts for ar
 
 ## S3 Layout
 
+```
 s3://bucket-name/
 users/
 {user_id}/
@@ -19,6 +20,7 @@ transcripts/
 {recording_id}.json
 summaries/
 {recording_id}.json
+```
 
 ## S3 Lifecycle Policy (Cost-Optimized)
 
