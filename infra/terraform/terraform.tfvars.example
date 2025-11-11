@@ -1,0 +1,26 @@
+# Example Terraform Variables
+# Copy this file to terraform.tfvars and customize for your environment
+
+# AWS Configuration
+aws_region  = "us-east-1"
+environment = "dev"
+
+# Project Configuration
+project_name = "meeting-recorder"
+
+# DynamoDB Configuration
+enable_point_in_time_recovery = true
+
+# S3 Configuration
+s3_versioning_enabled = true
+s3_lifecycle_days     = 90
+
+# Firebase Configuration
+# Get this from your Firebase project settings
+firebase_project_id = "your-firebase-project-id"
+
+# Additional Tags (optional)
+additional_tags = {
+  Owner = "your-name"
+  Team  = "your-team"
+}

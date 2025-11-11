@@ -1,0 +1,41 @@
+# Terraform
+
+## State files
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+## Crash log files
+crash.log
+crash.*.log
+
+## Variable files (may contain sensitive data)
+terraform.tfvars
+*.auto.tfvars
+*.auto.tfvars.json
+
+## Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+## CLI configuration files
+.terraformrc
+terraform.rc
+
+## Lock files
+.terraform.lock.hcl
+
+## Terraform directories
+.terraform/
+.terraform.tfstate.lock.info
+
+## Plan files
+*.tfplan
+
+## Ignore any .pem files (potential credentials)
+*.pem
+
+## macOS
+.DS_Store
