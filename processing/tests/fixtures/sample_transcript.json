@@ -1,0 +1,45 @@
+{
+  "recording_id": "test-recording-001",
+  "created_at": "2025-11-10T18:00:00Z",
+  "duration_seconds": 180,
+  "speakers": [
+    {
+      "speaker_id": "spk_0",
+      "name": "Alice",
+      "confidence": 0.95
+    },
+    {
+      "speaker_id": "spk_1",
+      "name": "Bob",
+      "confidence": 0.92
+    }
+  ],
+  "segments": [
+    {
+      "speaker_id": "spk_0",
+      "start_time": 0.5,
+      "end_time": 5.2,
+      "text": "Hi everyone, let's get started with the project kickoff.",
+      "confidence": 0.97
+    },
+    {
+      "speaker_id": "spk_1",
+      "start_time": 5.8,
+      "end_time": 12.4,
+      "text": "Sounds good. I have a few action items from our last meeting to discuss.",
+      "confidence": 0.94
+    },
+    {
+      "speaker_id": "spk_0",
+      "start_time": 13.0,
+      "end_time": 20.5,
+      "text": "Great. Let's start with the backend API design. We need to finalize the endpoints by Friday.",
+      "confidence": 0.96
+    }
+  ],
+  "metadata": {
+    "model_version": "transcribe-v1.0",
+    "pipeline_version": "1.0.0",
+    "trace_id": "test-trace-001"
+  }
+}

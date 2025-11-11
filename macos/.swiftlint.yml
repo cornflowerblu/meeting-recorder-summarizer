@@ -1,0 +1,90 @@
+# SwiftLint Configuration for Meeting Recorder
+# Enforces Swift code style and best practices
+
+# Opt-in rules
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - explicit_init
+  - fatal_error_message
+  - file_header
+  - force_unwrapping
+  - implicit_return
+  - multiline_arguments
+  - multiline_parameters
+  - overridden_super_call
+  - private_outlet
+  - redundant_nil_coalescing
+  - sorted_imports
+  - trailing_closure
+  - unneeded_parentheses_in_closure_argument
+
+# Disabled rules
+disabled_rules:
+  - identifier_name  # Allow short names like 'id' or single letter generics
+  - todo  # Allow TODO comments during development
+
+# File/path configuration
+excluded:
+  - .build
+  - build
+  - DerivedData
+  - Packages
+  - Tests
+  - UITests
+
+# Rule customization
+line_length:
+  warning: 120
+  error: 150
+  ignores_comments: true
+  ignores_urls: true
+
+type_body_length:
+  warning: 300
+  error: 400
+
+file_length:
+  warning: 500
+  error: 800
+
+function_body_length:
+  warning: 60
+  error: 100
+
+cyclomatic_complexity:
+  warning: 10
+  error: 20
+
+identifier_name:
+  min_length:
+    warning: 2
+  max_length:
+    warning: 40
+    error: 60
+  excluded:
+    - id
+    - i
+    - j
+    - k
+    - x
+    - y
+    - z
+
+# Type name configuration
+type_name:
+  min_length: 3
+  max_length:
+    warning: 40
+    error: 50
+
+# Force unwrapping configuration
+force_unwrapping: warning
+
+# Custom rules
+custom_rules:
+  no_print:
+    name: "No Print Statements"
+    regex: '\bprint\('
+    message: "Use Logger instead of print()"
+    severity: warning

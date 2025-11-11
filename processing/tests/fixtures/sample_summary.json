@@ -1,0 +1,37 @@
+{
+  "recording_id": "test-recording-001",
+  "created_at": "2025-11-10T18:05:00Z",
+  "summary": {
+    "text": "Project kickoff meeting to discuss backend API design and review action items from previous meeting.",
+    "key_points": [
+      {
+        "text": "Backend API endpoints need to be finalized by Friday",
+        "timestamp": 13.0,
+        "speaker_id": "spk_0"
+      }
+    ]
+  },
+  "action_items": [
+    {
+      "text": "Finalize backend API endpoints",
+      "owner": "Alice",
+      "due_date": null,
+      "timestamp": 13.0,
+      "confidence": 0.89
+    }
+  ],
+  "key_decisions": [
+    {
+      "text": "Backend API design is the priority for this week",
+      "timestamp": 13.0,
+      "participants": ["Alice", "Bob"],
+      "confidence": 0.85
+    }
+  ],
+  "metadata": {
+    "model_version": "bedrock-claude-sonnet-4.5",
+    "pipeline_version": "1.0.0",
+    "trace_id": "test-trace-001",
+    "processing_time_seconds": 3.2
+  }
+}
