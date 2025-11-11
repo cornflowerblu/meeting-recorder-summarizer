@@ -603,7 +603,7 @@ You *could* use Rust for the Fargate container:
 
 **Language/Version**: [Python 3.13, Swift 6.1, Rust 1.91.0]
 **Primary Dependencies**: [FastAPI, SwiftUI, LLVM, AWS SDK]
-**Storage**: [Dyanmo DB in AWS]
+**Storage**: [DynamoDB in AWS]
 **Testing**: [pytest, XCTest, XCUITest cargo test]
 **Target Platform**: [Linux server, MacOS, Maybe iOS but we need to investigate further]
 **Project Type**: [Mac desktop application leveraging AWS Cloud. I am open to a web version especially if that helps us with automated testing. iOS could be cool but it needs further discussion/exploration and should NOT be part of MVP]
