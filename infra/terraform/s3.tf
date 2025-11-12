@@ -47,12 +47,31 @@ resource "aws_s3_bucket_lifecycle_configuration" "recordings" {
   bucket = aws_s3_bucket.recordings.id
 
   rule {
-    id     = "transition-to-glacier"
+    id     = "intelligent-tiering"
     status = "Enabled"
 
+    # Transition to Standard-IA after 30 days
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    # Transition to One Zone-IA after 60 days
+    transition {
+      days          = 60
+      storage_class = "ONEZONE_IA"
+    }
+
+    # Transition to Glacier after 90 days (configurable)
     transition {
       days          = var.s3_lifecycle_days
       storage_class = "GLACIER"
+    }
+
+    # Optional: Deep Archive after 180 days for long-term storage
+    transition {
+      days          = 180
+      storage_class = "DEEP_ARCHIVE"
     }
 
     filter {
