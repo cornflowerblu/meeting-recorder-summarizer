@@ -15,7 +15,7 @@ resource "aws_iam_openid_connect_provider" "firebase" {
 
   # Firebase uses Google's certificate
   thumbprint_list = [
-    "6b67fabc6672c5aa9a583de1b1021a9ff6e5ef87"  # Google root CA thumbprint
+    "6b67fabc6672c5aa9a583de1b1021a9ff6e5ef87" # Google root CA thumbprint
   ]
 
   tags = merge(local.common_tags, {
@@ -50,7 +50,7 @@ resource "aws_iam_role" "macos_app" {
     ]
   })
 
-  max_session_duration = 3600  # 1 hour sessions
+  max_session_duration = 3600 # 1 hour sessions
 
   tags = merge(local.common_tags, {
     Name        = "${local.resource_prefix}-macos-app-role"

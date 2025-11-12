@@ -39,3 +39,6 @@ terraform.rc
 
 ## macOS
 .DS_Store
+
+## Downloaded binaries
+*.zip

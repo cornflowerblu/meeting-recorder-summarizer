@@ -58,6 +58,18 @@ output "auth_exchange_lambda_role_arn" {
 #   value       = try(aws_lambda_function_url.auth_exchange.function_url, "")
 # }
 
+# KMS Outputs
+
+output "dynamodb_kms_key_id" {
+  description = "ID of the KMS key used for DynamoDB encryption (empty if using AWS-managed key)"
+  value       = var.use_customer_managed_kms ? aws_kms_key.dynamodb[0].id : ""
+}
+
+output "dynamodb_kms_key_arn" {
+  description = "ARN of the KMS key used for DynamoDB encryption (empty if using AWS-managed key)"
+  value       = var.use_customer_managed_kms ? aws_kms_key.dynamodb[0].arn : ""
+}
+
 # SSM Parameter Store Outputs
 
 output "ssm_parameter_prefix" {

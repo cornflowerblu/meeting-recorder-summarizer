@@ -10,6 +10,9 @@ project_name = "meeting-recorder"
 
 # DynamoDB Configuration
 enable_point_in_time_recovery = true
+# Use customer-managed KMS key for production (better security, audit trails, key rotation control)
+# Set to true for production environments, false for dev/staging to use AWS-managed keys
+use_customer_managed_kms = false
 
 # S3 Configuration
 s3_versioning_enabled = true
