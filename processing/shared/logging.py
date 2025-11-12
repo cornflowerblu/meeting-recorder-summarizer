@@ -90,7 +90,9 @@ class StructuredLogger:
                 sanitized[key] = self._sanitize_dict(value)
             elif isinstance(value, list):
                 sanitized[key] = [
-                    self._sanitize_string(item) if isinstance(item, str) else item
+                    self._sanitize_dict(item) if isinstance(item, dict)
+                    else self._sanitize_string(item) if isinstance(item, str)
+                    else item
                     for item in value
                 ]
             else:
