@@ -2,6 +2,29 @@
 # MR-16 (T009)
 
 #############################################################################
+# Firebase OIDC Identity Provider
+#############################################################################
+
+# Create OIDC identity provider for Firebase authentication
+resource "aws_iam_openid_connect_provider" "firebase" {
+  url = "https://securetoken.google.com/${var.firebase_project_id}"
+
+  client_id_list = [
+    var.firebase_project_id
+  ]
+
+  # Firebase uses Google's certificate
+  thumbprint_list = [
+    "6b67fabc6672c5aa9a583de1b1021a9ff6e5ef87"  # Google root CA thumbprint
+  ]
+
+  tags = merge(local.common_tags, {
+    Name        = "${local.resource_prefix}-firebase-oidc"
+    Description = "OIDC provider for Firebase authentication"
+  })
+}
+
+#############################################################################
 # macOS App Role (Assumed via Firebase STS Exchange)
 #############################################################################
 
@@ -15,7 +38,7 @@ resource "aws_iam_role" "macos_app" {
       {
         Effect = "Allow"
         Principal = {
-          Federated = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/securetoken.google.com/${var.firebase_project_id}"
+          Federated = aws_iam_openid_connect_provider.firebase.arn
         }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
