@@ -2,53 +2,53 @@
 # MR-15 (T008)
 
 resource "aws_dynamodb_table" "meetings" {
-  name           = "${local.resource_prefix}-meetings"
-  billing_mode   = "PAY_PER_REQUEST"  # On-demand pricing for variable workload
-  hash_key       = "pk"               # Partition key: user_id#recording_id
-  range_key      = "sk"               # Sort key: METADATA or other item types
+  name         = "${local.resource_prefix}-meetings"
+  billing_mode = "PAY_PER_REQUEST" # On-demand pricing for variable workload
+  hash_key     = "pk"              # Partition key: user_id#recording_id
+  range_key    = "sk"              # Sort key: METADATA or other item types
 
   # Primary Key Attributes
   attribute {
     name = "pk"
-    type = "S"  # String: user_id#recording_id
+    type = "S" # String: user_id#recording_id
   }
 
   attribute {
     name = "sk"
-    type = "S"  # String: METADATA, CHUNK#001, etc.
+    type = "S" # String: METADATA, CHUNK#001, etc.
   }
 
   # GSI-1: Date Search (by user_id + created_at)
   attribute {
     name = "gsi1pk"
-    type = "S"  # String: USER#user_id
+    type = "S" # String: USER#user_id
   }
 
   attribute {
     name = "gsi1sk"
-    type = "S"  # String: created_at ISO8601 timestamp
+    type = "S" # String: created_at ISO8601 timestamp
   }
 
   # GSI-2: Participant Search (by user_id + participant)
   attribute {
     name = "gsi2pk"
-    type = "S"  # String: USER#user_id
+    type = "S" # String: USER#user_id
   }
 
   attribute {
     name = "gsi2sk"
-    type = "S"  # String: PARTICIPANT#name
+    type = "S" # String: PARTICIPANT#name
   }
 
   # GSI-3: Tag Search (by user_id + tag)
   attribute {
     name = "gsi3pk"
-    type = "S"  # String: USER#user_id
+    type = "S" # String: USER#user_id
   }
 
   attribute {
     name = "gsi3sk"
-    type = "S"  # String: TAG#tag_name
+    type = "S" # String: TAG#tag_name
   }
 
   # Global Secondary Index 1: DateSearch
@@ -81,9 +81,11 @@ resource "aws_dynamodb_table" "meetings" {
   }
 
   # Server-Side Encryption
+  # Uses customer-managed KMS key for production (better control, audit trails)
+  # Falls back to AWS-managed key for non-production environments
   server_side_encryption {
     enabled     = true
-    kms_key_arn = null  # Uses AWS-managed key for DynamoDB
+    kms_key_arn = var.use_customer_managed_kms ? aws_kms_key.dynamodb[0].arn : null
   }
 
   # TTL Configuration (for temporary/expired items)
@@ -100,7 +102,7 @@ resource "aws_dynamodb_table" "meetings" {
 
   # Prevent accidental deletion
   lifecycle {
-    prevent_destroy = false  # Set to true in production
+    prevent_destroy = false # Set to true in production
   }
 }
 

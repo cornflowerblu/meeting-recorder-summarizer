@@ -99,10 +99,10 @@ resource "aws_s3_bucket_policy" "recordings" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "DenyInsecureTransport"
-        Effect = "Deny"
+        Sid       = "DenyInsecureTransport"
+        Effect    = "Deny"
         Principal = "*"
-        Action = "s3:*"
+        Action    = "s3:*"
         Resource = [
           aws_s3_bucket.recordings.arn,
           "${aws_s3_bucket.recordings.arn}/*"
@@ -114,11 +114,11 @@ resource "aws_s3_bucket_policy" "recordings" {
         }
       },
       {
-        Sid    = "DenyUnencryptedObjectUploads"
-        Effect = "Deny"
+        Sid       = "DenyUnencryptedObjectUploads"
+        Effect    = "Deny"
         Principal = "*"
-        Action = "s3:PutObject"
-        Resource = "${aws_s3_bucket.recordings.arn}/*"
+        Action    = "s3:PutObject"
+        Resource  = "${aws_s3_bucket.recordings.arn}/*"
         Condition = {
           StringNotEquals = {
             "s3:x-amz-server-side-encryption" = "AES256"
@@ -136,7 +136,7 @@ resource "aws_s3_bucket_cors_configuration" "recordings" {
   cors_rule {
     allowed_headers = ["*"]
     allowed_methods = ["GET", "PUT", "POST", "DELETE", "HEAD"]
-    allowed_origins = ["*"]  # Restrict this in production
+    allowed_origins = ["*"] # Restrict this in production
     expose_headers  = ["ETag"]
     max_age_seconds = 3000
   }

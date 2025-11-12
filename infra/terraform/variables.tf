@@ -31,6 +31,12 @@ variable "enable_point_in_time_recovery" {
   default     = true
 }
 
+variable "use_customer_managed_kms" {
+  description = "Use customer-managed KMS key for encryption (recommended for production)"
+  type        = bool
+  default     = false
+}
+
 variable "s3_versioning_enabled" {
   description = "Enable versioning for S3 bucket"
   type        = bool

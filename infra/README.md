@@ -17,7 +17,9 @@ infra/terraform/
 ├── outputs.tf           # Output values
 ├── s3.tf               # S3 bucket for recordings
 ├── dynamodb.tf         # DynamoDB tables for metadata
+├── kms.tf              # KMS keys for encryption (optional)
 ├── iam.tf              # IAM roles and policies
+├── ssm.tf              # SSM Parameter Store values
 ├── stepfunctions.tf    # Step Functions workflow (Phase 4)
 ├── events.tf           # EventBridge rules (Phase 4)
 └── terraform.tfvars    # Variable values (gitignored, create from example)
@@ -36,7 +38,9 @@ cp terraform.tfvars.example terraform.tfvars
 
 Edit `terraform.tfvars` with your values:
 - `aws_region`: Your preferred AWS region
+- `environment`: Environment name (dev, staging, prod)
 - `firebase_project_id`: Your Firebase project ID
+- `use_customer_managed_kms`: Set to `true` for production to use customer-managed KMS keys
 - Other configuration as needed
 
 ### 2. Initialize Terraform
@@ -79,6 +83,7 @@ This displays important values like bucket names, table names, and IAM role ARNs
 |----------|---------|------|
 | S3 Bucket | Store meeting recordings and artifacts | `s3.tf` |
 | DynamoDB Table | Meetings metadata and catalog | `dynamodb.tf` |
+| KMS Key | Customer-managed encryption key (optional) | `kms.tf` |
 | IAM Roles | macOS app, Lambda execution roles | `iam.tf` |
 | Lambda (Auth) | Firebase → AWS STS token exchange | (deployed separately) |
 
@@ -168,12 +173,35 @@ Processing costs (Transcribe, Bedrock) are usage-based and added in Phase 4.
 
 ## Security Best Practices
 
-- ✅ Encryption at rest (SSE-S3)
+- ✅ Encryption at rest (SSE-S3, optional customer-managed KMS for DynamoDB)
 - ✅ Encryption in transit (TLS 1.2+)
 - ✅ Least-privilege IAM policies
 - ✅ No hardcoded credentials
 - ✅ DynamoDB point-in-time recovery enabled
 - ✅ S3 versioning enabled
+- ✅ Customer-managed KMS keys for production (configurable via `use_customer_managed_kms`)
+
+### KMS Encryption Configuration
+
+The infrastructure supports both AWS-managed and customer-managed KMS keys for DynamoDB encryption:
+
+**AWS-Managed Keys (Default)**
+- Suitable for development and staging environments
+- No additional cost
+- Automatic key rotation managed by AWS
+- Set `use_customer_managed_kms = false` in `terraform.tfvars`
+
+**Customer-Managed Keys (Recommended for Production)**
+- Enhanced security and compliance
+- Full control over key policies and rotation
+- Detailed audit trails via CloudTrail
+- Ability to disable/delete keys if needed
+- Set `use_customer_managed_kms = true` in `terraform.tfvars`
+
+The KMS key policy grants:
+- Full administrative access to the AWS account root
+- DynamoDB service permissions for encryption operations
+- CloudWatch Logs permissions for encrypted log groups
 
 ## Troubleshooting
 
