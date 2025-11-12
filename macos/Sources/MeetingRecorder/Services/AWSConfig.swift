@@ -75,9 +75,9 @@ struct AWSConfig {
     /// This Lambda exchanges Firebase ID tokens for AWS credentials
     static let authExchangeEndpoint: String = {
         #if DEBUG
-        return "https://dev-auth-exchange.execute-api.us-east-1.amazonaws.com/auth/exchange"
+            return "https://dev-auth-exchange.execute-api.us-east-1.amazonaws.com/auth/exchange"
         #else
-        return "https://auth-exchange.execute-api.us-east-1.amazonaws.com/auth/exchange"
+            return "https://auth-exchange.execute-api.us-east-1.amazonaws.com/auth/exchange"
         #endif
     }()
 
@@ -114,18 +114,18 @@ struct AWSConfig {
     /// Current environment (dev or prod)
     static let environment: String = {
         #if DEBUG
-        return "dev"
+            return "dev"
         #else
-        return "prod"
+            return "prod"
         #endif
     }()
 
     /// Is debug build
     static let isDebug: Bool = {
         #if DEBUG
-        return true
+            return true
         #else
-        return false
+            return false
         #endif
     }()
 
@@ -183,7 +183,7 @@ extension AWSConfig {
 
 /// Manages runtime configuration fetched from AWS Systems Manager Parameter Store
 /// Values are fetched on first access and cached for the lifetime of the app
-class RuntimeConfig {
+final class RuntimeConfig: @unchecked Sendable {
     static let shared = RuntimeConfig()
 
     private var cachedS3BucketName: String?
@@ -200,7 +200,8 @@ class RuntimeConfig {
             }
 
             // Fetch from SSM Parameter Store
-            let parameterName = "/\(AWSConfig.environment == "dev" ? "meeting-recorder" : "meeting-recorder")/\(AWSConfig.environment)/s3/bucket-name"
+            let parameterName =
+                "/\(AWSConfig.environment == "dev" ? "meeting-recorder" : "meeting-recorder")/\(AWSConfig.environment)/s3/bucket-name"
 
             if let value = fetchParameter(name: parameterName) {
                 cachedS3BucketName = value
@@ -208,7 +209,8 @@ class RuntimeConfig {
             }
 
             // Fallback to hardcoded value with warning
-            Logger.app.warning("Failed to fetch S3 bucket name from Parameter Store, using fallback")
+            Logger.app.warning(
+                "Failed to fetch S3 bucket name from Parameter Store, using fallback")
             let fallback = "meeting-recorder-\(AWSConfig.environment)-recordings"
             cachedS3BucketName = fallback
             return fallback
@@ -231,7 +233,8 @@ class RuntimeConfig {
             }
 
             // Fallback to hardcoded value with warning
-            Logger.app.warning("Failed to fetch DynamoDB table name from Parameter Store, using fallback")
+            Logger.app.warning(
+                "Failed to fetch DynamoDB table name from Parameter Store, using fallback")
             let fallback = "meeting-recorder-\(AWSConfig.environment)-meetings"
             cachedDynamoDBTableName = fallback
             return fallback
