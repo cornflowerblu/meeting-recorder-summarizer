@@ -234,7 +234,7 @@ extension UploadManifest {
         let url = Self.fileURL(recordingId: recordingId)
         try FileManager.default.removeItem(at: url)
 
-        Logger.upload.debug("Deleted upload manifest", file: #file, function: #function, line: #line)
+        Logger.upload.debug("Deleted upload manifest")
     }
 
     /// Check if manifest exists on disk
