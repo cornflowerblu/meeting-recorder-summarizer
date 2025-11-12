@@ -1,0 +1,13 @@
+# Development and testing dependencies
+-r requirements.txt
+
+# Testing framework
+pytest>=8.0.0
+pytest-cov>=4.1.0
+
+# AWS service mocking
+moto[sts]>=5.0.0
+
+# Code quality
+pylint>=3.0.0
+black>=24.0.0
