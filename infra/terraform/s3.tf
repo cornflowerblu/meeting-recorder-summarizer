@@ -7,7 +7,7 @@ resource "aws_s3_bucket" "recordings" {
 
   tags = merge(local.common_tags, {
     Name        = "${local.resource_prefix}-recordings"
-    Description = "Meeting recordings, transcripts, and summaries"
+    Description = "Meeting recordings transcripts and summaries"
   })
 }
 

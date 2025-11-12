@@ -46,14 +46,14 @@ output "auth_exchange_lambda_role_arn" {
   value       = try(aws_iam_role.auth_exchange_lambda.arn, "")
 }
 
-# Lambda Outputs (will be populated when Lambda functions are created)
+# Lambda Outputs (will be populated when Lambda functions are created in Phase 4)
 
-output "auth_exchange_lambda_arn" {
-  description = "ARN of the Firebase auth exchange Lambda function"
-  value       = try(aws_lambda_function.auth_exchange.arn, "")
-}
+# output "auth_exchange_lambda_arn" {
+#   description = "ARN of the Firebase auth exchange Lambda function"
+#   value       = try(aws_lambda_function.auth_exchange.arn, "")
+# }
 
-output "auth_exchange_lambda_url" {
-  description = "URL endpoint for the auth exchange Lambda"
-  value       = try(aws_lambda_function_url.auth_exchange.function_url, "")
-}
+# output "auth_exchange_lambda_url" {
+#   description = "URL endpoint for the auth exchange Lambda"
+#   value       = try(aws_lambda_function_url.auth_exchange.function_url, "")
+# }

@@ -4,7 +4,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 5.17.0"  # Compatible with Terraform 1.5.7
     }
     random = {
       source  = "hashicorp/random"
@@ -12,28 +12,18 @@ terraform {
     }
   }
 
-  # Backend configuration for state management
-  # Uncomment and configure after initial setup
-  # backend "s3" {
-  #   bucket         = "meeting-recorder-terraform-state"
-  #   key            = "meeting-recorder/terraform.tfstate"
-  #   region         = "us-east-1"
-  #   encrypt        = true
-  #   dynamodb_table = "meeting-recorder-terraform-lock"
-  # }
+  backend "s3" {
+    bucket         = "meeting-recorder-terraform-state"
+    key            = "meeting-recorder/terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+    dynamodb_table = "meeting-recorder-terraform-lock"
+  }
 }
 
 # AWS Provider Configuration
 provider "aws" {
   region = var.aws_region
-
-  default_tags {
-    tags = {
-      Project     = "MeetingRecorder"
-      ManagedBy   = "Terraform"
-      Environment = var.environment
-    }
-  }
 }
 
 # Random provider for unique resource naming

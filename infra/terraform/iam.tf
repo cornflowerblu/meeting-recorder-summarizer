@@ -54,7 +54,7 @@ resource "aws_iam_role" "macos_app" {
 
   tags = merge(local.common_tags, {
     Name        = "${local.resource_prefix}-macos-app-role"
-    Description = "IAM role for macOS app (assumed via Firebase auth)"
+    Description = "IAM role for macOS app assumed via Firebase auth"
   })
 }
 
