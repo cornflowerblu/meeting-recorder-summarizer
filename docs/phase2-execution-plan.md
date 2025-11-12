@@ -113,7 +113,7 @@ These tasks can be executed **in parallel**:
 - **Estimated Time**: 45 minutes
 
 #### MR-20 (T013) - Shared Python logging helper
-- **File**: `processing/shared/logging.py`
+- **File**: `processing/shared/logger.py`
 - **Dependencies**: None
 - **Deliverables**:
   - Python logging utility for Lambdas
