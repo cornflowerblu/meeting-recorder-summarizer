@@ -46,7 +46,7 @@ Purpose: Core infrastructure that MUST be complete before ANY user story can be 
 - [ ] T010 Implement Firebase → STS credentials exchange Lambda in processing/lambdas/auth_exchange/handler.py
 - [ ] T011 [P] macOS AWS config constants in macos/Services/AWSConfig.swift (region, bucket, table, identity provider endpoint)
 - [ ] T012 [P] macOS structured logger in macos/Services/Logger.swift (no PII)
-- [ ] T013 [P] Shared Python logging helper in processing/shared/logging.py (JSON logs, no PII)
+- [ ] T013 [P] Shared Python logging helper in processing/shared/logger.py (JSON logs, no PII)
 - [ ] T014 Define local upload manifest model in macos/Models/UploadManifest.swift (chunk_id, path, size, checksum, attempts, last_error)
 - [ ] T015 Config management stubs: macos/Services/Config.swift and processing/shared/config.py
 
@@ -221,7 +221,7 @@ Purpose: Improvements that affect multiple user stories
 - [ ] T050 [P] Documentation update and validation script in scripts/validate_quickstart.sh (ensure quickstart.md steps match)
 - [ ] T051 Code cleanup and refactoring across macos/ and processing/
 - [ ] T052 [P] Performance optimization: uploader concurrency and FFmpeg presets in macos/Services/S3Uploader.swift and processing/fargate/process_video.py
-- [ ] T053 Security hardening: redact PII in logs, HTTPS enforcement checks in processing/shared/logging.py and infra/terraform/s3.tf
+- [ ] T053 Security hardening: redact PII in logs, HTTPS enforcement checks in processing/shared/logger.py and infra/terraform/s3.tf
 - [ ] T054 Implement deletion workflow per FR-011 in processing/lambdas/delete_session/handler.py and macos/UI/DeleteSessionButton.swift
 - [ ] T055 Configure S3 lifecycle/retention policies in infra/terraform/s3_lifecycle.tf (per data-model.md)
 - [ ] T056 [P] Baseline evaluation runner per docs/eval.md in scripts/run_eval.sh
