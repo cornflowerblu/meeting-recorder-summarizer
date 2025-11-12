@@ -18,7 +18,7 @@ terraform {
     region         = "us-east-1"
     encrypt        = true
     dynamodb_table = "meeting-recorder-terraform-lock"
-    profile        = "default"
+    profile        = "admin"
   }
 }
 
