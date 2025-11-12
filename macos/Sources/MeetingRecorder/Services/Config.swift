@@ -71,7 +71,7 @@ struct Config {
         do {
             try validate()
         } catch {
-            Logger.app.error("Configuration validation failed", error: error, file: #file, function: #function, line: #line)
+            Logger.app.error("Configuration validation failed", error: error)
         }
     }
 
