@@ -18,7 +18,8 @@ terraform {
     region         = "us-east-1"
     encrypt        = true
     dynamodb_table = "meeting-recorder-terraform-lock"
-    profile        = "admin"
+    # Profile removed - uses AWS credential chain (env vars, IAM role, SSO session)
+    # For local dev: aws sso login --profile admin
   }
 }
 
