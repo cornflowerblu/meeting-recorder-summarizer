@@ -45,8 +45,9 @@ terraform apply
 
 - **Phase-based**: Currently Phase 2 (Foundational) in progress. See `specs/001-meeting-recorder-ai/tasks.md` for 75 numbered tasks across 7 phases
 - **Task IDs**: Reference as `MR-XX (TXXX)` in commits, e.g., `MR-13 (T006)` for Terraform scaffolding
-- **TDD Required**: Write failing tests before implementation (see `processing/pytest.ini` config)
+- **TDD Required**: Write failing tests FIRST before implementation (see `processing/pytest.ini` config). In code reviews, actively call out missing or insufficient test coverage.
 - **User Story Independence**: Each story (US1-US5) must be independently testable/deployable
+- **AWS Region**: Use `us-east-1` as the default region for all resources unless explicitly configured otherwise
 
 ## Project-Specific Conventions
 
@@ -73,6 +74,18 @@ terraform apply
 - **Swift**: `Config.shared` singleton loads from `AWSConfig.swift` constants + environment
 - **Python**: `Config` class in `processing/shared/config.py` loads from environment variables
 - **Terraform**: Variables in `terraform.tfvars` (gitignored), example in `terraform.tfvars.example`
+
+### Pipeline Versioning
+
+All artifacts (transcripts, summaries) MUST include version metadata for observability and debugging:
+
+- **`pipeline_version`**: Use semantic versioning (e.g., `1.0.0`). Increment for pipeline logic changes:
+  - MAJOR: Breaking schema changes or fundamental processing changes
+  - MINOR: New features or model changes (e.g., switching Transcribe settings)
+  - PATCH: Bug fixes or parameter tuning
+- **`model_version`**: Specific AI model identifier (e.g., `anthropic.claude-sonnet-4-20250514`, `amazon-transcribe-2023`)
+- **Current Version**: Start with `1.0.0` for MVP. Update in `processing/shared/config.py` as `PIPELINE_VERSION` constant
+- **Where to Set**: Lambda functions should read from `Config.PIPELINE_VERSION` and include in all artifact JSON outputs
 
 ## Integration Points
 
@@ -158,9 +171,15 @@ let credentials = // from Firebase → auth_exchange Lambda
 
 ### Testing Standards
 
+- **Test-First Mandate**: Write failing tests BEFORE implementation. No exceptions.
+- **Code Review Focus**: In reviews, prioritize test coverage feedback. Flag any PR with:
+  - Missing tests for new functionality
+  - Insufficient edge case coverage
+  - Tests that don't fail when implementation is removed
 - **Contract Tests**: Validate all JSON artifacts against schemas (use `jsonschema` library)
-- **No Tests Yet**: Project follows TDD but tests not written - implement test tasks first (T057-T059)
+- **Test Structure**: Implement test tasks (T057-T059) before feature work begins
 - **Pytest Markers**: `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.contract` (see `pytest.ini`)
+- **Swift Tests**: Unit tests in `Tests/MeetingRecorderTests/`, UI tests in `Tests/MeetingRecorderUITests/`
 
 ### Evaluation Framework (`docs/eval.md`)
 
