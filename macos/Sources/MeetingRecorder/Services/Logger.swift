@@ -185,12 +185,13 @@ struct Logger {
         let piiKeys = ["email", "phone", "password", "token", "secret", "ssn", "credit_card"]
 
         var sanitized = data
-        for key in piiKeys {
-            if sanitized.keys.contains(where: { $0.lowercased().contains(key) }) {
-                sanitized[key] = "[REDACTED]"
+        for dictKey in sanitized.keys {
+            for key in piiKeys {
+                if dictKey.lowercased().contains(key) {
+                    sanitized[dictKey] = "[REDACTED]"
+                }
             }
         }
-
         return sanitized
     }
 
