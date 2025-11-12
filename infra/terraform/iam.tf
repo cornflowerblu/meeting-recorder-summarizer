@@ -59,6 +59,8 @@ resource "aws_iam_role" "macos_app" {
 }
 
 # Policy for macOS app S3 access
+# IMPORTANT: Uses aws:username for user isolation, which maps to RoleSessionName.
+# The auth exchange Lambda MUST pass the Firebase user ID as the session name.
 resource "aws_iam_role_policy" "macos_app_s3" {
   name = "s3-access"
   role = aws_iam_role.macos_app.id
@@ -76,12 +78,12 @@ resource "aws_iam_role_policy" "macos_app_s3" {
           "s3:ListBucket"
         ]
         Resource = [
-          "${aws_s3_bucket.recordings.arn}/users/$${aws:userid}/*",
+          "${aws_s3_bucket.recordings.arn}/users/$${aws:username}/*",
           "${aws_s3_bucket.recordings.arn}"
         ]
         Condition = {
           StringLike = {
-            "s3:prefix" = ["users/$${aws:userid}/*"]
+            "s3:prefix" = ["users/$${aws:username}/*"]
           }
         }
       },
@@ -127,9 +129,31 @@ resource "aws_iam_role_policy" "macos_app_dynamodb" {
         ]
         Condition = {
           "ForAllValues:StringLike" = {
-            "dynamodb:LeadingKeys" = ["$${aws:userid}#*"]
+            "dynamodb:LeadingKeys" = ["$${aws:username}#*"]
           }
         }
+      }
+    ]
+  })
+}
+
+# Policy for macOS app SSM Parameter Store access
+resource "aws_iam_role_policy" "macos_app_ssm" {
+  name = "ssm-parameter-access"
+  role = aws_iam_role.macos_app.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowParameterStoreRead"
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+        ]
+        Resource = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/${var.project_name}/${var.environment}/*"
       }
     ]
   })

@@ -7,6 +7,7 @@ Exchanges Firebase ID tokens for temporary AWS credentials using STS AssumeRoleW
 
 import json
 import os
+import re
 from typing import Any, Dict
 
 import boto3
@@ -27,7 +28,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     Expected event body (JSON):
     {
         "id_token": "<firebase_id_token>",
-        "session_name": "user_email_or_id"  # Optional, defaults to context.request_id
+        "session_name": "<firebase_user_id>"  # REQUIRED: Firebase user ID for IAM isolation
     }
 
     Returns:
@@ -49,15 +50,37 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """
     try:
         # Parse request body
-        body = _parse_body(event)
+        try:
+            body = _parse_body(event)
+        except ValueError as e:
+            return _error_response(400, str(e))
 
-        # Extract Firebase ID token
+        # Extract and validate Firebase ID token
         id_token = body.get("id_token")
         if not id_token:
             return _error_response(400, "Missing required field: id_token")
 
-        # Session name (used for CloudTrail auditing)
-        session_name = body.get("session_name", context.request_id)
+        if not isinstance(id_token, str):
+            return _error_response(400, "Invalid id_token: must be a string")
+
+        if len(id_token) > 4096:
+            return _error_response(400, "Invalid id_token: token too large")
+
+        if len(id_token) < 10:
+            return _error_response(400, "Invalid id_token: token too short")
+
+        # Extract and validate session name
+        # Session name MUST be the Firebase user ID for IAM policy user isolation
+        session_name = body.get("session_name")
+        if not session_name:
+            return _error_response(400, "Missing required field: session_name (Firebase user ID)")
+
+        if not isinstance(session_name, str):
+            return _error_response(400, "Invalid session_name: must be a string")
+
+        # Sanitize session name: AWS allows alphanumeric, =,.@-_
+        # Remove any other characters to prevent injection
+        session_name = re.sub(r'[^a-zA-Z0-9=,.@_-]', '_', session_name[:64])
 
         # Validate environment configuration
         if not MACOS_APP_ROLE_ARN:
@@ -114,12 +137,20 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
 
 def _parse_body(event: Dict[str, Any]) -> Dict[str, Any]:
-    """Parse request body from event."""
+    """
+    Parse request body from event.
+
+    Raises:
+        ValueError: If body contains invalid JSON
+    """
     body = event.get("body", "{}")
 
     # If body is a string, parse as JSON
     if isinstance(body, str):
-        return json.loads(body)
+        try:
+            return json.loads(body)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON in request body: {e}")
 
     # If body is already a dict, return as-is
     return body

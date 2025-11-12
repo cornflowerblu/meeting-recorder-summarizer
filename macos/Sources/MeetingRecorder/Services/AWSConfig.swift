@@ -5,6 +5,9 @@ import Foundation
 ///
 /// Provides centralized AWS configuration for the macOS app including
 /// region, resource names, and service endpoints.
+///
+/// Runtime configuration values (bucket names, table names) are fetched from
+/// AWS Systems Manager Parameter Store on first access and cached.
 struct AWSConfig {
     // MARK: - AWS Region
 
@@ -14,14 +17,10 @@ struct AWSConfig {
     // MARK: - S3 Configuration
 
     /// S3 bucket name for meeting recordings and artifacts
-    /// Format: meeting-recorder-{environment}-recordings-{suffix}
-    static let s3BucketName: String = {
-        #if DEBUG
-        return "meeting-recorder-dev-recordings"
-        #else
-        return "meeting-recorder-prod-recordings"
-        #endif
-    }()
+    /// Fetched from SSM Parameter Store: /meeting-recorder/{environment}/s3/bucket-name
+    static var s3BucketName: String {
+        return RuntimeConfig.shared.s3BucketName
+    }
 
     /// S3 user prefix template
     /// User data is stored under: users/{user_id}/
@@ -57,14 +56,10 @@ struct AWSConfig {
     // MARK: - DynamoDB Configuration
 
     /// DynamoDB table name for meetings metadata
-    /// Format: meeting-recorder-{environment}-meetings
-    static let dynamoDBTableName: String = {
-        #if DEBUG
-        return "meeting-recorder-dev-meetings"
-        #else
-        return "meeting-recorder-prod-meetings"
-        #endif
-    }()
+    /// Fetched from SSM Parameter Store: /meeting-recorder/{environment}/dynamodb/table-name
+    static var dynamoDBTableName: String {
+        return RuntimeConfig.shared.dynamoDBTableName
+    }
 
     /// DynamoDB partition key format
     static func dynamoDBPartitionKey(userId: String, recordingId: String) -> String {
@@ -151,6 +146,10 @@ struct AWSConfig {
 extension AWSConfig {
     /// Validates required configuration is present
     static func validate() throws {
+        // Trigger config fetch by accessing properties
+        _ = s3BucketName
+        _ = dynamoDBTableName
+
         guard !s3BucketName.isEmpty else {
             throw ConfigurationError.missingConfiguration("S3 bucket name")
         }
@@ -176,6 +175,102 @@ extension AWSConfig {
             case .missingConfiguration(let item):
                 return "Missing required configuration: \(item)"
             }
+        }
+    }
+}
+
+// MARK: - Runtime Configuration from Parameter Store
+
+/// Manages runtime configuration fetched from AWS Systems Manager Parameter Store
+/// Values are fetched on first access and cached for the lifetime of the app
+class RuntimeConfig {
+    static let shared = RuntimeConfig()
+
+    private var cachedS3BucketName: String?
+    private var cachedDynamoDBTableName: String?
+    private let queue = DispatchQueue(label: "com.meetingrecorder.runtimeconfig")
+
+    private init() {}
+
+    /// S3 bucket name from Parameter Store
+    var s3BucketName: String {
+        return queue.sync {
+            if let cached = cachedS3BucketName {
+                return cached
+            }
+
+            // Fetch from SSM Parameter Store
+            let parameterName = "/\(AWSConfig.environment == "dev" ? "meeting-recorder" : "meeting-recorder")/\(AWSConfig.environment)/s3/bucket-name"
+
+            if let value = fetchParameter(name: parameterName) {
+                cachedS3BucketName = value
+                return value
+            }
+
+            // Fallback to hardcoded value with warning
+            Logger.app.warning("Failed to fetch S3 bucket name from Parameter Store, using fallback")
+            let fallback = "meeting-recorder-\(AWSConfig.environment)-recordings"
+            cachedS3BucketName = fallback
+            return fallback
+        }
+    }
+
+    /// DynamoDB table name from Parameter Store
+    var dynamoDBTableName: String {
+        return queue.sync {
+            if let cached = cachedDynamoDBTableName {
+                return cached
+            }
+
+            // Fetch from SSM Parameter Store
+            let parameterName = "/meeting-recorder/\(AWSConfig.environment)/dynamodb/table-name"
+
+            if let value = fetchParameter(name: parameterName) {
+                cachedDynamoDBTableName = value
+                return value
+            }
+
+            // Fallback to hardcoded value with warning
+            Logger.app.warning("Failed to fetch DynamoDB table name from Parameter Store, using fallback")
+            let fallback = "meeting-recorder-\(AWSConfig.environment)-meetings"
+            cachedDynamoDBTableName = fallback
+            return fallback
+        }
+    }
+
+    /// Fetch a parameter from SSM Parameter Store
+    /// TODO: Implement actual SSM API call using AWS SDK for Swift
+    /// For now, returns nil to trigger fallback behavior
+    private func fetchParameter(name: String) -> String? {
+        // IMPLEMENTATION NOTE:
+        // This needs to use the AWS SDK for Swift to call SSM GetParameter
+        // Example (pseudocode):
+        //
+        // import AWSSSM
+        //
+        // let ssmClient = SSMClient(region: AWSConfig.region)
+        // let input = GetParameterInput(name: name, withDecryption: false)
+        //
+        // do {
+        //     let output = try await ssmClient.getParameter(input: input)
+        //     return output.parameter?.value
+        // } catch {
+        //     Logger.app.error("Failed to fetch parameter from SSM", error: error)
+        //     return nil
+        // }
+        //
+        // For Phase 2, we'll return nil to use fallback values
+        // This will be implemented in Phase 3 when we integrate AWS SDK
+
+        Logger.app.debug("SSM fetch not yet implemented for parameter: \(name)")
+        return nil
+    }
+
+    /// Clear cached values (useful for testing)
+    func clearCache() {
+        queue.sync {
+            cachedS3BucketName = nil
+            cachedDynamoDBTableName = nil
         }
     }
 }

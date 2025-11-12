@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:meeting-recorder-summarizer}/macos",
+      "name": "Debug MeetingRecorder (macos)",
+      "target": "MeetingRecorder",
+      "configuration": "debug",
+      "preLaunchTask": "swift: Build Debug MeetingRecorder (macos)"
+    },
+    {
+      "type": "swift",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:meeting-recorder-summarizer}/macos",
+      "name": "Release MeetingRecorder (macos)",
+      "target": "MeetingRecorder",
+      "configuration": "release",
+      "preLaunchTask": "swift: Build Release MeetingRecorder (macos)"
+    }
+  ]
+}
