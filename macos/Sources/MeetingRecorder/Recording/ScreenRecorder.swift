@@ -31,6 +31,13 @@ class ScreenRecorder: ObservableObject {
     private var recordingStartTime: Date?
     private var pausedDuration: TimeInterval = 0
     private var lastPauseTime: Date?
+    
+    // MARK: - Constants
+    
+    /// Minimum required disk space (1GB)
+    /// This threshold is checked at recording start and before each chunk save to prevent
+    /// mid-recording failures due to disk space exhaustion during long sessions
+    private let minimumRequiredDiskSpace: Int64 = 1_000_000_000
 
     // MARK: - Initialization
 
@@ -59,11 +66,10 @@ class ScreenRecorder: ObservableObject {
         }
 
         // Check disk space (require at least 1GB)
-        let requiredSpace: Int64 = 1_000_000_000 // 1GB
-        guard storageService.hasSufficientDiskSpace(requiredBytes: requiredSpace) else {
+        guard storageService.hasSufficientDiskSpace(requiredBytes: minimumRequiredDiskSpace) else {
             throw ChunkStorageError.insufficientDiskSpace(
                 available: 0, // TODO: Get actual available space
-                required: requiredSpace
+                required: minimumRequiredDiskSpace
             )
         }
 
@@ -174,8 +180,11 @@ extension ScreenRecorder: ScreenCaptureDelegate {
         let service = storageService
         Task { @MainActor in
             // Check disk space before saving each chunk
-            let requiredSpace: Int64 = 1_000_000_000 // 1GB
-            if !service.hasSufficientDiskSpace(requiredBytes: requiredSpace) {
+            // Note: This check is redundant with the initial check in startRecording(),
+            // but necessary to handle disk space depletion during long recording sessions.
+            // A 60-minute recording can generate ~3GB of chunks, so disk space can be
+            // exhausted mid-recording even if sufficient space existed at start.
+            if !service.hasSufficientDiskSpace(requiredBytes: minimumRequiredDiskSpace) {
                 onError?(.diskSpaceLow)
                 try? await stopRecording()
                 return
