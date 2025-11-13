@@ -334,4 +334,180 @@ final class ChunkWriterTests: XCTestCase {
         )
         XCTAssertTrue(metadata.createdAt <= Date(), "Created date should be in the past or now")
     }
+
+    // MARK: - Helper Method Tests
+
+    func testGetChunkFilesEmpty() throws {
+        // Given - Recording ID with no chunks
+        let emptyRecordingId = "empty-recording-\(UUID().uuidString)"
+
+        // When
+        let chunkFiles = try chunkWriter.getChunkFiles(for: emptyRecordingId)
+
+        // Then
+        XCTAssertTrue(chunkFiles.isEmpty, "Should return empty array for recording with no chunks")
+    }
+
+    func testGetChunkFilesSortedByIndex() async throws {
+        // Given - Save chunks in non-sequential order (2, 0, 1)
+        let indices = [2, 0, 1]
+        for index in indices {
+            let chunkTempURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("chunk-\(index)-\(UUID().uuidString).mp4")
+            let data = Data(repeating: UInt8(index), count: 1024)
+            try data.write(to: chunkTempURL)
+
+            _ = try await chunkWriter.saveChunk(
+                fileURL: chunkTempURL,
+                index: index,
+                recordingId: testRecordingId
+            )
+        }
+
+        // When
+        let chunkFiles = try chunkWriter.getChunkFiles(for: testRecordingId)
+
+        // Then
+        XCTAssertEqual(chunkFiles.count, 3, "Should have 3 chunks")
+
+        // Verify sorting by filename (part-0001.mp4, part-0002.mp4, part-0003.mp4)
+        XCTAssertEqual(
+            chunkFiles[0].lastPathComponent,
+            "part-0001.mp4",
+            "First chunk should be part-0001.mp4"
+        )
+        XCTAssertEqual(
+            chunkFiles[1].lastPathComponent,
+            "part-0002.mp4",
+            "Second chunk should be part-0002.mp4"
+        )
+        XCTAssertEqual(
+            chunkFiles[2].lastPathComponent,
+            "part-0003.mp4",
+            "Third chunk should be part-0003.mp4"
+        )
+    }
+
+    func testGetChunkFilesFiltersNonMp4Files() async throws {
+        // Given - Create chunk directory with mixed file types
+        _ = try await chunkWriter.saveChunk(
+            fileURL: tempFileURL,
+            index: 0,
+            recordingId: testRecordingId
+        )
+
+        let chunkDir = chunkWriter.getChunkDirectory(for: testRecordingId)
+
+        // Add non-mp4 files to the directory
+        let txtFile = chunkDir.appendingPathComponent("notes.txt")
+        try "Some notes".write(to: txtFile, atomically: true, encoding: .utf8)
+
+        let jsonFile = chunkDir.appendingPathComponent("metadata.json")
+        try "{}".write(to: jsonFile, atomically: true, encoding: .utf8)
+
+        // When
+        let chunkFiles = try chunkWriter.getChunkFiles(for: testRecordingId)
+
+        // Then
+        XCTAssertEqual(chunkFiles.count, 1, "Should only return .mp4 files")
+        XCTAssertEqual(
+            chunkFiles[0].lastPathComponent,
+            "part-0001.mp4",
+            "Should only return mp4 chunk"
+        )
+    }
+
+    func testGetTotalSizeEmpty() throws {
+        // Given - Recording ID with no chunks
+        let emptyRecordingId = "empty-recording-\(UUID().uuidString)"
+
+        // When
+        let totalSize = try chunkWriter.getTotalSize(for: emptyRecordingId)
+
+        // Then
+        XCTAssertEqual(totalSize, 0, "Should return 0 for recording with no chunks")
+    }
+
+    func testGetTotalSizeSingleChunk() async throws {
+        // Given - Save one chunk with known size
+        let data = Data(repeating: 0xFF, count: 2_000_000) // 2MB
+        let chunkURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("chunk-single-\(UUID().uuidString).mp4")
+        try data.write(to: chunkURL)
+
+        let metadata = try await chunkWriter.saveChunk(
+            fileURL: chunkURL,
+            index: 0,
+            recordingId: testRecordingId
+        )
+
+        // When
+        let totalSize = try chunkWriter.getTotalSize(for: testRecordingId)
+
+        // Then
+        XCTAssertEqual(
+            totalSize,
+            metadata.sizeBytes,
+            "Total size should match single chunk size"
+        )
+        XCTAssertEqual(totalSize, 2_000_000, "Total size should be 2MB")
+    }
+
+    func testGetTotalSizeMultipleChunks() async throws {
+        // Given - Save multiple chunks with different sizes
+        let sizes = [1_000_000, 2_000_000, 3_000_000] // 1MB, 2MB, 3MB
+        var expectedTotal: Int64 = 0
+
+        for (index, size) in sizes.enumerated() {
+            let data = Data(repeating: UInt8(index), count: size)
+            let chunkURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("chunk-\(index)-\(UUID().uuidString).mp4")
+            try data.write(to: chunkURL)
+
+            let metadata = try await chunkWriter.saveChunk(
+                fileURL: chunkURL,
+                index: index,
+                recordingId: testRecordingId
+            )
+            expectedTotal += metadata.sizeBytes
+        }
+
+        // When
+        let totalSize = try chunkWriter.getTotalSize(for: testRecordingId)
+
+        // Then
+        XCTAssertEqual(totalSize, expectedTotal, "Total size should be sum of all chunks")
+        XCTAssertEqual(totalSize, 6_000_000, "Total size should be 6MB")
+    }
+
+    func testGetTotalSizeAfterChunkDeletion() async throws {
+        // Given - Save 2 chunks
+        for index in 0..<2 {
+            let data = Data(repeating: UInt8(index), count: 1_000_000)
+            let chunkURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("chunk-\(index)-\(UUID().uuidString).mp4")
+            try data.write(to: chunkURL)
+
+            _ = try await chunkWriter.saveChunk(
+                fileURL: chunkURL,
+                index: index,
+                recordingId: testRecordingId
+            )
+        }
+
+        // Verify initial size
+        let initialSize = try chunkWriter.getTotalSize(for: testRecordingId)
+        XCTAssertEqual(initialSize, 2_000_000, "Initial total should be 2MB")
+
+        // Manually delete one chunk
+        let chunkDir = chunkWriter.getChunkDirectory(for: testRecordingId)
+        let chunkToDelete = chunkDir.appendingPathComponent("part-0001.mp4")
+        try FileManager.default.removeItem(at: chunkToDelete)
+
+        // When
+        let updatedSize = try chunkWriter.getTotalSize(for: testRecordingId)
+
+        // Then
+        XCTAssertEqual(updatedSize, 1_000_000, "Updated total should be 1MB after deletion")
+    }
 }
