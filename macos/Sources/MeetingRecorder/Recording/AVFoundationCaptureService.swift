@@ -3,6 +3,16 @@ import Foundation
 import ScreenCaptureKit
 
 /// Real implementation of screen capture using AVFoundation
+///
+/// ⚠️ **WARNING: Partial Implementation**
+/// This is a foundational implementation establishing the protocol contract and basic structure.
+/// Critical functionality NOT yet implemented:
+/// - Actual sample buffer processing and video data capture
+/// - Chunk rotation logic based on time intervals
+/// - Full error recovery and resource cleanup
+///
+/// DO NOT USE for production recording. This will be completed in Phase 3, PR Group 2.
+/// For testing purposes, use mock implementations instead.
 @MainActor
 class AVFoundationCaptureService: NSObject, ScreenCaptureService {
     // MARK: - Properties
@@ -63,6 +73,10 @@ class AVFoundationCaptureService: NSObject, ScreenCaptureService {
 
         guard hasPermission() else {
             throw CaptureError.permissionDenied
+        }
+
+        guard delegate != nil else {
+            throw CaptureError.invalidState("Delegate must be set before starting capture")
         }
 
         // Setup capture session

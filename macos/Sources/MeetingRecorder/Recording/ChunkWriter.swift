@@ -2,10 +2,20 @@ import CryptoKit
 import Foundation
 
 /// Service for writing and managing recording chunks on local storage
+///
+/// **Thread Safety:**
+/// This class uses `@unchecked Sendable` with the following safety guarantees:
+/// 1. Each chunk has a unique filename based on recordingId and index, preventing file conflicts
+/// 2. Atomic writes use temp files + rename, ensuring integrity even under concurrent access
+/// 3. FileManager operations on distinct files are thread-safe
+/// 4. All mutable state (fileManager, baseDirectory) is immutable after initialization
+///
+/// While FileManager itself is not Sendable, our usage pattern (operating on distinct files
+/// with atomic operations) makes concurrent access safe in practice.
 final class ChunkWriter: ChunkStorageService, @unchecked Sendable {
     // MARK: - Properties
 
-    private let fileManager = FileManager.default
+    private let fileManager: FileManager
     private let baseDirectory: URL
 
     // Minimum free space required: 1GB
@@ -14,6 +24,9 @@ final class ChunkWriter: ChunkStorageService, @unchecked Sendable {
     // MARK: - Initialization
 
     init() {
+        // Each instance gets its own FileManager for thread safety
+        self.fileManager = FileManager()
+
         // Base directory: ~/Library/Caches/MeetingRecorder/
         let cacheDir = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
@@ -110,8 +123,21 @@ final class ChunkWriter: ChunkStorageService, @unchecked Sendable {
 
     func calculateChecksum(fileURL: URL) throws -> String {
         do {
-            let data = try Data(contentsOf: fileURL)
-            let hash = SHA256.hash(data: data)
+            let bufferSize = 1024 * 1024 // 1MB buffer
+            let file = try FileHandle(forReadingFrom: fileURL)
+            defer { try? file.close() }
+
+            var hasher = SHA256()
+
+            // Stream file in chunks to avoid loading entire file into memory
+            while autoreleasepool(invoking: {
+                let data = file.readData(ofLength: bufferSize)
+                if data.isEmpty { return false }
+                hasher.update(data: data)
+                return true
+            }) { }
+
+            let hash = hasher.finalize()
             return hash.compactMap { String(format: "%02x", $0) }.joined()
         } catch {
             throw ChunkStorageError.checksumCalculationFailed(error.localizedDescription)

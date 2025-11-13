@@ -423,13 +423,15 @@ class MockScreenCaptureService: ScreenCaptureService {
     }
 }
 
+/// Mock storage service for testing
+/// Uses @unchecked Sendable as test mocks operate in controlled, single-threaded test contexts
 final class MockChunkStorageService: ChunkStorageService, @unchecked Sendable {
     var shouldThrowDiskSpaceError = false
     var cleanupCalled = false
     var savedChunks: [ChunkMetadata] = []
 
     func hasSufficientDiskSpace(requiredBytes: Int64) -> Bool {
-        return !shouldThrowDiskSpaceError
+        !shouldThrowDiskSpaceError
     }
 
     func saveChunk(fileURL: URL, index: Int, recordingId: String) async throws -> ChunkMetadata {

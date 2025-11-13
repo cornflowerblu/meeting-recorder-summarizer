@@ -40,12 +40,10 @@ class ScreenRecorder: ObservableObject {
     ) {
         self.captureService = captureService
         self.storageService = storageService
-    }
 
-    /// Set up delegate connection - called after initialization
-    func setupDelegateConnection() {
-        if let captureService = captureService as? AVFoundationCaptureService {
-            captureService.delegate = self
+        // Set up delegate connection if capture service supports it
+        if let avCaptureService = captureService as? AVFoundationCaptureService {
+            avCaptureService.delegate = self
         }
     }
 
@@ -172,12 +170,17 @@ extension ScreenRecorder: ScreenCaptureDelegate {
     func captureDidCompleteChunk(fileURL: URL, index: Int, duration: TimeInterval) {
         guard let recordingId = recordingId else { return }
 
-        // Update chunk index
-        currentChunkIndex = index + 1
-
         // Store chunk asynchronously
         let service = storageService
         Task { @MainActor in
+            // Check disk space before saving each chunk
+            let requiredSpace: Int64 = 1_000_000_000 // 1GB
+            if !service.hasSufficientDiskSpace(requiredBytes: requiredSpace) {
+                onError?(.diskSpaceLow)
+                try? await stopRecording()
+                return
+            }
+
             do {
                 let metadata = try await service.saveChunk(
                     fileURL: fileURL,
@@ -185,10 +188,13 @@ extension ScreenRecorder: ScreenCaptureDelegate {
                     recordingId: recordingId
                 )
 
+                // Only update state AFTER successful save
+                currentChunkIndex = index + 1
+
                 // Notify completion
                 onChunkCompleted?(metadata.filePath, index, duration)
             } catch {
-                onError?(.captureSessionFailed("Failed to save chunk: \(error.localizedDescription)"))
+                onError?(.captureSessionFailed("Failed to save chunk \(index): \(error.localizedDescription)"))
             }
         }
     }
