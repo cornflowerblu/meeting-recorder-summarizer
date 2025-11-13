@@ -170,6 +170,7 @@ final class ScreenRecorderTests: XCTestCase {
         }
 
         // When - Simulate 3 chunks (3-minute recording)
+        // Add small delays to simulate real-world sequential chunk completion
         for index in 0..<3 {
             let chunkURL = URL(fileURLWithPath: "/tmp/part-\(String(format: "%04d", index + 1)).mp4")
             mockCaptureService.delegate?.captureDidCompleteChunk(
@@ -177,6 +178,8 @@ final class ScreenRecorderTests: XCTestCase {
                 index: index,
                 duration: 60.0
             )
+            // Small delay to ensure chunks process sequentially
+            try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
         }
 
         // Wait for all async callbacks

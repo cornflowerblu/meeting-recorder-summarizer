@@ -31,9 +31,9 @@ class ScreenRecorder: ObservableObject {
     private var recordingStartTime: Date?
     private var pausedDuration: TimeInterval = 0
     private var lastPauseTime: Date?
-    
+
     // MARK: - Constants
-    
+
     /// Minimum required disk space (1GB)
     /// This threshold is checked at recording start and before each chunk save to prevent
     /// mid-recording failures due to disk space exhaustion during long sessions
