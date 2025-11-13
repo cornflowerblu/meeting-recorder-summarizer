@@ -174,13 +174,6 @@ final class ChunkWriterTests: XCTestCase {
         XCTAssertTrue(hasSpace, "Should have at least 1MB free space")
     }
 
-    func testInsufficientDiskSpaceError() async {
-        // This test is difficult to simulate without filling the disk
-        // In practice, the error would be thrown when trying to write
-        // We'll skip actual testing of this scenario
-        XCTAssertTrue(true, "Placeholder for disk space error test")
-    }
-
     // MARK: - Cleanup Tests
 
     func testCleanup() async throws {
