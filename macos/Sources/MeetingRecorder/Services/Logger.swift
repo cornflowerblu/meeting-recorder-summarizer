@@ -9,7 +9,7 @@ import os.log
 struct Logger {
     // MARK: - Log Categories
 
-    private static let subsystem = "com.meetingrecorder.macos"
+    private static let subsystem = "com.slingshotgroup.interviewcompanion"
 
     /// General application logs
     static let app = Logger(category: "App")

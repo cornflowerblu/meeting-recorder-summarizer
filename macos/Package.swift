@@ -30,6 +30,9 @@ let package = Package(
                 .product(name: "AWSSTS", package: "aws-sdk-swift")
             ],
             path: "Sources/MeetingRecorder",
+            resources: [
+                .process("Resources")
+            ],
             swiftSettings: [
                 .unsafeFlags(["-parse-as-library"])
             ]

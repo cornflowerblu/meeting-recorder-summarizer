@@ -9,13 +9,25 @@ struct MeetingRecorderApp: App {
 
     init() {
         // Configure Firebase on app launch
-        FirebaseApp.configure()
-        Logger.app.info(
-            "Firebase configured",
-            file: #file,
-            function: #function,
-            line: #line
-        )
+        // Requires GoogleService-Info.plist in Resources directory
+        // See: macos/Sources/MeetingRecorder/Resources/README.md
+        do {
+            FirebaseApp.configure()
+            Logger.app.info(
+                "Firebase configured successfully",
+                file: #file,
+                function: #function,
+                line: #line
+            )
+        } catch {
+            Logger.app.error(
+                "Firebase configuration failed. Did you add GoogleService-Info.plist? See Resources/README.md for setup instructions.",
+                error: error,
+                file: #file,
+                function: #function,
+                line: #line
+            )
+        }
     }
 
     var body: some Scene {

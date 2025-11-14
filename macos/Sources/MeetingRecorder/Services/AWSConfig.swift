@@ -201,7 +201,7 @@ final class RuntimeConfig: @unchecked Sendable {
 
     private var cachedS3BucketName: String?
     private var cachedDynamoDBTableName: String?
-    private let queue = DispatchQueue(label: "com.meetingrecorder.runtimeconfig")
+    private let queue = DispatchQueue(label: "com.slingshotgroup.interviewcompanion.runtimeconfig")
 
     private init() {}
 
