@@ -2,6 +2,22 @@ import AWSClientRuntime
 import AWSS3
 import Foundation
 
+// MARK: - S3 Client Protocol
+
+/// Protocol abstraction for S3 client operations to enable testing
+protocol S3ClientProtocol {
+    func createMultipartUpload(input: CreateMultipartUploadInput) async throws
+        -> CreateMultipartUploadOutput
+    func uploadPart(input: UploadPartInput) async throws -> UploadPartOutput
+    func completeMultipartUpload(input: CompleteMultipartUploadInput) async throws
+        -> CompleteMultipartUploadOutput
+    func abortMultipartUpload(input: AbortMultipartUploadInput) async throws
+        -> AbortMultipartUploadOutput
+}
+
+/// Wrapper to make AWS SDK S3Client conform to our protocol
+extension S3Client: S3ClientProtocol {}
+
 /// S3 uploader for recording chunks with multipart upload support
 /// Handles large file uploads with retry logic and progress tracking
 ///
@@ -32,7 +48,7 @@ import Foundation
 final class S3Uploader: S3UploaderProtocol, @unchecked Sendable {
     // MARK: - Properties
 
-    private let s3Client: S3Client
+    private let s3Client: any S3ClientProtocol
     private let bucketName: String
 
     // Multipart upload configuration
@@ -41,7 +57,7 @@ final class S3Uploader: S3UploaderProtocol, @unchecked Sendable {
 
     // MARK: - Initialization
 
-    init(s3Client: S3Client, bucketName: String? = nil) {
+    init(s3Client: any S3ClientProtocol, bucketName: String? = nil) {
         self.s3Client = s3Client
         self.bucketName = bucketName ?? AWSConfig.s3BucketName
     }
