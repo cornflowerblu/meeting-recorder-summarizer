@@ -29,6 +29,9 @@ struct Logger {
     /// UI-related logs
     static let ui = Logger(category: "UI")
 
+    /// Catalog/DynamoDB logs
+    static let catalog = Logger(category: "Catalog")
+
     // MARK: - Properties
 
     private let osLog: OSLog
