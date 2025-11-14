@@ -142,7 +142,8 @@ final class UploadQueue: ObservableObject {
             let chunkInfo = UploadManifest.ChunkInfo(
                 chunkId: chunk.chunkId,
                 path: chunk.filePath.path,
-                size: chunk.sizeBytes
+                size: chunk.sizeBytes,
+                durationSeconds: chunk.durationSeconds
             )
 
             manifest.chunks.append(chunkInfo)
@@ -454,7 +455,7 @@ final class UploadQueue: ObservableObject {
             filePath: fileURL,
             sizeBytes: chunkInfo.size,
             checksum: chunkInfo.checksum ?? "",
-            durationSeconds: 60.0, // Default
+            durationSeconds: chunkInfo.durationSeconds ?? 60.0, // Use stored duration or fallback to 60.0
             index: index,
             recordingId: recordingId,
             createdAt: chunkInfo.createdAt
