@@ -53,7 +53,7 @@ final class UploadQueueTests: XCTestCase {
         }
 
         // When
-        await uploadQueue.enqueue(chunk)
+        try await uploadQueue.enqueue(chunk)
         await uploadQueue.start()
 
         // Wait for upload
@@ -90,7 +90,7 @@ final class UploadQueueTests: XCTestCase {
 
         // When
         for chunk in chunks {
-            await uploadQueue.enqueue(chunk)
+            try await uploadQueue.enqueue(chunk)
         }
         await uploadQueue.start()
 
@@ -114,7 +114,7 @@ final class UploadQueueTests: XCTestCase {
 
         // When
         for chunk in chunks {
-            await uploadQueue.enqueue(chunk)
+            try await uploadQueue.enqueue(chunk)
         }
         await uploadQueue.start()
 
@@ -150,7 +150,7 @@ final class UploadQueueTests: XCTestCase {
         }
 
         // When
-        await uploadQueue.enqueue(chunk)
+        try await uploadQueue.enqueue(chunk)
         await uploadQueue.start()
 
         // Wait for retries and eventual success
@@ -189,7 +189,7 @@ final class UploadQueueTests: XCTestCase {
         }
 
         // When
-        await uploadQueue.enqueue(chunk)
+        try await uploadQueue.enqueue(chunk)
         await uploadQueue.start()
 
         // Wait for failure
@@ -221,7 +221,7 @@ final class UploadQueueTests: XCTestCase {
         }
 
         // When
-        await uploadQueue.enqueue(chunk)
+        try await uploadQueue.enqueue(chunk)
         await uploadQueue.start()
 
         await fulfillment(of: [expectation], timeout: 120.0)
@@ -249,7 +249,7 @@ final class UploadQueueTests: XCTestCase {
 
         // When
         for chunk in chunks {
-            await uploadQueue.enqueue(chunk)
+            try await uploadQueue.enqueue(chunk)
         }
         await uploadQueue.start()
 
@@ -362,7 +362,7 @@ final class UploadQueueTests: XCTestCase {
 
         // When
         for chunk in chunks {
-            await uploadQueue.enqueue(chunk)
+            try await uploadQueue.enqueue(chunk)
         }
         await uploadQueue.start()
 
@@ -383,7 +383,7 @@ final class UploadQueueTests: XCTestCase {
         mockUploader.uploadDelay = 0.5 // Slow uploads
 
         for chunk in chunks {
-            await uploadQueue.enqueue(chunk)
+            try await uploadQueue.enqueue(chunk)
         }
         await uploadQueue.start()
 
@@ -429,7 +429,7 @@ final class UploadQueueTests: XCTestCase {
         }
 
         // When
-        await uploadQueue.enqueue(chunk)
+        try await uploadQueue.enqueue(chunk)
         await uploadQueue.start()
 
         await fulfillment(of: [expectation], timeout: 20.0)
@@ -458,7 +458,7 @@ final class UploadQueueTests: XCTestCase {
         }
 
         // When
-        await uploadQueue.enqueue(chunk)
+        try await uploadQueue.enqueue(chunk)
         await uploadQueue.start()
 
         await fulfillment(of: [expectation], timeout: 3.0)

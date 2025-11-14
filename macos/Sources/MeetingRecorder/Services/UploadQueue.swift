@@ -43,7 +43,8 @@ final class UploadQueue: ObservableObject {
     private var manifest: UploadManifest
     private var uploadTasks: [String: Task<Void, Error>] = [:]
     private var isPaused: Bool = false
-    private let maxConcurrentUploads = 3
+    private var isProcessing: Bool = false // Prevents concurrent processQueue() calls
+    private let maxConcurrentUploads = AWSConfig.maxConcurrentChunkUploads
 
     // MARK: - Constants
 
@@ -97,7 +98,45 @@ final class UploadQueue: ObservableObject {
     // MARK: - Public Methods
 
     /// Enqueue a chunk for upload
-    func enqueue(_ chunk: ChunkMetadata) async {
+    /// Enqueues a chunk for upload with validation
+    ///
+    /// Performs safety checks before adding chunk to the upload queue:
+    /// - Verifies chunk file exists
+    /// - Checks available disk space for manifest persistence
+    ///
+    /// - Parameter chunk: Chunk metadata to enqueue
+    /// - Throws: UploadError.invalidChunk if file doesn't exist
+    /// - Throws: UploadError.insufficientStorage if disk space too low
+    func enqueue(_ chunk: ChunkMetadata) async throws {
+        // Verify chunk file exists
+        guard FileManager.default.fileExists(atPath: chunk.filePath.path) else {
+            Logger.upload.error(
+                "Chunk file not found: \(chunk.filePath.path)",
+                file: #file,
+                function: #function,
+                line: #line
+            )
+            throw UploadError.invalidChunk("Chunk file not found: \(chunk.filePath.path)")
+        }
+
+        // Check disk space for manifest persistence
+        let manifestURL = UploadManifest.fileURL(recordingId: recordingId)
+        if let resourceValues = try? manifestURL.resourceValues(forKeys: [.volumeAvailableCapacityKey]),
+           let availableBytes = resourceValues.volumeAvailableCapacity {
+
+            let minRequiredBytes: Int64 = 10_000_000 // 10MB minimum
+            if availableBytes < minRequiredBytes {
+                let availableMB = availableBytes / 1_000_000
+                Logger.upload.error(
+                    "Insufficient disk space: \(availableMB)MB available, need at least 10MB",
+                    file: #file,
+                    function: #function,
+                    line: #line
+                )
+                throw UploadError.insufficientStorage("Only \(availableMB)MB available")
+            }
+        }
+
         // Check if chunk already exists in manifest
         if !manifest.chunks.contains(where: { $0.chunkId == chunk.chunkId }) {
             let chunkInfo = UploadManifest.ChunkInfo(
@@ -185,7 +224,25 @@ final class UploadQueue: ObservableObject {
 
     // MARK: - Private Methods - Queue Processing
 
+    /// Processes the upload queue with concurrency control
+    ///
+    /// Prevents race conditions by ensuring only one processQueue() operation runs at a time.
+    /// Uses TaskGroup to manage concurrent uploads with a maximum limit.
     private func processQueue() async {
+        // Prevent concurrent processing
+        guard !isProcessing else {
+            Logger.upload.warning(
+                "Queue processing already in progress, skipping",
+                file: #file,
+                function: #function,
+                line: #line
+            )
+            return
+        }
+
+        isProcessing = true
+        defer { isProcessing = false }
+
         // Get pending chunks (FIFO order)
         let pendingChunks = manifest.chunks
             .filter { $0.status == .pending }
@@ -352,10 +409,30 @@ final class UploadQueue: ObservableObject {
 
     // MARK: - Private Methods - Helpers
 
+    /// Calculates exponential backoff delay with jitter
+    ///
+    /// Implements industry best practice for retry logic:
+    /// - Base delay doubles with each attempt (exponential backoff)
+    /// - Adds ±20% random jitter to prevent thundering herd problem
+    /// - Caps at maximum backoff delay
+    ///
+    /// Example delays (with jitter range):
+    /// - Attempt 0: 0.8-1.2s
+    /// - Attempt 1: 1.6-2.4s
+    /// - Attempt 2: 3.2-4.8s
+    /// - Attempt 3: 6.4-9.6s
+    ///
+    /// - Parameter attempt: Zero-based attempt number
+    /// - Returns: Delay in seconds with jitter applied
     private func calculateBackoff(attempt: Int) -> TimeInterval {
         // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 32s, 60s (max)
-        let delay = initialBackoff * pow(2.0, Double(attempt))
-        return min(delay, maxBackoff)
+        let baseDelay = initialBackoff * pow(2.0, Double(attempt))
+        let cappedDelay = min(baseDelay, maxBackoff)
+
+        // Add ±20% jitter to prevent thundering herd
+        // If many uploads fail simultaneously, jitter spreads retry attempts over time
+        let jitter = Double.random(in: 0.8...1.2)
+        return cappedDelay * jitter
     }
 
     private func loadChunkMetadata(_ chunkInfo: UploadManifest.ChunkInfo) -> ChunkMetadata? {

@@ -1,9 +1,34 @@
-import AWSS3
 import AWSClientRuntime
+import AWSS3
 import Foundation
 
 /// S3 uploader for recording chunks with multipart upload support
 /// Handles large file uploads with retry logic and progress tracking
+///
+/// ## Concurrency Safety
+///
+/// **TECH DEBT:** This class is marked `@unchecked Sendable` which bypasses Swift's concurrency safety checks.
+///
+/// ### Current Justification:
+/// - AWS SDK's `S3Client` is used concurrently but its thread-safety isn't documented in Swift 6.0
+/// - All stored properties are immutable (`let`) or have value semantics (String, Int64)
+/// - No mutable state is shared across concurrent calls
+///
+/// ### Safety Verification Needed:
+/// 1. Verify AWS SDK S3Client documentation confirms thread-safety for concurrent operations
+/// 2. Test under high concurrency load to detect potential race conditions
+/// 3. Consider wrapping in an `actor` if thread-safety cannot be confirmed
+///
+/// ### Recommended Fix (Future):
+/// ```swift
+/// actor S3Uploader: S3UploaderProtocol {
+///     // Actor automatically serializes access
+/// }
+/// ```
+///
+/// **Issue Tracker:** See Phase 3 code review - Critical Issue #2
+/// **Priority:** High (should be addressed before production deployment)
+///
 final class S3Uploader: S3UploaderProtocol, @unchecked Sendable {
     // MARK: - Properties
 
@@ -11,16 +36,14 @@ final class S3Uploader: S3UploaderProtocol, @unchecked Sendable {
     private let bucketName: String
 
     // Multipart upload configuration
-    private let partSize: Int64
-    private let maxConcurrentParts: Int
+    private let partSize: Int64 = Int64(AWSConfig.multipartChunkSize)
+    private let maxConcurrentParts: Int = AWSConfig.maxConcurrentPartUploads
 
     // MARK: - Initialization
 
     init(s3Client: S3Client, bucketName: String? = nil) {
         self.s3Client = s3Client
         self.bucketName = bucketName ?? AWSConfig.s3BucketName
-        self.partSize = Int64(AWSConfig.multipartChunkSize)
-        self.maxConcurrentParts = 3
     }
 
     // MARK: - S3UploaderProtocol
@@ -51,7 +74,8 @@ final class S3Uploader: S3UploaderProtocol, @unchecked Sendable {
             let etag = try await multipartUpload(
                 key: s3Key,
                 fileURL: chunkMetadata.filePath,
-                metadata: createUploadMetadata(chunkMetadata: chunkMetadata, recordingId: recordingId)
+                metadata: createUploadMetadata(
+                    chunkMetadata: chunkMetadata, recordingId: recordingId)
             )
 
             let uploadDuration = Date().timeIntervalSince(startTime)
@@ -70,6 +94,12 @@ final class S3Uploader: S3UploaderProtocol, @unchecked Sendable {
             )
 
         } catch {
+            Logger.upload.error(
+                "Failed to upload chunk \(chunkMetadata.chunkId): \(error)",
+                file: #file,
+                function: #function,
+                line: #line
+            )
             throw mapS3Error(error)
         }
     }
@@ -102,8 +132,30 @@ final class S3Uploader: S3UploaderProtocol, @unchecked Sendable {
             return etag
 
         } catch {
-            // If anything fails, abort the multipart upload
-            try? await abortMultipartUpload(key: key, uploadId: uploadId)
+            // Attempt to abort the multipart upload to prevent orphaned parts in S3
+            do {
+                try await abortMultipartUpload(key: key, uploadId: uploadId)
+                Logger.upload.info(
+                    "Successfully aborted incomplete multipart upload: \(uploadId)",
+                    file: #file,
+                    function: #function,
+                    line: #line
+                )
+            } catch let abortError {
+                // Log but don't override original error
+                // Orphaned parts will remain in S3 and incur storage costs
+                Logger.upload.error(
+                    "Failed to abort multipart upload \(uploadId): \(abortError). "
+                        + "Orphaned parts may remain in S3. Manual cleanup may be required. "
+                        + "Ensure S3 lifecycle policy is configured to delete incomplete multipart uploads.",
+                    file: #file,
+                    function: #function,
+                    line: #line
+                )
+                // TODO: Track failed aborts for cleanup job or CloudWatch metrics
+            }
+
+            // Re-throw original error
             throw error
         }
     }
@@ -148,7 +200,7 @@ final class S3Uploader: S3UploaderProtocol, @unchecked Sendable {
         }
 
         // Calculate number of parts
-        let partCount = Int((fileSize + partSize - 1) / partSize) // Ceiling division
+        let partCount = Int((fileSize + partSize - 1) / partSize)  // Ceiling division
 
         Logger.upload.debug(
             "Uploading \(partCount) parts for file of size \(fileSize) bytes",
@@ -159,9 +211,29 @@ final class S3Uploader: S3UploaderProtocol, @unchecked Sendable {
 
         // Open file handle
         let fileHandle = try FileHandle(forReadingFrom: fileURL)
-        defer { try? fileHandle.close() }
+        var didCloseSuccessfully = false
+
+        // Ensure FileHandle is always closed, even on errors
+        defer {
+            if !didCloseSuccessfully {
+                do {
+                    try fileHandle.close()
+                    didCloseSuccessfully = true
+                } catch {
+                    // Critical: File descriptor leak if this fails
+                    Logger.upload.error(
+                        "Failed to close file handle for \(fileURL.path): \(error). File descriptor may be leaked.",
+                        file: #file,
+                        function: #function,
+                        line: #line
+                    )
+                    // Note: Process may need restart if too many file descriptors leak
+                }
+            }
+        }
 
         // Upload parts sequentially (for now - can be parallelized later)
+        // TODO: Parallelize part uploads for better throughput (see code review issue #7)
         var completedParts: [S3ClientTypes.CompletedPart] = []
 
         for partNumber in 1...partCount {
@@ -203,6 +275,10 @@ final class S3Uploader: S3UploaderProtocol, @unchecked Sendable {
                 line: #line
             )
         }
+
+        // Explicitly close file handle before returning
+        try fileHandle.close()
+        didCloseSuccessfully = true
 
         return completedParts
     }
@@ -254,11 +330,74 @@ final class S3Uploader: S3UploaderProtocol, @unchecked Sendable {
 
     // MARK: - Private Methods - Helpers
 
+    /// Generates a secure S3 key for a chunk with anti-enumeration measures
+    ///
+    /// Security measures:
+    /// - Sanitizes userId and recordingId to prevent path traversal attacks
+    /// - Adds random suffix to prevent enumeration of sequential chunk numbers
+    /// - Validates path components don't contain directory navigation sequences
     private func generateS3Key(userId: String, recordingId: String, chunkIndex: Int) -> String {
-        let fileName = "part-\(String(format: "%04d", chunkIndex + 1)).mp4"
-        return AWSConfig.s3ChunksPath(userId: userId, recordingId: recordingId) + fileName
+        // Sanitize inputs to prevent path traversal attacks
+        let sanitizedUserId = sanitizePathComponent(userId)
+        let sanitizedRecordingId = sanitizePathComponent(recordingId)
+
+        // Add random component to prevent enumeration
+        let randomSuffix = UUID().uuidString.prefix(8)
+        let fileName = "part-\(String(format: "%04d", chunkIndex + 1))-\(randomSuffix).mp4"
+
+        return AWSConfig.s3ChunksPath(userId: sanitizedUserId, recordingId: sanitizedRecordingId)
+            + fileName
     }
 
+    /// Sanitizes a path component to prevent directory traversal and injection attacks
+    ///
+    /// Removes:
+    /// - Directory navigation sequences (.., /)
+    /// - Backslashes (Windows path separators)
+    /// - Other potentially dangerous characters
+    ///
+    /// - Parameter component: The path component to sanitize
+    /// - Returns: Sanitized path component safe for use in S3 keys
+    private func sanitizePathComponent(_ component: String) -> String {
+        return
+            component
+            .replacingOccurrences(of: "..", with: "")
+            .replacingOccurrences(of: "/", with: "")
+            .replacingOccurrences(of: "\\", with: "")
+            .replacingOccurrences(of: "\0", with: "")  // Null bytes
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Creates S3 object metadata for uploaded chunks
+    ///
+    /// ## Security Considerations:
+    ///
+    /// **WARNING:** S3 object metadata is accessible to anyone with read permissions on the bucket.
+    /// Ensure bucket policies restrict metadata access to authorized users only.
+    ///
+    /// **Data Sensitivity:**
+    /// - `recording-id` and `chunk-id` could enable correlation attacks to identify user recordings
+    /// - Do NOT include PII (personally identifiable information) in metadata
+    /// - Consider encrypting sensitive metadata fields if additional privacy is required
+    ///
+    /// **Compliance Requirements:**
+    /// - Audit logging should track metadata access for GDPR/CCPA compliance
+    /// - Metadata retention should align with data retention policies
+    ///
+    /// **Bucket Policy Example:**
+    /// ```json
+    /// {
+    ///   "Effect": "Allow",
+    ///   "Principal": {"AWS": "arn:aws:iam::ACCOUNT:role/meeting-recorder"},
+    ///   "Action": ["s3:GetObjectMetadata"],
+    ///   "Resource": "arn:aws:s3:::bucket/users/${aws:userid}/*"
+    /// }
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - chunkMetadata: Chunk metadata to include in S3 object metadata
+    ///   - recordingId: Recording identifier (sanitized before use in S3 keys)
+    /// - Returns: Dictionary of metadata key-value pairs for S3 object
     private func createUploadMetadata(
         chunkMetadata: ChunkMetadata,
         recordingId: String
@@ -268,21 +407,40 @@ final class S3Uploader: S3UploaderProtocol, @unchecked Sendable {
             "recording-id": recordingId,
             "chunk-id": chunkMetadata.chunkId,
             "chunk-index": String(chunkMetadata.index),
-            "duration-seconds": String(format: "%.2f", chunkMetadata.durationSeconds)
+            "duration-seconds": String(format: "%.2f", chunkMetadata.durationSeconds),
         ]
     }
 
+    /// Maps AWS SDK and system errors to UploadError types
+    ///
+    /// TODO: AWS SDK for Swift doesn't expose typed S3Error enum yet.
+    /// When available, replace string matching with structured error checking.
+    ///
+    /// - Parameter error: The error to map
+    /// - Returns: Typed UploadError for consistent error handling
     private func mapS3Error(_ error: Error) -> UploadError {
-        // Check for network errors
-        if (error as NSError).domain == NSURLErrorDomain {
+        // Check for network errors (URLSession/Foundation errors)
+        let nsError = error as NSError
+        if nsError.domain == NSURLErrorDomain {
             return .networkError("Network connection failed: \(error.localizedDescription)")
         }
 
-        // Check if error message contains credential-related keywords
+        // Check error message for credential-related keywords
+        // This is less reliable but necessary until AWS SDK provides typed errors
         let errorMessage = error.localizedDescription.lowercased()
-        if errorMessage.contains("forbidden") || errorMessage.contains("credentials") ||
-           errorMessage.contains("unauthorized") {
+        if errorMessage.contains("forbidden") || errorMessage.contains("credentials")
+            || errorMessage.contains("unauthorized") || errorMessage.contains("accessdenied")
+        {
             return .credentialsExpired
+        }
+
+        // Check for S3-specific errors in message
+        if errorMessage.contains("nosuchbucket") {
+            return .credentialsExpired
+        }
+
+        if errorMessage.contains("serviceunavailable") || errorMessage.contains("slowdown") {
+            return .networkError("S3 service temporarily unavailable")
         }
 
         return .uploadFailed(error.localizedDescription)
@@ -322,6 +480,7 @@ enum UploadError: Error, LocalizedError {
     case credentialsExpired
     case uploadFailed(String)
     case invalidChunk(String)
+    case insufficientStorage(String)
 
     var errorDescription: String? {
         switch self {
@@ -333,6 +492,8 @@ enum UploadError: Error, LocalizedError {
             return "Upload failed: \(message)"
         case .invalidChunk(let message):
             return "Invalid chunk: \(message)"
+        case .insufficientStorage(let message):
+            return "Insufficient storage: \(message)"
         }
     }
 
@@ -340,7 +501,7 @@ enum UploadError: Error, LocalizedError {
         switch self {
         case .networkError, .credentialsExpired, .uploadFailed:
             return true
-        case .invalidChunk:
+        case .invalidChunk, .insufficientStorage:
             return false
         }
     }

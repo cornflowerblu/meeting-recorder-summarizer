@@ -89,6 +89,14 @@ struct AWSConfig {
     /// S3 multipart upload chunk size (5 MB minimum)
     static let multipartChunkSize = 5 * 1024 * 1024  // 5 MB
 
+    /// Maximum concurrent part uploads per file
+    /// Limits parallel uploads within a single multipart upload
+    static let maxConcurrentPartUploads = 3
+
+    /// Maximum concurrent chunk uploads
+    /// Limits number of chunks being uploaded simultaneously
+    static let maxConcurrentChunkUploads = 3
+
     /// Maximum retry attempts for uploads
     static let maxUploadRetries = 3
 
@@ -97,6 +105,10 @@ struct AWSConfig {
 
     /// Maximum backoff delay for retries (seconds)
     static let maxBackoffDelay: TimeInterval = 60.0
+
+    /// KMS Key ID for server-side encryption
+    /// TODO: Replace with actual KMS key ARN after infrastructure setup
+    /// static let kmsKeyId = "arn:aws:kms:us-east-1:ACCOUNT:key/YOUR-KEY-ID"
 
     // MARK: - Recording Configuration
 
