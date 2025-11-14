@@ -41,6 +41,7 @@ final class UploadQueue: ObservableObject {
     // MARK: - State
 
     private var manifest: UploadManifest
+    // TODO: populate and utilize the task dictionary. 
     private var uploadTasks: [String: Task<Void, Error>] = [:]
     private var isPaused: Bool = false
     private var isProcessing: Bool = false // Prevents concurrent processQueue() calls
@@ -142,7 +143,8 @@ final class UploadQueue: ObservableObject {
             let chunkInfo = UploadManifest.ChunkInfo(
                 chunkId: chunk.chunkId,
                 path: chunk.filePath.path,
-                size: chunk.sizeBytes
+                size: chunk.sizeBytes,
+                durationSeconds: chunk.durationSeconds
             )
 
             manifest.chunks.append(chunkInfo)
@@ -442,10 +444,10 @@ final class UploadQueue: ObservableObject {
             return nil
         }
 
-        // Extract index from chunk ID
-        let components = chunkInfo.chunkId.split(separator: "-")
-        guard let indexStr = components.last,
-              let index = Int(indexStr) else {
+        // Extract index from chunk ID using robust parsing
+        let components = chunkInfo.chunkId.components(separatedBy: "-chunk-")
+        guard components.count == 2,
+              let index = Int(components[1]) else {
             return nil
         }
 
@@ -454,7 +456,7 @@ final class UploadQueue: ObservableObject {
             filePath: fileURL,
             sizeBytes: chunkInfo.size,
             checksum: chunkInfo.checksum ?? "",
-            durationSeconds: 60.0, // Default
+            durationSeconds: chunkInfo.durationSeconds ?? 60.0, // Use stored duration or fallback to 60.0
             index: index,
             recordingId: recordingId,
             createdAt: chunkInfo.createdAt
