@@ -153,7 +153,9 @@ final class UploadQueue: ObservableObject {
 
     /// Resume upload processing
     func resume() async {
-        guard status == .paused else { return }
+        // Allow resuming from both paused and idle states
+        // Idle state occurs when resuming from a persisted manifest after app restart
+        guard status == .paused || status == .idle else { return }
 
         isPaused = false
         status = .uploading

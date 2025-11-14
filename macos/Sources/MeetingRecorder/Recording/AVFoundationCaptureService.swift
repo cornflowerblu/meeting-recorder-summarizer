@@ -1,6 +1,6 @@
 import AVFoundation
 import Foundation
-import ScreenCaptureKit
+@preconcurrency import ScreenCaptureKit
 
 /// Real implementation of screen capture using AVFoundation
 ///
