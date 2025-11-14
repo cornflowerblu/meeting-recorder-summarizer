@@ -446,6 +446,7 @@ final class S3Uploader: S3UploaderProtocol, @unchecked Sendable {
         let errorMessage = error.localizedDescription.lowercased()
         if errorMessage.contains("forbidden") || errorMessage.contains("credentials")
             || errorMessage.contains("unauthorized") || errorMessage.contains("accessdenied")
+            || errorMessage.contains("expired") || errorMessage.contains("token")
         {
             return .credentialsExpired
         }

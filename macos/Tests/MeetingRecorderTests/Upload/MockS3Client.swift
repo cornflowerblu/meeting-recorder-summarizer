@@ -25,6 +25,9 @@ final class MockS3Client: S3ClientProtocol, @unchecked Sendable {
   /// Part number that should fail (1-indexed)
   var failOnPartNumber: Int?
 
+  /// Whether createMultipartUpload should fail
+  var failOnCreate: Bool = false
+
   /// Whether completeMultipartUpload should fail
   var failOnComplete: Bool = false
 
@@ -63,7 +66,8 @@ final class MockS3Client: S3ClientProtocol, @unchecked Sendable {
     lastMetadata = input.metadata
     lastEncryption = input.serverSideEncryption
 
-    if let error = errorToThrow {
+    // Check if createMultipartUpload should fail
+    if failOnCreate, let error = errorToThrow {
       throw error
     }
 
@@ -139,6 +143,7 @@ final class MockS3Client: S3ClientProtocol, @unchecked Sendable {
     lastAbortedUploadId = nil
     uploadedParts = []
     errorToThrow = nil
+    failOnCreate = false
     failOnPartNumber = nil
     failOnComplete = false
     failOnAbort = false

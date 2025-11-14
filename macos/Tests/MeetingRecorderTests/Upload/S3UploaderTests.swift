@@ -80,7 +80,7 @@ final class S3UploaderTests: XCTestCase {
 
     // Verify result
     XCTAssertEqual(result.etag, "test-etag-456")
-    XCTAssertTrue(result.s3Key.hasPrefix("users/\(testUserId)/raw-chunks/\(testRecordingId)/"))
+    XCTAssertTrue(result.s3Key.hasPrefix("users/\(testUserId!)/raw-chunks/\(testRecordingId!)/"))
     XCTAssertTrue(result.uploadDuration > 0)
   }
 
@@ -148,7 +148,7 @@ final class S3UploaderTests: XCTestCase {
     )
 
     // Then: Key follows users/{userId}/raw-chunks/{recordingId}/part-XXXX-{random}.mp4
-    let expectedPrefix = "users/\(testUserId)/raw-chunks/\(testRecordingId)/part-"
+    let expectedPrefix = "users/\(testUserId!)/raw-chunks/\(testRecordingId!)/part-"
     XCTAssertTrue(
       result.s3Key.hasPrefix(expectedPrefix),
       "S3 key should start with \(expectedPrefix)"
@@ -157,7 +157,7 @@ final class S3UploaderTests: XCTestCase {
 
     // Verify pattern: part-0001-{8chars}.mp4
     let pattern =
-      "^users/\(testUserId)/raw-chunks/\(testRecordingId)/part-\\d{4}-[a-zA-Z0-9]{8}\\.mp4$"
+      "^users/\(testUserId!)/raw-chunks/\(testRecordingId!)/part-\\d{4}-[a-zA-Z0-9]{8}\\.mp4$"
     let regex = try NSRegularExpression(pattern: pattern)
     let range = NSRange(result.s3Key.startIndex..., in: result.s3Key)
     XCTAssertNotNil(
@@ -325,6 +325,7 @@ final class S3UploaderTests: XCTestCase {
 
   func testNetworkErrorMapping() async throws {
     // Given: Network error from AWS SDK
+    mockS3Client.failOnCreate = true
     mockS3Client.errorToThrow = createNetworkError()
     let chunk = createChunkMetadata(index: 0)
 
@@ -352,6 +353,7 @@ final class S3UploaderTests: XCTestCase {
 
     for errorMessage in credentialErrors {
       mockS3Client.reset()
+      mockS3Client.failOnCreate = true
       mockS3Client.errorToThrow = createAWSError(code: 403, message: errorMessage)
       let chunk = createChunkMetadata(index: 0)
 
@@ -369,6 +371,7 @@ final class S3UploaderTests: XCTestCase {
   func testServiceUnavailableErrorMapping() async throws {
     // Given: S3 service unavailable
     let serviceError = "ServiceUnavailable: Please reduce your request rate"
+    mockS3Client.failOnCreate = true
     mockS3Client.errorToThrow = createAWSError(code: 503, message: serviceError)
     let chunk = createChunkMetadata(index: 0)
 
@@ -387,6 +390,7 @@ final class S3UploaderTests: XCTestCase {
 
   func testGenericUploadFailureMapping() async throws {
     // Given: Generic S3 error
+    mockS3Client.failOnCreate = true
     mockS3Client.errorToThrow = createAWSError(
       code: 500,
       message: "InternalError: Something went wrong"
