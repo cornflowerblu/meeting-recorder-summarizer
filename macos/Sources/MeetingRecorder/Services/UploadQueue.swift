@@ -443,10 +443,10 @@ final class UploadQueue: ObservableObject {
             return nil
         }
 
-        // Extract index from chunk ID
-        let components = chunkInfo.chunkId.split(separator: "-")
-        guard let indexStr = components.last,
-              let index = Int(indexStr) else {
+        // Extract index from chunk ID using robust parsing
+        let components = chunkInfo.chunkId.components(separatedBy: "-chunk-")
+        guard components.count == 2,
+              let index = Int(components[1]) else {
             return nil
         }
 

@@ -240,15 +240,12 @@ final class S3Uploader: S3UploaderProtocol, @unchecked Sendable {
             let offset = Int64(partNumber - 1) * partSize
             let length = min(partSize, fileSize - offset)
 
-            // Read part data
-            try fileHandle.seek(toOffset: UInt64(offset))
-            guard let partData = try fileHandle.read(upToCount: Int(length)) else {
-                throw UploadError.invalidChunk("Failed to read part \(partNumber)")
-            }
+            // Stream part data directly from disk (avoid loading into memory)
+            let bufferedStream = BufferedStream(fileURL: fileURL, offset: offset, length: length)
 
             // Upload part
             let input = UploadPartInput(
-                body: .data(partData),
+                body: .stream(bufferedStream),
                 bucket: bucketName,
                 key: key,
                 partNumber: partNumber,
