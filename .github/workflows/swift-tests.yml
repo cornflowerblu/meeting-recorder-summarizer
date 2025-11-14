@@ -1,0 +1,148 @@
+name: Swift Tests
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'macos/**'
+      - '.github/workflows/swift-tests.yml'
+  push:
+    branches: [ main ]
+    paths:
+      - 'macos/**'
+      - '.github/workflows/swift-tests.yml'
+
+jobs:
+  test:
+    name: Run Swift Tests
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '15.2'
+
+      - name: Swift Version
+        run: swift --version
+
+      - name: Cache Swift packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            macos/.build
+            ~/Library/Caches/org.swift.swiftpm
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Resolve dependencies
+        working-directory: macos
+        run: swift package resolve
+
+      - name: Build
+        working-directory: macos
+        run: swift build -v
+
+      - name: Run tests
+        working-directory: macos
+        run: swift test -v 2>&1 | tee test-output.txt
+
+      - name: Test Summary
+        if: always()
+        working-directory: macos
+        run: |
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Extract test summary
+          if grep -q "Test Suite.*passed" test-output.txt; then
+            PASSED=$(grep "Executed.*tests.*with.*failures" test-output.txt | tail -1 || echo "")
+            echo "✅ **Tests Passed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "$PASSED" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Tests Failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "See logs for details" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: macos/test-output.txt
+          retention-days: 30
+
+  lint:
+    name: SwiftLint
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Run SwiftLint
+        working-directory: macos
+        run: |
+          swiftlint --reporter github-actions-logging || true
+          swiftlint > swiftlint-results.txt || true
+
+      - name: SwiftLint Summary
+        if: always()
+        working-directory: macos
+        run: |
+          echo "## SwiftLint Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -s swiftlint-results.txt ]; then
+            VIOLATIONS=$(wc -l < swiftlint-results.txt | tr -d ' ')
+            if [ "$VIOLATIONS" -eq 0 ]; then
+              echo "✅ **No violations found**" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ **$VIOLATIONS violations found**" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo '<details>' >> $GITHUB_STEP_SUMMARY
+              echo '<summary>View violations</summary>' >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              head -50 swiftlint-results.txt >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo '</details>' >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "✅ **No violations found**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload SwiftLint results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: swiftlint-results
+          path: macos/swiftlint-results.txt
+          retention-days: 30
+
+  status-check:
+    name: CI Status Check
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "❌ Tests failed or were cancelled"
+            exit 1
+          fi
+
+          echo "✅ All checks passed"
