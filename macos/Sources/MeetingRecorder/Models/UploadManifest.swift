@@ -143,6 +143,9 @@ extension UploadManifest {
         /// SHA-256 checksum (computed after writing)
         var checksum: String?
 
+        /// Duration of this chunk in seconds (optional for backward compatibility)
+        var durationSeconds: TimeInterval?
+
         /// Upload status
         var status: ChunkStatus
 
@@ -161,11 +164,12 @@ extension UploadManifest {
         // Codable conformance
         var id: String { chunkId }
 
-        init(chunkId: String, path: String, size: Int64) {
+        init(chunkId: String, path: String, size: Int64, durationSeconds: TimeInterval? = nil) {
             self.chunkId = chunkId
             self.path = path
             self.size = size
             self.checksum = nil
+            self.durationSeconds = durationSeconds
             self.status = .pending
             self.attempts = 0
             self.lastError = nil

@@ -1,0 +1,55 @@
+name: Debug Build
+
+on:
+  workflow_dispatch:  # Manual trigger only
+
+jobs:
+  debug:
+    name: Debug Build Environment
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: System Info
+        run: |
+          echo "=== macOS Version ==="
+          sw_vers
+          echo ""
+          echo "=== Available Xcodes ==="
+          ls -la /Applications/ | grep Xcode
+          echo ""
+          echo "=== Current Xcode ==="
+          xcodebuild -version
+          echo ""
+          echo "=== Swift Version (before setup) ==="
+          swift --version
+
+      - name: Setup Xcode 16.1
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.1'
+
+      - name: Xcode & Swift After Setup
+        run: |
+          echo "=== Xcode After Setup ==="
+          xcodebuild -version
+          echo ""
+          echo "=== Swift After Setup ==="
+          swift --version
+          echo ""
+          echo "=== Swift Package Manager ==="
+          swift package --version
+
+      - name: Try Build
+        working-directory: macos
+        run: |
+          echo "=== Resolving Dependencies ==="
+          swift package resolve
+          echo ""
+          echo "=== Package Info ==="
+          swift package describe
+          echo ""
+          echo "=== Building ==="
+          swift build -v 2>&1 | tail -50

@@ -43,6 +43,11 @@ let package = Package(
             name: "MeetingRecorderUITests",
             dependencies: ["MeetingRecorder"],
             path: "Tests/MeetingRecorderUITests"
+        ),
+        .testTarget(
+            name: "MeetingRecorderIntegrationTests",
+            dependencies: ["MeetingRecorder"],
+            path: "Tests/MeetingRecorderIntegrationTests"
         )
     ]
 )
