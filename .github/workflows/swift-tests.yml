@@ -45,11 +45,13 @@ jobs:
 
       - name: Build
         working-directory: macos
-        run: swift build -v
+        timeout-minutes: 20
+        run: swift build -c release
 
       - name: Run tests
         working-directory: macos
-        run: swift test -v 2>&1 | tee test-output.txt
+        timeout-minutes: 15
+        run: swift test 2>&1 | tee test-output.txt
 
       - name: Test Summary
         if: always()
