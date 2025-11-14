@@ -2,6 +2,7 @@ import SwiftUI
 import AWSS3
 import AWSDynamoDB
 import FirebaseCore
+import GoogleSignIn
 
 @main
 struct MeetingRecorderApp: App {
@@ -9,25 +10,76 @@ struct MeetingRecorderApp: App {
 
     init() {
         // Configure Firebase on app launch
-        // Requires GoogleService-Info.plist in Resources directory
-        // See: macos/Sources/MeetingRecorder/Resources/README.md
-        do {
-            FirebaseApp.configure()
-            Logger.app.info(
-                "Firebase configured successfully",
-                file: #file,
-                function: #function,
-                line: #line
-            )
-        } catch {
+        // Swift Package Manager stores resources in Bundle.module, not Bundle.main
+        // So we need to manually load the plist and configure Firebase
+        configureFirebase()
+    }
+
+    private func configureFirebase() {
+        // Try to load GoogleService-Info.plist from Bundle.module
+        guard let plistURL = Bundle.module.url(forResource: "GoogleService-Info", withExtension: "plist") else {
             Logger.app.error(
-                "Firebase configuration failed. Did you add GoogleService-Info.plist? See Resources/README.md for setup instructions.",
-                error: error,
+                "GoogleService-Info.plist not found in Resources directory. See Resources/README.md for setup instructions.",
                 file: #file,
                 function: #function,
                 line: #line
             )
+            return
         }
+
+        guard let plistData = try? Data(contentsOf: plistURL),
+              let plistDict = try? PropertyListSerialization.propertyList(from: plistData, options: [], format: nil) as? [String: Any] else {
+            Logger.app.error(
+                "Failed to read GoogleService-Info.plist",
+                file: #file,
+                function: #function,
+                line: #line
+            )
+            return
+        }
+
+        // Extract required Firebase configuration values
+        guard let apiKey = plistDict["API_KEY"] as? String,
+              let gcmSenderID = plistDict["GCM_SENDER_ID"] as? String,
+              let googleAppID = plistDict["GOOGLE_APP_ID"] as? String,
+              let projectID = plistDict["PROJECT_ID"] as? String else {
+            Logger.app.error(
+                "GoogleService-Info.plist is missing required keys",
+                file: #file,
+                function: #function,
+                line: #line
+            )
+            return
+        }
+
+        // Create FirebaseOptions manually
+        let options = FirebaseOptions(googleAppID: googleAppID, gcmSenderID: gcmSenderID)
+        options.apiKey = apiKey
+        options.projectID = projectID
+
+        // Optional fields
+        if let bundleID = plistDict["BUNDLE_ID"] as? String {
+            options.bundleID = bundleID
+        }
+        if let clientID = plistDict["CLIENT_ID"] as? String {
+            options.clientID = clientID
+        }
+        if let databaseURL = plistDict["DATABASE_URL"] as? String {
+            options.databaseURL = databaseURL
+        }
+        if let storageBucket = plistDict["STORAGE_BUCKET"] as? String {
+            options.storageBucket = storageBucket
+        }
+
+        // Configure Firebase with our custom options
+        FirebaseApp.configure(options: options)
+
+        Logger.app.info(
+            "Firebase configured successfully for project: \(projectID)",
+            file: #file,
+            function: #function,
+            line: #line
+        )
     }
 
     var body: some Scene {
@@ -39,6 +91,17 @@ struct MeetingRecorderApp: App {
             }
         }
         .windowResizability(.contentSize)
+        .onOpenURL { url in
+            // Handle Google Sign-In OAuth redirect
+            GIDSignIn.sharedInstance.handle(url)
+
+            Logger.app.info(
+                "Received OAuth redirect URL: \(url.absoluteString)",
+                file: #file,
+                function: #function,
+                line: #line
+            )
+        }
         .commands {
             // TODO: Add menu commands (Preferences, About, etc.)
         }

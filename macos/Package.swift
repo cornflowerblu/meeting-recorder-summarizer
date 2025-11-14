@@ -17,6 +17,8 @@ let package = Package(
     dependencies: [
         // Firebase Auth for authentication
         .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "10.0.0"),
+        // Google Sign-In for OAuth authentication
+        .package(url: "https://github.com/google/GoogleSignIn-iOS.git", from: "7.0.0"),
         // AWS SDK for Swift - S3, DynamoDB, and STS
         .package(url: "https://github.com/awslabs/aws-sdk-swift.git", from: "0.40.0")
     ],
@@ -25,6 +27,7 @@ let package = Package(
             name: "MeetingRecorder",
             dependencies: [
                 .product(name: "FirebaseAuth", package: "firebase-ios-sdk"),
+                .product(name: "GoogleSignIn", package: "GoogleSignIn-iOS"),
                 .product(name: "AWSS3", package: "aws-sdk-swift"),
                 .product(name: "AWSDynamoDB", package: "aws-sdk-swift"),
                 .product(name: "AWSSTS", package: "aws-sdk-swift")

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>com.slingshotgroup.interviewcompanion</string>
+	<key>CFBundleName</key>
+	<string>Interview Companion</string>
+	<key>CFBundleDisplayName</key>
+	<string>Interview Companion</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2025 Slingshot Group. All rights reserved.</string>
+
+	<!-- URL Schemes for Google Sign-In OAuth redirect -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>Google OAuth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.1030198293365-hfggqlto8bg1oj8o4s2cmvj8p165m4k3</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- Screen Recording Permission -->
+	<key>NSScreenCaptureDescription</key>
+	<string>Interview Companion needs screen recording permission to capture your screen during interviews.</string>
+
+	<!-- Microphone Permission (if needed in the future) -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Interview Companion needs microphone access to record audio during interviews.</string>
+</dict>
+</plist>
