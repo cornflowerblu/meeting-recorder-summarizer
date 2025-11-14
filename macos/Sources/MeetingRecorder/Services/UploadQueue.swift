@@ -41,6 +41,7 @@ final class UploadQueue: ObservableObject {
     // MARK: - State
 
     private var manifest: UploadManifest
+    // TODO: populate and utilize the task dictionary. 
     private var uploadTasks: [String: Task<Void, Error>] = [:]
     private var isPaused: Bool = false
     private var isProcessing: Bool = false // Prevents concurrent processQueue() calls
