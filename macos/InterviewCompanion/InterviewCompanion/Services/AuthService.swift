@@ -1,10 +1,6 @@
-import AppKit
 import AWSSTS
-import Combine
 import FirebaseAuth
-import FirebaseCore
 import Foundation
-import GoogleSignIn
 import Security
 
 /// Service for managing user authentication and AWS credentials
@@ -35,7 +31,7 @@ final class AuthService: ObservableObject {
     private var credentialRefreshTimer: Timer?
 
     // Keychain keys
-    private let keychainServiceName = "com.slingshotgroup.interviewcompanion.aws"
+    private let keychainServiceName = "com.meetingrecorder.aws"
     private let accessKeyIdKey = "aws_access_key_id"
     private let secretAccessKeyKey = "aws_secret_access_key"
     private let sessionTokenKey = "aws_session_token"
@@ -65,6 +61,14 @@ final class AuthService: ObservableObject {
 
     /// Sign in with Google using Firebase
     func signInWithGoogle() async throws {
+        // TODO: Implement Google Sign-In flow
+        // For now, this is a placeholder that demonstrates the flow
+
+        // 1. Present Google Sign-In UI (requires GoogleSignIn SDK)
+        // 2. Get Google credential
+        // 3. Sign in to Firebase with Google credential
+        // 4. Exchange Firebase token for AWS credentials
+
         Logger.auth.info(
             "Sign in with Google started",
             file: #file,
@@ -72,64 +76,9 @@ final class AuthService: ObservableObject {
             line: #line
         )
 
-        do {
-            // Configure Google Sign-In with client ID from GoogleService-Info.plist
-            guard let clientID = Auth.auth().app?.options.clientID else {
-                throw AuthError.configurationError("Failed to get Firebase client ID")
-            }
-
-            let config = GIDConfiguration(clientID: clientID)
-            GIDSignIn.sharedInstance.configuration = config
-
-            // Sign in with Google - this will open a browser window
-            // On macOS, we need to provide the presenting window
-            guard let window = NSApplication.shared.windows.first else {
-                throw AuthError.configurationError("No window available for sign-in")
-            }
-
-            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: window)
-            let user = result.user
-
-            // Get ID token and access token
-            guard let idToken = user.idToken?.tokenString else {
-                throw AuthError.firebaseError("Failed to get Google ID token")
-            }
-
-            let accessToken = user.accessToken.tokenString
-
-            // Create Firebase credential with Google tokens
-            let credential = GoogleAuthProvider.credential(
-                withIDToken: idToken,
-                accessToken: accessToken
-            )
-
-            // Sign in to Firebase with Google credential
-            let authResult = try await Auth.auth().signIn(with: credential)
-
-            Logger.auth.info(
-                "Signed in with Google: \(authResult.user.email ?? "no-email")",
-                file: #file,
-                function: #function,
-                line: #line
-            )
-
-            // Exchange Firebase token for AWS credentials
-            // Lambda will emit user.signed_in event to EventBridge
-            try await exchangeTokenForCredentials(user: authResult.user)
-
-            self.currentUser = authResult.user
-            self.userId = authResult.user.uid
-            self.isAuthenticated = true
-
-        } catch let error as NSError {
-            Logger.auth.error(
-                "Google sign-in failed: \(error.localizedDescription)",
-                file: #file,
-                function: #function,
-                line: #line
-            )
-            throw AuthError.firebaseError(error.localizedDescription)
-        }
+        // For MVP, we'll use email/password sign-in as a simpler alternative
+        // to Google Sign-In which requires additional setup
+        throw AuthError.notImplemented("Google Sign-In requires additional configuration")
     }
 
     /// Sign in with email and password (for testing)
@@ -145,7 +94,6 @@ final class AuthService: ObservableObject {
             )
 
             // Exchange Firebase token for AWS credentials
-            // Lambda will emit user.signed_in event to EventBridge
             try await exchangeTokenForCredentials(user: result.user)
 
             self.currentUser = result.user
@@ -176,7 +124,6 @@ final class AuthService: ObservableObject {
             )
 
             // Exchange Firebase token for AWS credentials
-            // Lambda will emit user.signed_in event to EventBridge
             try await exchangeTokenForCredentials(user: result.user)
 
             self.currentUser = result.user
@@ -305,43 +252,16 @@ final class AuthService: ObservableObject {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        // Build request body with user profile data for EventBridge event
-        var requestBody: [String: String] = [
+        let requestBody = [
             "id_token": idToken,
             "session_name": user.uid,
         ]
-
-        // Add optional user profile fields
-        if let email = user.email {
-            requestBody["email"] = email
-        }
-        if let displayName = user.displayName {
-            requestBody["display_name"] = displayName
-        }
-        if let photoURL = user.photoURL?.absoluteString {
-            requestBody["photo_url"] = photoURL
-        }
-        // Get provider from first provider data entry
-        if let providerId = user.providerData.first?.providerID {
-            requestBody["provider"] = providerId
-        }
-
         request.httpBody = try JSONEncoder().encode(requestBody)
 
-        var (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AuthError.networkError("Invalid response")
-        }
-
-        // Check if response is wrapped in API Gateway structure
-        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-           let bodyString = json["body"] as? String {
-            // API Gateway wrapped response - extract the body
-            guard let bodyData = bodyString.data(using: .utf8) else {
-                throw AuthError.tokenExchangeFailed("Failed to extract body from API Gateway response")
-            }
-            data = bodyData
         }
 
         guard httpResponse.statusCode == 200 else {
@@ -358,19 +278,7 @@ final class AuthService: ObservableObject {
 
         // Parse response
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601  // Handle ISO8601 date strings
-        let exchangeResponse: TokenExchangeResponse
-        do {
-            exchangeResponse = try decoder.decode(TokenExchangeResponse.self, from: data)
-        } catch {
-            Logger.auth.error(
-                "Failed to parse Lambda response: \(error.localizedDescription)",
-                file: #file,
-                function: #function,
-                line: #line
-            )
-            throw AuthError.tokenExchangeFailed("Failed to parse response: \(error.localizedDescription)")
-        }
+        let exchangeResponse = try decoder.decode(TokenExchangeResponse.self, from: data)
 
         // Store credentials in Keychain
         storeCredentials(exchangeResponse.credentials)
