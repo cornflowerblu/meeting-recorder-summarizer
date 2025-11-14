@@ -343,13 +343,9 @@ final class UploadQueueTests: XCTestCase {
             recordingId: testRecordingId
         )
 
-        // Then - Should not throw, should handle gracefully
-        do {
-            await newQueue.resume()
-            // Success - corrupted manifest was handled
-        } catch {
-            XCTFail("Should handle corrupted manifest gracefully: \(error)")
-        }
+        // Then - Should not crash, should handle gracefully
+        await newQueue.resume()
+        // Success - corrupted manifest was handled without crashing
     }
 
     // MARK: - Progress Tracking Tests
