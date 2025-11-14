@@ -200,7 +200,6 @@ final class RuntimeConfig: @unchecked Sendable {
     private var cachedS3BucketName: String?
     private var cachedDynamoDBTableName: String?
     private let queue = DispatchQueue(label: "com.slingshotgroup.interviewcompanion.runtimeconfig")
-    private var ssmClient: SSMClient?
 
     private init() {
         // Initialize SSM client for parameter fetching

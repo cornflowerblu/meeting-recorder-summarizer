@@ -31,7 +31,7 @@ final class AuthService: ObservableObject {
     private var credentialRefreshTimer: Timer?
 
     // Keychain keys
-    private let keychainServiceName = "com.meetingrecorder.aws"
+    private let keychainServiceName = "com.slingshotgroup.interviewcompanion.aws"
     private let accessKeyIdKey = "aws_access_key_id"
     private let secretAccessKeyKey = "aws_secret_access_key"
     private let sessionTokenKey = "aws_session_token"
