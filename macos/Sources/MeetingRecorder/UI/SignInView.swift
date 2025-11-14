@@ -54,7 +54,7 @@ struct SignInView: View {
                 .font(.system(size: 64))
                 .foregroundColor(.blue)
 
-            Text("Meeting Recorder")
+            Text("Interview Companion")
                 .font(.largeTitle)
                 .fontWeight(.bold)
 
