@@ -1,19 +1,29 @@
 import SwiftUI
 import AWSS3
 import AWSDynamoDB
+import FirebaseCore
 
 @main
 struct MeetingRecorderApp: App {
-    // Placeholder for future authentication
-    @State private var isAuthenticated: Bool = true  // TODO: Replace with real auth
-    @State private var currentUserId: String = "demo-user"  // TODO: Replace with real user ID
+    @StateObject private var authService = AuthService()
+
+    init() {
+        // Configure Firebase on app launch
+        FirebaseApp.configure()
+        Logger.app.info(
+            "Firebase configured",
+            file: #file,
+            function: #function,
+            line: #line
+        )
+    }
 
     var body: some Scene {
         WindowGroup {
-            if isAuthenticated {
-                MainView(userId: currentUserId)
+            if authService.isAuthenticated, let userId = authService.userId {
+                MainView(userId: userId, authService: authService)
             } else {
-                LoginPlaceholderView()
+                SignInView(authService: authService)
             }
         }
         .windowResizability(.contentSize)
@@ -28,13 +38,15 @@ struct MeetingRecorderApp: App {
 @MainActor
 struct MainView: View {
     let userId: String
+    @ObservedObject var authService: AuthService
 
     @StateObject private var screenRecorder: ScreenRecorder
     @StateObject private var uploadQueue: UploadQueue
     @StateObject private var catalogService: CatalogService
 
-    init(userId: String) {
+    init(userId: String, authService: AuthService) {
         self.userId = userId
+        self.authService = authService
 
         // Initialize services
         let captureService = AVFoundationCaptureService()
@@ -44,10 +56,23 @@ struct MainView: View {
             storageService: storageService
         )
 
-        // Create AWS clients (will use credentials from environment or IAM role)
-        // TODO: Replace with STS credentials from Firebase auth exchange
-        let s3Client = try! S3Client(region: ProcessInfo.processInfo.environment["AWS_REGION"] ?? "us-east-1")
-        let dynamoDBClient = try! DynamoDBClient(region: ProcessInfo.processInfo.environment["AWS_REGION"] ?? "us-east-1")
+        // TODO: Implement STS credential provider after Lambda deployment
+        // For now, AWS SDK will use credentials from:
+        // 1. Environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN)
+        // 2. AWS credentials file (~/.aws/credentials)
+        // 3. IAM role (if running on EC2/ECS)
+        //
+        // After Lambda deployment, we need to:
+        // 1. Get credentials from AuthService.getAWSCredentials()
+        // 2. Set them as environment variables before AWS client initialization
+        // 3. Refresh environment variables before credential expiry
+        //
+        // AWS SDK for Swift doesn't have a public CredentialsProvider protocol,
+        // so we'll need to use environment variables or implement a custom solution
+
+        // Create AWS clients using default credential provider chain
+        let s3Client = try! S3Client(region: AWSConfig.region)
+        let dynamoDBClient = try! DynamoDBClient(region: AWSConfig.region)
 
         let uploader = S3Uploader(s3Client: s3Client)
         let uploadQueue = UploadQueue(
@@ -64,6 +89,13 @@ struct MainView: View {
         _screenRecorder = StateObject(wrappedValue: screenRecorder)
         _uploadQueue = StateObject(wrappedValue: uploadQueue)
         _catalogService = StateObject(wrappedValue: catalogService)
+
+        Logger.app.info(
+            "AWS clients initialized for user: \(userId)",
+            file: #file,
+            function: #function,
+            line: #line
+        )
     }
 
     var body: some View {
@@ -82,45 +114,37 @@ struct MainView: View {
                 }
         }
         .frame(minWidth: 600, minHeight: 700)
-    }
-}
-
-// MARK: - Login Placeholder
-
-struct LoginPlaceholderView: View {
-    var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "person.circle.fill")
-                .font(.system(size: 64))
-                .foregroundColor(.blue)
-
-            Text("Meeting Recorder")
-                .font(.title)
-                .fontWeight(.bold)
-
-            Text("Sign in to continue")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-
-            Button("Sign In with Google") {
-                // TODO: Implement Firebase Google Sign-In
-                print("Sign in tapped")
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Menu {
+                    Text("Signed in as: \(authService.currentUser?.email ?? userId)")
+                    Divider()
+                    Button("Sign Out") {
+                        do {
+                            try authService.signOut()
+                        } catch {
+                            Logger.app.error(
+                                "Sign out failed: \(error.localizedDescription)",
+                                file: #file,
+                                function: #function,
+                                line: #line
+                            )
+                        }
+                    }
+                } label: {
+                    Image(systemName: "person.circle")
+                }
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-
-            Text("Firebase authentication coming soon")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.top, 20)
         }
-        .frame(width: 400, height: 300)
-        .padding()
     }
 }
 
 // MARK: - Preview
 
-#Preview {
-    MainView(userId: "preview-user")
+#Preview("Main View") {
+    MainView(userId: "preview-user", authService: AuthService())
+}
+
+#Preview("Sign In") {
+    SignInView(authService: AuthService())
 }

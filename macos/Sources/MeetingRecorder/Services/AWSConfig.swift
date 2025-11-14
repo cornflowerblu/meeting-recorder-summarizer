@@ -73,11 +73,12 @@ struct AWSConfig {
 
     /// Firebase auth exchange Lambda URL
     /// This Lambda exchanges Firebase ID tokens for AWS credentials
+    /// Deployed via Terraform - see infra/terraform/api_gateway.tf
     static let authExchangeEndpoint: String = {
         #if DEBUG
-            return "https://dev-auth-exchange.execute-api.us-east-1.amazonaws.com/auth/exchange"
+            return "https://2d9wdaov4i.execute-api.us-east-1.amazonaws.com/auth/exchange"
         #else
-            return "https://auth-exchange.execute-api.us-east-1.amazonaws.com/auth/exchange"
+            return "https://2d9wdaov4i.execute-api.us-east-1.amazonaws.com/auth/exchange" // TODO: Deploy separate prod endpoint
         #endif
     }()
 
