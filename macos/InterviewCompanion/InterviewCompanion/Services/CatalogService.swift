@@ -1,4 +1,5 @@
 import AWSDynamoDB
+import Combine
 import Foundation
 
 /// Service for managing recording catalog in DynamoDB
@@ -332,7 +333,7 @@ protocol DynamoDBClientProtocol: Sendable {
     func query(input: QueryInput) async throws -> QueryOutput
 }
 
-extension AWSDynamoDB.DynamoDBClient: @unchecked Sendable, DynamoDBClientProtocol {}
+extension AWSDynamoDB.DynamoDBClient: @unchecked @retroactive Sendable, DynamoDBClientProtocol {}
 
 // MARK: - AttributeValue Helpers
 

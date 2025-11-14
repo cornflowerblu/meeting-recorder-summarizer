@@ -1,6 +1,8 @@
 import AppKit
 import AWSSTS
+import Combine
 import FirebaseAuth
+import FirebaseCore
 import Foundation
 import GoogleSignIn
 import Security
@@ -306,10 +308,20 @@ final class AuthService: ObservableObject {
         ]
         request.httpBody = try JSONEncoder().encode(requestBody)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        var (data, response) = try await URLSession.shared.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AuthError.networkError("Invalid response")
+        }
+
+        // Check if response is wrapped in API Gateway structure
+        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let bodyString = json["body"] as? String {
+            // API Gateway wrapped response - extract the body
+            guard let bodyData = bodyString.data(using: .utf8) else {
+                throw AuthError.tokenExchangeFailed("Failed to extract body from API Gateway response")
+            }
+            data = bodyData
         }
 
         guard httpResponse.statusCode == 200 else {
@@ -326,7 +338,19 @@ final class AuthService: ObservableObject {
 
         // Parse response
         let decoder = JSONDecoder()
-        let exchangeResponse = try decoder.decode(TokenExchangeResponse.self, from: data)
+        decoder.dateDecodingStrategy = .iso8601  // Handle ISO8601 date strings
+        let exchangeResponse: TokenExchangeResponse
+        do {
+            exchangeResponse = try decoder.decode(TokenExchangeResponse.self, from: data)
+        } catch {
+            Logger.auth.error(
+                "Failed to parse Lambda response: \(error.localizedDescription)",
+                file: #file,
+                function: #function,
+                line: #line
+            )
+            throw AuthError.tokenExchangeFailed("Failed to parse response: \(error.localizedDescription)")
+        }
 
         // Store credentials in Keychain
         storeCredentials(exchangeResponse.credentials)

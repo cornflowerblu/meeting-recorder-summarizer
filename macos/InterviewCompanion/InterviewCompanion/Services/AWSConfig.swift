@@ -1,6 +1,4 @@
 import Foundation
-import AWSSSM
-import AWSClientRuntime
 
 /// AWS Configuration Constants
 /// MR-18 (T011)
@@ -58,11 +56,15 @@ struct AWSConfig {
     // MARK: - DynamoDB Configuration
 
     /// DynamoDB table name for meetings metadata
-    /// Fetched from SSM Parameter Store: /meeting-recorder/{environment}/dynamodb/meetings-table-name
+    /// Fetched from SSM Parameter Store: /meeting-recorder/{environment}/dynamodb/table-name
     static var dynamoDBTableName: String {
         return RuntimeConfig.shared.dynamoDBTableName
     }
 
+    /// DynamoDB partition key format
+    static func dynamoDBPartitionKey(userId: String, recordingId: String) -> String {
+        return "\(userId)#\(recordingId)"
+    }
 
     /// DynamoDB sort key for metadata items
     static let dynamoDBMetadataSortKey = "METADATA"
@@ -201,19 +203,7 @@ final class RuntimeConfig: @unchecked Sendable {
     private var cachedDynamoDBTableName: String?
     private let queue = DispatchQueue(label: "com.slingshotgroup.interviewcompanion.runtimeconfig")
 
-    private init() {
-        // Initialize SSM client for parameter fetching
-        do {
-            ssmClient = try SSMClient(region: AWSConfig.region)
-        } catch {
-            Logger.app.error(
-                "Failed to initialize SSM client: \(error.localizedDescription)",
-                file: #file,
-                function: #function,
-                line: #line
-            )
-        }
-    }
+    private init() {}
 
     /// S3 bucket name from Parameter Store
     var s3BucketName: String {
@@ -234,14 +224,13 @@ final class RuntimeConfig: @unchecked Sendable {
             // Fallback to hardcoded value with warning
             Logger.app.warning(
                 "Failed to fetch S3 bucket name from Parameter Store, using fallback")
-            // TODO: Implement SSM parameter fetching - this is the actual deployed bucket
-            let fallback = "meeting-recorder-\(AWSConfig.environment)-recordings-8bc998ca"
+            let fallback = "meeting-recorder-\(AWSConfig.environment)-recordings"
             cachedS3BucketName = fallback
             return fallback
         }
     }
 
-    /// DynamoDB meetings table name from Parameter Store
+    /// DynamoDB table name from Parameter Store
     var dynamoDBTableName: String {
         return queue.sync {
             if let cached = cachedDynamoDBTableName {
@@ -249,7 +238,7 @@ final class RuntimeConfig: @unchecked Sendable {
             }
 
             // Fetch from SSM Parameter Store
-            let parameterName = "/meeting-recorder/\(AWSConfig.environment)/dynamodb/meetings-table-name"
+            let parameterName = "/meeting-recorder/\(AWSConfig.environment)/dynamodb/table-name"
 
             if let value = fetchParameter(name: parameterName) {
                 cachedDynamoDBTableName = value
@@ -258,66 +247,39 @@ final class RuntimeConfig: @unchecked Sendable {
 
             // Fallback to hardcoded value with warning
             Logger.app.warning(
-                "Failed to fetch DynamoDB meetings table name from Parameter Store, using fallback",
-                file: #file,
-                function: #function,
-                line: #line
-            )
+                "Failed to fetch DynamoDB table name from Parameter Store, using fallback")
             let fallback = "meeting-recorder-\(AWSConfig.environment)-meetings"
             cachedDynamoDBTableName = fallback
             return fallback
         }
     }
 
-    /// DynamoDB users table name from Parameter Store
-
     /// Fetch a parameter from SSM Parameter Store
-    /// Uses a semaphore to block until the async AWS call completes
-    /// Returns nil if SSM client is not available or fetch fails
+    /// TODO: Implement actual SSM API call using AWS SDK for Swift
+    /// For now, returns nil to trigger fallback behavior
     private func fetchParameter(name: String) -> String? {
-        guard let ssmClient = ssmClient else {
-            Logger.app.warning(
-                "SSM client not initialized, cannot fetch parameter: \(name)",
-                file: #file,
-                function: #function,
-                line: #line
-            )
-            return nil
-        }
+        // IMPLEMENTATION NOTE:
+        // This needs to use the AWS SDK for Swift to call SSM GetParameter
+        // Example (pseudocode):
+        //
+        // import AWSSSM
+        //
+        // let ssmClient = SSMClient(region: AWSConfig.region)
+        // let input = GetParameterInput(name: name, withDecryption: false)
+        //
+        // do {
+        //     let output = try await ssmClient.getParameter(input: input)
+        //     return output.parameter?.value
+        // } catch {
+        //     Logger.app.error("Failed to fetch parameter from SSM", error: error)
+        //     return nil
+        // }
+        //
+        // For Phase 2, we'll return nil to use fallback values
+        // This will be implemented in Phase 3 when we integrate AWS SDK
 
-        let semaphore = DispatchSemaphore(value: 0)
-        var result: String?
-
-        Task {
-            do {
-                let input = GetParameterInput(name: name, withDecryption: false)
-                let output = try await ssmClient.getParameter(input: input)
-
-                result = output.parameter?.value
-
-                if let value = result {
-                    Logger.app.info(
-                        "Successfully fetched parameter: \(name) = \(value)",
-                        file: #file,
-                        function: #function,
-                        line: #line
-                    )
-                }
-            } catch {
-                Logger.app.error(
-                    "Failed to fetch parameter \(name): \(error.localizedDescription)",
-                    file: #file,
-                    function: #function,
-                    line: #line
-                )
-            }
-
-            semaphore.signal()
-        }
-
-        // Wait for the async call to complete (with 5 second timeout)
-        _ = semaphore.wait(timeout: .now() + 5)
-        return result
+        Logger.app.debug("SSM fetch not yet implemented for parameter: \(name)")
+        return nil
     }
 
     /// Clear cached values (useful for testing)

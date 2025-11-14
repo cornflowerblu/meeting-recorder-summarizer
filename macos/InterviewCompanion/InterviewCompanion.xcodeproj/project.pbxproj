@@ -7,15 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		FD38BBD42EC81B58001EC309 /* AWSEventBridge in Frameworks */ = {isa = PBXBuildFile; productRef = FD38BBD32EC81B58001EC309 /* AWSEventBridge */; };
-		FD5BFF432EC8135B00566C0C /* IntegrationTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF422EC8135B00566C0C /* IntegrationTests.xctestplan */; };
-		FD5BFF452EC8140200566C0C /* UITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF442EC8140200566C0C /* UITests.xctestplan */; };
-		FD5BFF472EC8141F00566C0C /* UnitTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF462EC8141F00566C0C /* UnitTests.xctestplan */; };
-		FD7B51662EC8180000B126A1 /* AllTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD7B51652EC8180000B126A1 /* AllTests.xctestplan */; };
-		FD7FD0AF2EC829CE007B6E02 /* AWSSSM in Frameworks */ = {isa = PBXBuildFile; productRef = FD7FD0AE2EC829CE007B6E02 /* AWSSSM */; };
-		FD7FD0B12EC82D95007B6E02 /* AWSDynamoDB in Frameworks */ = {isa = PBXBuildFile; productRef = FD7FD0B02EC82D95007B6E02 /* AWSDynamoDB */; };
 		FDEE5D722EC7E616002959B6 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = FDEE5D712EC7E616002959B6 /* FirebaseAuth */; };
 		FDEE5D752EC7E684002959B6 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = FDEE5D742EC7E684002959B6 /* GoogleSignIn */; };
+		FDEE5D782EC7E777002959B6 /* AWSDynamoDB in Frameworks */ = {isa = PBXBuildFile; productRef = FDEE5D772EC7E777002959B6 /* AWSDynamoDB */; };
 		FDEE5D7A2EC7E777002959B6 /* AWSS3 in Frameworks */ = {isa = PBXBuildFile; productRef = FDEE5D792EC7E777002959B6 /* AWSS3 */; };
 		FDEE5D7C2EC7E777002959B6 /* AWSSTS in Frameworks */ = {isa = PBXBuildFile; productRef = FDEE5D7B2EC7E777002959B6 /* AWSSTS */; };
 /* End PBXBuildFile section */
@@ -38,10 +32,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		FD5BFF422EC8135B00566C0C /* IntegrationTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = IntegrationTests.xctestplan; sourceTree = "<group>"; };
-		FD5BFF442EC8140200566C0C /* UITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITests.xctestplan; sourceTree = "<group>"; };
-		FD5BFF462EC8141F00566C0C /* UnitTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UnitTests.xctestplan; sourceTree = "<group>"; };
-		FD7B51652EC8180000B126A1 /* AllTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AllTests.xctestplan; sourceTree = "<group>"; };
 		FDEE5D462EC7E40C002959B6 /* InterviewCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InterviewCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDEE5D532EC7E40D002959B6 /* InterviewCompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InterviewCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDEE5D5D2EC7E40D002959B6 /* InterviewCompanionUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InterviewCompanionUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -85,9 +75,7 @@
 			files = (
 				FDEE5D7C2EC7E777002959B6 /* AWSSTS in Frameworks */,
 				FDEE5D722EC7E616002959B6 /* FirebaseAuth in Frameworks */,
-				FD7FD0B12EC82D95007B6E02 /* AWSDynamoDB in Frameworks */,
-				FD38BBD42EC81B58001EC309 /* AWSEventBridge in Frameworks */,
-				FD7FD0AF2EC829CE007B6E02 /* AWSSSM in Frameworks */,
+				FDEE5D782EC7E777002959B6 /* AWSDynamoDB in Frameworks */,
 				FDEE5D7A2EC7E777002959B6 /* AWSS3 in Frameworks */,
 				FDEE5D752EC7E684002959B6 /* GoogleSignIn in Frameworks */,
 			);
@@ -110,24 +98,12 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		FD7FD0AD2EC829CE007B6E02 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		FDEE5D3D2EC7E40C002959B6 = {
 			isa = PBXGroup;
 			children = (
-				FD7B51652EC8180000B126A1 /* AllTests.xctestplan */,
-				FD5BFF462EC8141F00566C0C /* UnitTests.xctestplan */,
-				FD5BFF442EC8140200566C0C /* UITests.xctestplan */,
-				FD5BFF422EC8135B00566C0C /* IntegrationTests.xctestplan */,
 				FDEE5D482EC7E40C002959B6 /* InterviewCompanion */,
 				FDEE5D562EC7E40D002959B6 /* InterviewCompanionTests */,
 				FDEE5D602EC7E40D002959B6 /* InterviewCompanionUITests */,
-				FD7FD0AD2EC829CE007B6E02 /* Frameworks */,
 				FDEE5D472EC7E40C002959B6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -164,11 +140,9 @@
 			packageProductDependencies = (
 				FDEE5D712EC7E616002959B6 /* FirebaseAuth */,
 				FDEE5D742EC7E684002959B6 /* GoogleSignIn */,
+				FDEE5D772EC7E777002959B6 /* AWSDynamoDB */,
 				FDEE5D792EC7E777002959B6 /* AWSS3 */,
 				FDEE5D7B2EC7E777002959B6 /* AWSSTS */,
-				FD38BBD32EC81B58001EC309 /* AWSEventBridge */,
-				FD7FD0AE2EC829CE007B6E02 /* AWSSSM */,
-				FD7FD0B02EC82D95007B6E02 /* AWSDynamoDB */,
 			);
 			productName = InterviewCompanion;
 			productReference = FDEE5D462EC7E40C002959B6 /* InterviewCompanion.app */;
@@ -274,10 +248,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FD5BFF432EC8135B00566C0C /* IntegrationTests.xctestplan in Resources */,
-				FD5BFF452EC8140200566C0C /* UITests.xctestplan in Resources */,
-				FD5BFF472EC8141F00566C0C /* UnitTests.xctestplan in Resources */,
-				FD7B51662EC8180000B126A1 /* AllTests.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -389,7 +359,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -447,10 +417,9 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
@@ -560,7 +529,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = H7JMZ6X53B;
 				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.slingshot.InterviewCompanionTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -581,7 +550,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = H7JMZ6X53B;
 				GENERATE_INFOPLIST_FILE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.slingshot.InterviewCompanionTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -642,7 +611,7 @@
 				FDEE5D662EC7E40D002959B6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		FDEE5D672EC7E40D002959B6 /* Build configuration list for PBXNativeTarget "InterviewCompanion" */ = {
 			isa = XCConfigurationList;
@@ -651,7 +620,7 @@
 				FDEE5D692EC7E40D002959B6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		FDEE5D6A2EC7E40D002959B6 /* Build configuration list for PBXNativeTarget "InterviewCompanionTests" */ = {
 			isa = XCConfigurationList;
@@ -660,7 +629,7 @@
 				FDEE5D6C2EC7E40D002959B6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		FDEE5D6D2EC7E40D002959B6 /* Build configuration list for PBXNativeTarget "InterviewCompanionUITests" */ = {
 			isa = XCConfigurationList;
@@ -669,7 +638,7 @@
 				FDEE5D6F2EC7E40D002959B6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
@@ -701,21 +670,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		FD38BBD32EC81B58001EC309 /* AWSEventBridge */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FDEE5D762EC7E777002959B6 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
-			productName = AWSEventBridge;
-		};
-		FD7FD0AE2EC829CE007B6E02 /* AWSSSM */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FDEE5D762EC7E777002959B6 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
-			productName = AWSSSM;
-		};
-		FD7FD0B02EC82D95007B6E02 /* AWSDynamoDB */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FDEE5D762EC7E777002959B6 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
-			productName = AWSDynamoDB;
-		};
 		FDEE5D712EC7E616002959B6 /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = FDEE5D702EC7E616002959B6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
@@ -725,6 +679,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FDEE5D732EC7E684002959B6 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignIn;
+		};
+		FDEE5D772EC7E777002959B6 /* AWSDynamoDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FDEE5D762EC7E777002959B6 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
+			productName = AWSDynamoDB;
 		};
 		FDEE5D792EC7E777002959B6 /* AWSS3 */ = {
 			isa = XCSwiftPackageProductDependency;
