@@ -3,7 +3,6 @@ Start Transcribe Lambda
 Implementation of T036 - AWS Transcribe job initiation with diarization
 """
 
-import json
 import uuid
 from datetime import datetime
 from typing import Dict, Any, Optional
