@@ -14,7 +14,6 @@ import json
 import boto3
 import logging
 from datetime import datetime, timedelta
-from decimal import Decimal
 from typing import Dict, Any, Optional
 from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.core import patch_all
