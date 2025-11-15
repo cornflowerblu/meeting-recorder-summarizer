@@ -631,7 +631,7 @@
 				FDEE5D662EC7E40D002959B6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		FDEE5D672EC7E40D002959B6 /* Build configuration list for PBXNativeTarget "InterviewCompanion" */ = {
 			isa = XCConfigurationList;
@@ -640,7 +640,7 @@
 				FDEE5D692EC7E40D002959B6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		FDEE5D6A2EC7E40D002959B6 /* Build configuration list for PBXNativeTarget "InterviewCompanionTests" */ = {
 			isa = XCConfigurationList;
@@ -649,7 +649,7 @@
 				FDEE5D6C2EC7E40D002959B6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		FDEE5D6D2EC7E40D002959B6 /* Build configuration list for PBXNativeTarget "InterviewCompanionUITests" */ = {
 			isa = XCConfigurationList;
@@ -658,7 +658,7 @@
 				FDEE5D6F2EC7E40D002959B6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 
