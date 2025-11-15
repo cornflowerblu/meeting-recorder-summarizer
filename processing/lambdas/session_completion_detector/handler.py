@@ -279,6 +279,12 @@ def trigger_processing(recording_id: str, user_id: str, chunk_count: int) -> Non
     """
     if not PROCESSING_STATE_MACHINE_ARN:
         logger.warning("PROCESSING_STATE_MACHINE_ARN not set, skipping Step Functions trigger")
+        update_session_status(
+            recording_id,
+            user_id,
+            'processing_trigger_failed',
+            {'error': 'PROCESSING_STATE_MACHINE_ARN not set'}
+        )
         return
 
     execution_input = {
