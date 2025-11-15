@@ -22,6 +22,15 @@ s3_lifecycle_days     = 90
 # Get this from your Firebase project settings
 firebase_project_id = "your-firebase-project-id"
 
+# Monitoring and Alerting (Added per AWS Architecture Audit)
+# Email address for cost anomaly alerts and operational notifications
+# Leave empty to disable email notifications
+alert_email = "your-email@example.com"
+
+# Monthly budget limit in USD for cost monitoring
+# Alert will trigger at 80%, 90%, and 100% of this limit
+monthly_budget_limit = 100
+
 # Additional Tags (optional)
 additional_tags = {
   Owner = "your-name"

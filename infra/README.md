@@ -160,16 +160,43 @@ terraform validate
 
 ## Cost Estimation
 
-Terraform resources incur AWS costs:
+### Current Architecture (After Audit Improvements)
 
-| Service | Estimated Cost/Month (dev) |
-|---------|---------------------------|
-| S3 (1GB) | ~$0.023 |
-| DynamoDB (on-demand, light usage) | Free tier |
-| IAM | Free |
-| **Total** | **~$0.50-1/month** |
+**Per Month (Single User, 10 hours of meetings):**
 
-Processing costs (Transcribe, Bedrock) are usage-based and added in Phase 4.
+| Service | Cost |
+|---------|------|
+| Lambda | $0.50 |
+| Fargate (2vCPU, 4GB) | $15.00 |
+| S3 Storage (optimized) | $5.00 |
+| DynamoDB | $3.00 |
+| Transcribe (10 hours) | $14.40 |
+| Bedrock (Claude Sonnet 4.5) | $7.50 |
+| Monitoring (CloudWatch, Budgets) | $1.00 |
+| Other | $0.79 |
+| **Total** | **~$47/month** |
+
+**Potential with Phase 3 & 4 optimizations**: ~$27/month (57% savings)
+
+See [AUDIT-IMPROVEMENTS.md](./AUDIT-IMPROVEMENTS.md) for detailed cost breakdown.
+
+## AWS Architecture Audit Improvements 🆕
+
+**A comprehensive AWS Solutions Architect audit was conducted on 2025-11-15** identifying opportunities for:
+- 52% cost reduction ($55.69 → $26.69/month)
+- Enhanced security posture
+- Improved operational monitoring
+
+**Key improvements implemented:**
+- ✅ Cost anomaly detection and budgets
+- ✅ CloudWatch alarms for operational monitoring
+- ✅ VPC Gateway Endpoints (FREE, better security)
+- ✅ Optimized S3 lifecycle rules
+- ✅ AWS Backup for DynamoDB
+- ✅ Tightened IAM policies
+
+📄 **See**: [AUDIT-IMPROVEMENTS.md](./AUDIT-IMPROVEMENTS.md) for detailed summary  
+📄 **Full Report**: [docs/aws-architecture-audit.md](../docs/aws-architecture-audit.md)
 
 ## Security Best Practices
 
@@ -180,6 +207,9 @@ Processing costs (Transcribe, Bedrock) are usage-based and added in Phase 4.
 - ✅ DynamoDB point-in-time recovery enabled
 - ✅ S3 versioning enabled
 - ✅ Customer-managed KMS keys for production (configurable via `use_customer_managed_kms`)
+- ✅ VPC Gateway Endpoints for S3 and DynamoDB
+- ✅ S3 access logging enabled
+- ✅ CloudWatch alarms for security events
 
 ### KMS Encryption Configuration
 

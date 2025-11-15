@@ -472,6 +472,7 @@ resource "aws_iam_role_policy" "step_functions_policy" {
         ]
       },
       {
+        Sid    = "AllowCloudWatchLogs"
         Effect = "Allow"
         Action = [
           "logs:CreateLogDelivery",
@@ -483,14 +484,20 @@ resource "aws_iam_role_policy" "step_functions_policy" {
           "logs:DescribeResourcePolicies",
           "logs:DescribeLogGroups"
         ]
-        Resource = "*"
+        # Tightened from "*" to specific log groups per audit
+        Resource = [
+          "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/stepfunctions/*",
+          "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/ecs/*"
+        ]
       },
       {
+        Sid    = "AllowXRayTracing"
         Effect = "Allow"
         Action = [
           "xray:PutTraceSegments",
           "xray:PutTelemetryRecords"
         ]
+        # X-Ray requires wildcard per AWS docs
         Resource = "*"
       }
     ]

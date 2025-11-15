@@ -263,15 +263,25 @@ See [`specs/001-meeting-recorder-ai/tasks.md`](specs/001-meeting-recorder-ai/tas
 
 ## Cost Estimation
 
-Approximate AWS costs for typical usage:
+### Current Architecture (After AWS Audit Improvements)
 
-- **Amazon Transcribe**: ~$0.72/hour of audio
-- **Amazon Bedrock (Claude Sonnet 4.5)**: ~$0.003/summary
-- **S3 Storage**: ~$0.023/GB/month
-- **DynamoDB**: Free tier covers typical usage
-- **Other services**: Minimal (Lambda, EventBridge, Step Functions)
+**Updated 2025-11-15**: AWS Solutions Architect audit identified 52% cost savings opportunity.
 
-**Example**: 10 hours of meetings/month ≈ $10-15/month
+**Typical usage (10 hours of meetings/month):**
+
+| Service | Monthly Cost |
+|---------|--------------|
+| Amazon Transcribe | $14.40 |
+| Amazon Bedrock (Claude Sonnet 4.5) | $7.50 |
+| AWS Fargate (FFmpeg processing) | $15.00 |
+| S3 Storage (optimized) | $5.00 |
+| DynamoDB | $3.00 |
+| Lambda & Other | $2.29 |
+| **Total** | **~$47/month** |
+
+**With Phase 3 & 4 optimizations** (AWS Batch, Claude Haiku, GSI removal): **~$27/month**
+
+📄 **See**: [docs/aws-architecture-audit.md](docs/aws-architecture-audit.md) for detailed cost analysis and recommendations
 
 ## Development Workflow
 
