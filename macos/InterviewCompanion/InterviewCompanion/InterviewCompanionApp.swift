@@ -9,6 +9,11 @@ import FirebaseAuth
 struct InterviewCompanionApp: App {
     @StateObject private var authService = AuthService()
 
+    // UI Testing bypass
+    private var isUITesting: Bool {
+        CommandLine.arguments.contains("--ui-testing")
+    }
+
     init() {
         // Configure Firebase on app launch
         // In Xcode app projects, resources are in Bundle.main
@@ -85,7 +90,10 @@ struct InterviewCompanionApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if authService.isAuthenticated, let userId = authService.userId {
+                if isUITesting {
+                    // Bypass authentication for UI tests
+                    MainView(userId: "ui-test-user", authService: authService)
+                } else if authService.isAuthenticated, let userId = authService.userId {
                     MainView(userId: userId, authService: authService)
                 } else {
                     SignInView(authService: authService)

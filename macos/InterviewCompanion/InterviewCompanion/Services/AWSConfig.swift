@@ -224,7 +224,8 @@ final class RuntimeConfig: @unchecked Sendable {
             // Fallback to hardcoded value with warning
             Logger.app.warning(
                 "Failed to fetch S3 bucket name from Parameter Store, using fallback")
-            let fallback = "meeting-recorder-\(AWSConfig.environment)-recordings"
+            // TODO: Implement SSM parameter fetching - this is the actual deployed bucket
+            let fallback = "meeting-recorder-\(AWSConfig.environment)-recordings-8bc998ca"
             cachedS3BucketName = fallback
             return fallback
         }
