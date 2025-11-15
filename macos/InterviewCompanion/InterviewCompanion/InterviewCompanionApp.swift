@@ -133,10 +133,24 @@ struct MainViewLoader: View {
     let authService: AuthService
 
     @State private var isConfigLoaded = false
+    @State private var loadError: String?
 
     var body: some View {
         Group {
-            if isConfigLoaded {
+            if let error = loadError {
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.system(size: 48))
+                        .foregroundColor(.red)
+                    Text("Configuration Error")
+                        .font(.headline)
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding()
+            } else if isConfigLoaded {
                 MainView(userId: userId, authService: authService)
             } else {
                 VStack(spacing: 16) {
@@ -149,9 +163,23 @@ struct MainViewLoader: View {
             }
         }
         .task {
-            // Prefetch AWS runtime configuration parameters in the background
-            await RuntimeConfig.shared.prefetchParameters()
-            isConfigLoaded = true
+            // Initialize credentials first
+            do {
+                guard let credentials = try? authService.getAWSCredentials() else {
+                    loadError = "AWS credentials not available. Please sign in again."
+                    return
+                }
+
+                // Set credentials on RuntimeConfig for SSM access
+                RuntimeConfig.shared.setCredentials(credentials)
+
+                // Now prefetch parameters in the background
+                await RuntimeConfig.shared.prefetchParameters()
+
+                isConfigLoaded = true
+            } catch {
+                loadError = "Failed to load configuration: \(error.localizedDescription)"
+            }
         }
     }
 }
@@ -181,6 +209,7 @@ struct MainView: View {
 
         // Get credentials from AuthService (Firebase token exchange)
         // These are temporary AWS credentials obtained from the auth_exchange Lambda
+        // Note: RuntimeConfig.shared.setCredentials() is called by MainViewLoader
         guard let credentials = try? authService.getAWSCredentials() else {
             Logger.app.error(
                 "Failed to get AWS credentials from AuthService",
@@ -190,9 +219,6 @@ struct MainView: View {
             )
             fatalError("AWS credentials not available. Please sign in again.")
         }
-
-        // Initialize RuntimeConfig with credentials for SSM Parameter Store access
-        RuntimeConfig.shared.setCredentials(credentials)
 
         // Create credential resolver for AWS service clients
         let credentialResolver: StaticAWSCredentialIdentityResolver

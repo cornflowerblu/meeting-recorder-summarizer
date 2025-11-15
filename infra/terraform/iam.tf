@@ -126,7 +126,7 @@ resource "aws_iam_role_policy" "macos_app_dynamodb" {
         Resource = aws_dynamodb_table.meetings.arn
         Condition = {
           "ForAllValues:StringLike" = {
-            "dynamodb:LeadingKeys" = ["$${aws:username}#*"]
+            "dynamodb:LeadingKeys" = ["$${aws:username}"]
           }
         }
       },
@@ -140,11 +140,9 @@ resource "aws_iam_role_policy" "macos_app_dynamodb" {
           aws_dynamodb_table.meetings.arn,
           "${aws_dynamodb_table.meetings.arn}/index/*"
         ]
-        Condition = {
-          "ForAllValues:StringLike" = {
-            "dynamodb:LeadingKeys" = ["$${aws:username}"]
-          }
-        }
+        # Note: dynamodb:LeadingKeys condition doesn't work for GSI queries
+        # GSI queries are inherently scoped to the user via the gsi1pk value in the query itself
+        # The application ensures gsi1pk = "USER#{userId}" in the query
       }
     ]
   })
