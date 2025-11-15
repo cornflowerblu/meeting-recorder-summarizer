@@ -81,8 +81,8 @@ resource "aws_dynamodb_table" "meetings" {
   }
 
   # Server-Side Encryption
-  # Uses customer-managed KMS key for production (better control, audit trails)
-  # Falls back to AWS-managed key for non-production environments
+  # Per AWS Architecture Audit: Use AWS-managed key for MVP (saves $2/month)
+  # Customer-managed KMS key only if compliance requires (enable via var.use_customer_managed_kms)
   server_side_encryption {
     enabled     = true
     kms_key_arn = var.use_customer_managed_kms ? aws_kms_key.dynamodb[0].arn : null
@@ -167,7 +167,8 @@ resource "aws_dynamodb_table" "users" {
     enabled = var.enable_point_in_time_recovery
   }
 
-  # Server-Side Encryption
+  # Server-Side Encryption  
+  # Per AWS Architecture Audit: Use AWS-managed key for MVP (saves $2/month)
   server_side_encryption {
     enabled     = true
     kms_key_arn = var.use_customer_managed_kms ? aws_kms_key.dynamodb[0].arn : null

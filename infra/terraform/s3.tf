@@ -42,49 +42,87 @@ resource "aws_s3_bucket_public_access_block" "recordings" {
   restrict_public_buckets = true
 }
 
-# Lifecycle Configuration
+# Lifecycle Configuration - Optimized per AWS Architecture Audit
 resource "aws_s3_bucket_lifecycle_configuration" "recordings" {
   bucket = aws_s3_bucket.recordings.id
 
+  # Rule 1: Delete raw chunks after processing (save ~40% storage cost)
   rule {
-    id     = "intelligent-tiering"
+    id     = "delete-processed-chunks"
     status = "Enabled"
-
-    # Transition to Standard-IA after 30 days
-    transition {
-      days          = 30
-      storage_class = "STANDARD_IA"
-    }
-
-    # Transition to One Zone-IA after 60 days
-    transition {
-      days          = 60
-      storage_class = "ONEZONE_IA"
-    }
-
-    # Transition to Glacier after 90 days (configurable)
-    transition {
-      days          = var.s3_lifecycle_days
-      storage_class = "GLACIER"
-    }
-
-    # Optional: Deep Archive after 180 days for long-term storage
-    transition {
-      days          = 180
-      storage_class = "DEEP_ARCHIVE"
-    }
 
     filter {
       prefix = "users/"
+      tags = {
+        type = "chunk"
+      }
+    }
+
+    expiration {
+      days = 7 # Keep for 1 week for debugging, then delete
     }
   }
 
+  # Rule 2: Delete audio files after transcription (can regenerate from video)
+  rule {
+    id     = "delete-audio-after-transcription"
+    status = "Enabled"
+
+    filter {
+      prefix = "users/"
+      tags = {
+        type = "audio"
+      }
+    }
+
+    expiration {
+      days = 30 # Keep for 1 month, then delete
+    }
+  }
+
+  # Rule 3: Intelligent-Tiering for videos (auto-optimizes based on access)
+  rule {
+    id     = "intelligent-tiering-videos"
+    status = "Enabled"
+
+    filter {
+      prefix = "users/"
+      tags = {
+        type = "video"
+      }
+    }
+
+    transition {
+      days          = 0 # Immediate
+      storage_class = "INTELLIGENT_TIERING"
+    }
+  }
+
+  # Rule 4: Transcripts and summaries - keep accessible, transition to IA after 90 days
+  rule {
+    id     = "metadata-lifecycle"
+    status = "Enabled"
+
+    filter {
+      prefix = "users/"
+      tags = {
+        type = "metadata"
+      }
+    }
+
+    transition {
+      days          = 90
+      storage_class = "STANDARD_IA"
+    }
+  }
+
+  # Rule 5: Abort incomplete multipart uploads quickly
   rule {
     id     = "abort-incomplete-multipart-uploads"
     status = "Enabled"
 
     abort_incomplete_multipart_upload {
-      days_after_initiation = 7
+      days_after_initiation = 1 # Reduced from 7 to 1 day
     }
 
     filter {}
@@ -142,10 +180,8 @@ resource "aws_s3_bucket_cors_configuration" "recordings" {
   }
 }
 
-# CloudWatch Logging (optional, enabled for monitoring)
+# S3 Access Logging - Per AWS Architecture Audit, enable for all environments
 resource "aws_s3_bucket_logging" "recordings" {
-  count = var.environment == "prod" ? 1 : 0
-
   bucket = aws_s3_bucket.recordings.id
 
   target_bucket = aws_s3_bucket.recordings.id

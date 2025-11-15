@@ -90,3 +90,17 @@ variable "additional_tags" {
   type        = map(string)
   default     = {}
 }
+
+# Monitoring and Alerting
+
+variable "alert_email" {
+  description = "Email address for alerts (cost anomalies, operational issues)"
+  type        = string
+  default     = ""
+}
+
+variable "monthly_budget_limit" {
+  description = "Monthly budget limit in USD for cost monitoring"
+  type        = number
+  default     = 100
+}
