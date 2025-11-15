@@ -43,7 +43,7 @@ jobs:
           # Install provisioning profile
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           PP_PATH=~/Library/MobileDevice/Provisioning\ Profiles/profile.provisionprofile
-          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode > $PP_PATH
+          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PP_PATH"
 
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
