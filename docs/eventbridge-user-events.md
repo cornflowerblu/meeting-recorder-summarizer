@@ -110,6 +110,7 @@ resource "aws_iam_role_policy" "auth_exchange_eventbridge" {
 **Purpose**: Handle `user.signed_in` events and create/update Users table
 
 **Event Schema**:
+
 ```json
 {
   "version": "0",
@@ -131,6 +132,7 @@ resource "aws_iam_role_policy" "auth_exchange_eventbridge" {
 ```
 
 **Lambda Function**:
+
 ```python
 import boto3
 import os
@@ -189,6 +191,7 @@ def handler(event, context):
 ```
 
 **Terraform**:
+
 ```hcl
 # File: infra/terraform/lambda.tf
 
@@ -198,7 +201,7 @@ resource "aws_lambda_function" "user_profile" {
   role             = aws_iam_role.user_profile_lambda.arn
   handler          = "handler.handler"
   source_code_hash = data.archive_file.user_profile_lambda.output_base64sha256
-  runtime          = "python3.12"
+  runtime          = "python3.11"
   timeout          = 10
   memory_size      = 256
 
@@ -390,16 +393,18 @@ All authentication events follow this schema:
   "detail": {
     "userId": "string",
     "email": "string",
-    "timestamp": "ISO8601",
+    "timestamp": "ISO8601"
     // ... action-specific fields
   }
 }
 ```
 
 **Current Events**:
+
 - `user.signed_in`: User authenticated successfully
 
 **Future Events**:
+
 - `user.signed_out`: User signed out
 - `user.credentials_refreshed`: AWS credentials refreshed
 - `user.profile_updated`: User updated their profile
@@ -445,18 +450,24 @@ aws dynamodb get-item \
 ## Future Extensions
 
 ### Analytics Lambda
+
 Subscribe to `user.signed_in` events to track:
+
 - Daily/monthly active users
 - Sign-in frequency
 - Provider distribution (Google vs Email)
 
 ### Welcome Email Lambda
+
 Send welcome email on first sign-in:
+
 - Check if `createdAt == timestamp` (first sign-in)
 - Send personalized welcome email via SES
 
 ### Security Monitoring Lambda
+
 Track unusual sign-in patterns:
+
 - Multiple sign-ins from different IPs
 - Sign-ins from new countries
 - Rapid credential refresh attempts

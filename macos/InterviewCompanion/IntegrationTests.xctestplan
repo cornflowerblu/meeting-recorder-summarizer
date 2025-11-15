@@ -3,14 +3,7 @@
     {
       "id": "B55153A1-4402-45D0-AD9A-DBE65924471F",
       "name": "Configuration 1",
-      "options": {
-        "environmentVariableEntries": [
-          {
-            "key": "TEST_S3_BUCKET",
-            "value": "meeting-recorder-test-integration"
-          }
-        ]
-      }
+      "options": {}
     }
   ],
   "defaultOptions": {

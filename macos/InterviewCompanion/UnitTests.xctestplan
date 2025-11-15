@@ -6,8 +6,14 @@
       "options": {}
     }
   ],
-  "defaultOptions": {
-    "testTimeoutsEnabled": true
+  "defaultOptions" : {
+    "environmentVariableEntries" : [
+      {
+        "key" : "TEST_S3_BUCKET",
+        "value" : "meeting-recorder-test-integration"
+      }
+    ],
+    "testTimeoutsEnabled" : true
   },
   "testTargets": [
     {
