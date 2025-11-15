@@ -1,0 +1,113 @@
+name: MeetingRecorder
+options:
+  bundleIdPrefix: com.meetingrecorder
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "15.0"
+
+settings:
+  SWIFT_VERSION: "6.0"
+  MACOSX_DEPLOYMENT_TARGET: "14.0"
+  ENABLE_STRICT_CONCURRENCY: YES
+
+targets:
+  MeetingRecorder:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/MeetingRecorder
+        excludes:
+          - "**/*.md"
+    resources:
+      - path: Resources
+        type: folder
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.meetingrecorder.app
+      INFOPLIST_FILE: Resources/Info.plist
+      CODE_SIGN_ENTITLEMENTS: Resources/Entitlements.plist
+      SWIFT_STRICT_CONCURRENCY: complete
+      SWIFT_UPCOMING_FEATURE_CONCISE_MAGIC_FILE: YES
+      SWIFT_UPCOMING_FEATURE_FORWARD_TRAILING_CLOSURES: YES
+      SWIFT_UPCOMING_FEATURE_BARE_SLASH_REGEX_LITERALS: YES
+    dependencies:
+      - package: aws-sdk-swift
+        product: AWSS3
+      - package: aws-sdk-swift
+        product: AWSDynamoDB
+      - package: aws-sdk-swift
+        product: AWSSTS
+      - package: aws-sdk-swift
+        product: AWSClientRuntime
+      - package: firebase-ios-sdk
+        product: FirebaseAuth
+      - package: firebase-ios-sdk
+        product: FirebaseCore
+    preBuildScripts:
+      - name: SwiftLint
+        script: |
+          if which swiftlint >/dev/null; then
+            swiftlint
+          else
+            echo "warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint"
+          fi
+        basedOnDependencyAnalysis: false
+
+  MeetingRecorderTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - Tests/MeetingRecorderTests
+    dependencies:
+      - target: MeetingRecorder
+    settings:
+      BUNDLE_LOADER: $(TEST_HOST)
+      TEST_HOST: $(BUILT_PRODUCTS_DIR)/MeetingRecorder.app/Contents/MacOS/MeetingRecorder
+
+  MeetingRecorderUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - Tests/MeetingRecorderUITests
+    dependencies:
+      - target: MeetingRecorder
+    settings:
+      TEST_TARGET_NAME: MeetingRecorder
+
+schemes:
+  MeetingRecorder:
+    build:
+      targets:
+        MeetingRecorder: all
+        MeetingRecorderTests: [test]
+        MeetingRecorderUITests: [test]
+    run:
+      config: Debug
+      commandLineArguments:
+        - -com.apple.CoreData.SQLDebug 1
+      environmentVariables:
+        AWS_REGION: us-east-1
+        LOG_LEVEL: debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      targets:
+        - MeetingRecorderTests
+        - MeetingRecorderUITests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+packages:
+  aws-sdk-swift:
+    url: https://github.com/awslabs/aws-sdk-swift.git
+    from: 1.0.0
+  firebase-ios-sdk:
+    url: https://github.com/firebase/firebase-ios-sdk.git
+    from: 10.20.0
+
+configFiles:
+  Debug: Configs/Development.xcconfig
+  Release: Configs/Production.xcconfig

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Camera access -->
+	<key>com.apple.security.device.camera</key>
+	<true/>
+	
+	<!-- Microphone access -->
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+	
+	<!-- Screen capture -->
+	<key>com.apple.security.device.screen-capture</key>
+	<true/>
+	
+	<!-- Network client (for AWS/Firebase) -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+	
+	<!-- User selected files (for export/import) -->
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+	
+	<!-- Application Groups (if needed for shared containers) -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.meetingrecorder.shared</string>
+	</array>
+	
+	<!-- Hardened Runtime (recommended for distribution) -->
+	<key>com.apple.security.cs.allow-jit</key>
+	<false/>
+	<key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+	<false/>
+	<key>com.apple.security.cs.allow-dyld-environment-variables</key>
+	<false/>
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<false/>
+</dict>
+</plist>
