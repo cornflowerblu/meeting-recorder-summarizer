@@ -25,19 +25,26 @@ Event Schema:
 import boto3
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 # AWS X-Ray SDK for distributed tracing
-from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.core import patch_all
 
 # Patch all AWS SDK calls (auto-traces DynamoDB)
 patch_all()
 
-# Initialize DynamoDB client
+# Initialize DynamoDB client (lazy to support testing)
 dynamodb = boto3.resource('dynamodb')
-users_table_name = os.environ['USERS_TABLE_NAME']
-users_table = dynamodb.Table(users_table_name)
+users_table = None
+
+
+def _get_table():
+    """Get users table, initializing if needed."""
+    global users_table
+    if users_table is None:
+        users_table_name = os.environ['USERS_TABLE_NAME']
+        users_table = dynamodb.Table(users_table_name)
+    return users_table
 
 
 def handler(event, context):
@@ -67,57 +74,52 @@ def handler(event, context):
             'body': json.dumps({'error': 'userId is required'})
         }
 
-    email = detail.get('email', '')
+    email = detail.get('email')
     display_name = detail.get('displayName')
     photo_url = detail.get('photoURL')
     provider = detail.get('provider')
     timestamp = detail.get('timestamp')
 
-    # Add searchable X-Ray annotations for filtering traces
-    xray_recorder.put_annotation('user_id', user_id)
-    xray_recorder.put_annotation('event_source', 'EventBridge')
-
     # Validate timestamp
     if not timestamp:
-        timestamp = datetime.utcnow().isoformat() + 'Z'
+        timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         print(f"WARNING: No timestamp in event, using current time: {timestamp}")
 
     try:
+        # Get DynamoDB table
+        table = _get_table()
+        
         # Check if user exists to preserve createdAt (DynamoDB call auto-traced by patch_all)
-        with xray_recorder.capture('dynamodb_get_user'):
-            response = users_table.get_item(Key={'userId': user_id})
-            existing_user = response.get('Item')
+        response = table.get_item(Key={'userId': user_id})
+        existing_user = response.get('Item')
 
         # Use existing createdAt if user exists, otherwise use current timestamp
         created_at = existing_user.get('createdAt') if existing_user else timestamp
         is_new_user = existing_user is None
 
-        # Add annotation for whether this is a new user
-        xray_recorder.put_annotation('action', 'created' if is_new_user else 'updated')
-
-        # Build user item
+        # Build user item with required fields
         item = {
             'userId': user_id,
-            'email': email,
             'lastLoginDate': timestamp,
             'createdAt': created_at
         }
 
-        # Add optional fields if provided
-        if display_name:
-            item['displayName'] = display_name
-        if photo_url:
-            item['photoURL'] = photo_url
-        if provider:
-            item['provider'] = provider
+        # Add optional fields only if they are non-empty strings
+        if email and isinstance(email, str) and email.strip():
+            item['email'] = email.strip()
+        if display_name and isinstance(display_name, str) and display_name.strip():
+            item['displayName'] = display_name.strip()
+        if photo_url and isinstance(photo_url, str) and photo_url.strip():
+            item['photoURL'] = photo_url.strip()
+        if provider and isinstance(provider, str) and provider.strip():
+            item['provider'] = provider.strip()
 
         # Write to DynamoDB (auto-traced by patch_all)
-        with xray_recorder.capture('dynamodb_put_user'):
-            users_table.put_item(Item=item)
+        table.put_item(Item=item)
 
-        # Add metadata (not searchable, but visible in trace details)
-        xray_recorder.put_metadata('user_email', email)
-        print(f"User profile {'created' if is_new_user else 'updated'}: {user_id} ({email})")
+        action = 'created' if is_new_user else 'updated'
+        email_display = item.get('email', 'no-email')
+        print(f"User profile {action}: {user_id} ({email_display})")
 
         return {
             'statusCode': 200,
