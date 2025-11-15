@@ -7,6 +7,7 @@
 
 import AWSS3
 import AWSClientRuntime
+import AWSSDKIdentity
 import ClientRuntime
 import Foundation
 
@@ -76,10 +77,13 @@ actor S3ClientFactory {
         // Create S3 client
         let client: S3Client
         do {
+            let region = await AWSConfig.region
+            let bucket = await AWSConfig.s3BucketName
+
             let config = try await S3Client.S3ClientConfiguration(
                 awsCredentialIdentityResolver: credentialsProvider,
-                region: AWSConfig.region,
-                signingRegion: AWSConfig.region.rawValue
+                region: region,
+                signingRegion: region
             )
 
             client = S3Client(config: config)
@@ -94,9 +98,11 @@ actor S3ClientFactory {
         cachedClient = client
         clientCreatedAt = Date()
 
+        let region = await AWSConfig.region
+        let bucket = await AWSConfig.s3BucketName
         await Logger.shared.info("S3 client created successfully", metadata: [
-            "region": AWSConfig.region.rawValue,
-            "bucket": AWSConfig.s3BucketName
+            "region": region,
+            "bucket": bucket
         ])
 
         return client
@@ -131,13 +137,14 @@ actor S3ClientFactory {
     /// Create a credentials provider from STS credentials
     private func createCredentialsProvider(
         from credentials: AuthSession.AWSCredentials
-    ) throws -> AWSCredentialIdentity {
-        AWSCredentialIdentity(
+    ) throws -> StaticAWSCredentialIdentityResolver {
+        let identity = AWSCredentialIdentity(
             accessKey: credentials.accessKeyId,
             secret: credentials.secretAccessKey,
-            sessionToken: credentials.sessionToken,
-            expiration: credentials.expiration
+            expiration: credentials.expiration,
+            sessionToken: credentials.sessionToken
         )
+        return try StaticAWSCredentialIdentityResolver(identity)
     }
 }
 

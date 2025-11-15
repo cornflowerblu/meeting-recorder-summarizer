@@ -70,9 +70,9 @@ actor AuthSession {
         try saveToKeychain(key: .firebaseRefreshToken, value: credentials.refreshToken)
         try saveToKeychain(key: .firebaseUserId, value: credentials.userId)
 
-        await Logger.shared.info("Firebase credentials saved to keychain", metadata: [
+        Task { await Logger.shared.info("Firebase credentials saved to keychain", metadata: [
             "userId": credentials.userId
-        ])
+        ]) }
     }
 
     /// Load Firebase credentials from keychain
@@ -81,7 +81,7 @@ actor AuthSession {
         let refreshToken = try loadFromKeychain(key: .firebaseRefreshToken)
         let userId = try loadFromKeychain(key: .firebaseUserId)
 
-        await Logger.shared.debug("Firebase credentials loaded from keychain")
+        Task { await Logger.shared.debug("Firebase credentials loaded from keychain")
 
         return FirebaseCredentials(
             idToken: idToken,
@@ -106,7 +106,7 @@ actor AuthSession {
         try deleteFromKeychain(key: .firebaseRefreshToken)
         try deleteFromKeychain(key: .firebaseUserId)
 
-        await Logger.shared.info("Firebase credentials cleared from keychain")
+        Task { await Logger.shared.info("Firebase credentials cleared from keychain")
     }
 
     // MARK: - AWS Credentials
@@ -139,10 +139,10 @@ actor AuthSession {
         let expirationString = ISO8601DateFormatter().string(from: credentials.expiration)
         try saveToKeychain(key: .awsCredentialsExpiration, value: expirationString)
 
-        await Logger.shared.info("AWS credentials saved to keychain", metadata: [
+        Task { await Logger.shared.info("AWS credentials saved to keychain", metadata: [
             "expiration": expirationString,
             "secondsUntilExpiration": String(Int(credentials.secondsUntilExpiration))
-        ])
+        ]) }
     }
 
     /// Load AWS STS credentials from keychain
@@ -166,15 +166,15 @@ actor AuthSession {
 
         // Check if expired
         if credentials.isExpired(bufferMinutes: AWSConfig.Security.tokenExpirationBufferMinutes) {
-            await Logger.shared.warning("AWS credentials expired", metadata: [
+            Task { await Logger.shared.warning("AWS credentials expired", metadata: [
                 "expiration": expirationString
-            ])
+            ]) }
             throw AuthSessionError.credentialsExpired
         }
 
-        await Logger.shared.debug("AWS credentials loaded from keychain", metadata: [
+        Task { await Logger.shared.debug("AWS credentials loaded from keychain", metadata: [
             "secondsUntilExpiration": String(Int(credentials.secondsUntilExpiration))
-        ])
+        ]) }
 
         return credentials
     }
@@ -196,7 +196,7 @@ actor AuthSession {
         try deleteFromKeychain(key: .awsSessionToken)
         try deleteFromKeychain(key: .awsCredentialsExpiration)
 
-        await Logger.shared.info("AWS credentials cleared from keychain")
+        Task { await Logger.shared.info("AWS credentials cleared from keychain")
     }
 
     // MARK: - Clear All
@@ -206,20 +206,20 @@ actor AuthSession {
         do {
             try clearFirebaseCredentials()
         } catch {
-            await Logger.shared.warning("Failed to clear Firebase credentials", metadata: [
+            Task { await Logger.shared.warning("Failed to clear Firebase credentials", metadata: [
                 "error": error.localizedDescription
-            ])
+            ]) }
         }
 
         do {
             try clearAWSCredentials()
         } catch {
-            await Logger.shared.warning("Failed to clear AWS credentials", metadata: [
+            Task { await Logger.shared.warning("Failed to clear AWS credentials", metadata: [
                 "error": error.localizedDescription
-            ])
+            ]) }
         }
 
-        await Logger.shared.info("All credentials cleared")
+        Task { await Logger.shared.info("All credentials cleared")
     }
 
     // MARK: - Keychain Operations

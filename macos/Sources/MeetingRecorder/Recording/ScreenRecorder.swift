@@ -53,7 +53,7 @@ enum ScreenRecorderError: Error, LocalizedError {
 
 /// Records screen with ScreenCaptureKit, segmenting into timed chunks
 @MainActor
-final class ScreenRecorder: NSObject, ObservableObject {
+class ScreenRecorder: NSObject, ObservableObject {
 
     // MARK: - Properties
 

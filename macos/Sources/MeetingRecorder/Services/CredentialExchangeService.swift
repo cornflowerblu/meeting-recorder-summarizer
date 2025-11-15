@@ -14,7 +14,6 @@ actor CredentialExchangeService {
     // MARK: - Configuration
 
     private let authSession = AuthSession.shared
-    private let lambdaEndpoint: URL
 
     // MARK: - Errors
 
@@ -72,15 +71,17 @@ actor CredentialExchangeService {
     // MARK: - Initialization
 
     private init() {
-        // Get Lambda endpoint from config
-        let baseURL = Config.shared.authExchangeLambdaURL
-        self.lambdaEndpoint = URL(string: baseURL)!
-
         Task {
-            await Logger.shared.debug("CredentialExchangeService initialized", metadata: [
-                "endpoint": baseURL
-            ])
+            await Logger.shared.debug("CredentialExchangeService initialized")
         }
+    }
+
+    // MARK: - Private Helpers
+
+    @MainActor
+    private func getLambdaEndpoint() -> URL {
+        let baseURL = Config.shared.authExchangeLambdaURL
+        return URL(string: baseURL)!
     }
 
     // MARK: - Public API
@@ -169,6 +170,7 @@ actor CredentialExchangeService {
         }
 
         // Create URLRequest
+        let lambdaEndpoint = await getLambdaEndpoint()
         var request = URLRequest(url: lambdaEndpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")

@@ -1,4 +1,4 @@
-import FirebaseCore
+import FirebaseAuth
 import SwiftUI
 
 @main

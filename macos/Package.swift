@@ -28,7 +28,6 @@ let package = Package(
         .product(name: "AWSSTS", package: "aws-sdk-swift"),
         .product(name: "AWSClientRuntime", package: "aws-sdk-swift"),
         .product(name: "FirebaseAuth", package: "firebase-ios-sdk"),
-        .product(name: "FirebaseCore", package: "firebase-ios-sdk"),
       ],
       path: "Sources/MeetingRecorder",
       swiftSettings: [

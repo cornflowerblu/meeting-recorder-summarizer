@@ -6,19 +6,21 @@ struct AWSConfig {
 
   // MARK: - Regional Configuration
 
-  static let defaultRegion: AWSClientRuntime.Region = .usEast1
+  static let defaultRegion: String = "us-east-1"
 
-  static var region: AWSClientRuntime.Region {
-    let regionString = Config.shared.awsRegion
-    return AWSClientRuntime.Region(rawValue: regionString) ?? defaultRegion
+  @MainActor
+  static var region: String {
+    Config.shared.awsRegion
   }
 
   // MARK: - Service Endpoints
 
+  @MainActor
   static var s3BucketName: String {
     Config.shared.s3BucketName
   }
 
+  @MainActor
   static var dynamoDBTableName: String {
     Config.shared.dynamoDBTableName
   }
@@ -64,7 +66,10 @@ struct AWSConfig {
   // MARK: - DynamoDB Configuration
 
   struct DynamoDB {
-    static let tableName = Config.shared.dynamoDBTableName
+    @MainActor
+    static var tableName: String {
+      Config.shared.dynamoDBTableName
+    }
 
     // Key patterns
     static func partitionKey(userId: String, recordingId: String) -> String {
@@ -101,6 +106,7 @@ struct AWSConfig {
     static let maxConcurrentUploads = 3
     static let uploadTimeoutSeconds: TimeInterval = 300  // 5 minutes
 
+    @MainActor
     static var chunkSize: Int64 {
       Int64(Config.shared.chunkDurationSeconds * 1024 * 1024)  // Rough estimate
     }

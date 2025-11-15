@@ -7,6 +7,7 @@
 
 import AWSDynamoDB
 import AWSClientRuntime
+import AWSSDKIdentity
 import ClientRuntime
 import Foundation
 
@@ -76,10 +77,13 @@ actor DynamoDBClientFactory {
         // Create DynamoDB client
         let client: DynamoDBClient
         do {
+            let region = await AWSConfig.region
+            let table = await AWSConfig.dynamoDBTableName
+
             let config = try await DynamoDBClient.DynamoDBClientConfiguration(
                 awsCredentialIdentityResolver: credentialsProvider,
-                region: AWSConfig.region,
-                signingRegion: AWSConfig.region.rawValue
+                region: region,
+                signingRegion: region
             )
 
             client = DynamoDBClient(config: config)
@@ -94,9 +98,11 @@ actor DynamoDBClientFactory {
         cachedClient = client
         clientCreatedAt = Date()
 
+        let region = await AWSConfig.region
+        let table = await AWSConfig.dynamoDBTableName
         await Logger.shared.info("DynamoDB client created successfully", metadata: [
-            "region": AWSConfig.region.rawValue,
-            "table": AWSConfig.dynamoDBTableName
+            "region": region,
+            "table": table
         ])
 
         return client
@@ -131,13 +137,14 @@ actor DynamoDBClientFactory {
     /// Create a credentials provider from STS credentials
     private func createCredentialsProvider(
         from credentials: AuthSession.AWSCredentials
-    ) throws -> AWSCredentialIdentity {
-        AWSCredentialIdentity(
+    ) throws -> StaticAWSCredentialIdentityResolver {
+        let identity = AWSCredentialIdentity(
             accessKey: credentials.accessKeyId,
             secret: credentials.secretAccessKey,
-            sessionToken: credentials.sessionToken,
-            expiration: credentials.expiration
+            expiration: credentials.expiration,
+            sessionToken: credentials.sessionToken
         )
+        return try StaticAWSCredentialIdentityResolver(identity)
     }
 }
 
@@ -145,61 +152,61 @@ actor DynamoDBClientFactory {
 
 extension DynamoDBClientFactory {
     /// Create attribute value from string
-    static func stringAttribute(_ value: String) -> AWSDynamoDB.AttributeValue {
+    static func stringAttribute(_ value: String) -> DynamoDBClientTypes.AttributeValue {
         .s(value)
     }
 
     /// Create attribute value from number
-    static func numberAttribute(_ value: Int) -> AWSDynamoDB.AttributeValue {
+    static func numberAttribute(_ value: Int) -> DynamoDBClientTypes.AttributeValue {
         .n(String(value))
     }
 
     /// Create attribute value from number
-    static func numberAttribute(_ value: Double) -> AWSDynamoDB.AttributeValue {
+    static func numberAttribute(_ value: Double) -> DynamoDBClientTypes.AttributeValue {
         .n(String(value))
     }
 
     /// Create attribute value from boolean
-    static func boolAttribute(_ value: Bool) -> AWSDynamoDB.AttributeValue {
+    static func boolAttribute(_ value: Bool) -> DynamoDBClientTypes.AttributeValue {
         .bool(value)
     }
 
     /// Create attribute value from string list
-    static func stringListAttribute(_ values: [String]) -> AWSDynamoDB.AttributeValue {
+    static func stringListAttribute(_ values: [String]) -> DynamoDBClientTypes.AttributeValue {
         .ss(values)
     }
 
     /// Create attribute value from map
-    static func mapAttribute(_ map: [String: AWSDynamoDB.AttributeValue]) -> AWSDynamoDB.AttributeValue {
+    static func mapAttribute(_ map: [String: DynamoDBClientTypes.AttributeValue]) -> DynamoDBClientTypes.AttributeValue {
         .m(map)
     }
 
     /// Extract string from attribute value
-    static func extractString(from attribute: AWSDynamoDB.AttributeValue?) -> String? {
+    static func extractString(from attribute: DynamoDBClientTypes.AttributeValue?) -> String? {
         guard case .s(let value) = attribute else { return nil }
         return value
     }
 
     /// Extract number as Int from attribute value
-    static func extractInt(from attribute: AWSDynamoDB.AttributeValue?) -> Int? {
+    static func extractInt(from attribute: DynamoDBClientTypes.AttributeValue?) -> Int? {
         guard case .n(let value) = attribute else { return nil }
         return Int(value)
     }
 
     /// Extract number as Double from attribute value
-    static func extractDouble(from attribute: AWSDynamoDB.AttributeValue?) -> Double? {
+    static func extractDouble(from attribute: DynamoDBClientTypes.AttributeValue?) -> Double? {
         guard case .n(let value) = attribute else { return nil }
         return Double(value)
     }
 
     /// Extract boolean from attribute value
-    static func extractBool(from attribute: AWSDynamoDB.AttributeValue?) -> Bool? {
+    static func extractBool(from attribute: DynamoDBClientTypes.AttributeValue?) -> Bool? {
         guard case .bool(let value) = attribute else { return nil }
         return value
     }
 
     /// Extract string list from attribute value
-    static func extractStringList(from attribute: AWSDynamoDB.AttributeValue?) -> [String]? {
+    static func extractStringList(from attribute: DynamoDBClientTypes.AttributeValue?) -> [String]? {
         guard case .ss(let value) = attribute else { return nil }
         return value
     }
