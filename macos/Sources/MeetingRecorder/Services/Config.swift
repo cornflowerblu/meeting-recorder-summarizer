@@ -43,7 +43,8 @@ final class Config: ObservableObject {
   // MARK: - Lambda Configuration
 
   var authExchangeLambdaURL: String {
-    bundleValue(for: "AUTH_EXCHANGE_LAMBDA_URL") ?? "https://your-api-gateway-url.execute-api.us-east-1.amazonaws.com/prod/auth/exchange"
+    bundleValue(for: "AUTH_EXCHANGE_LAMBDA_URL")
+      ?? "https://2d9wdaov4i.execute-api.us-east-1.amazonaws.com/auth/exchange"
   }
 
   // MARK: - Recording Settings
@@ -95,7 +96,7 @@ final class Config: ObservableObject {
           "environment": environment.rawValue,
           "awsRegion": awsRegion,
           "s3Bucket": s3BucketName,
-          "dynamoDBTable": dynamoDBTableName
+          "dynamoDBTable": dynamoDBTableName,
         ])
     }
   }
