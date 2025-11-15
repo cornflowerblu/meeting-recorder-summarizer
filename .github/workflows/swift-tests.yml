@@ -63,10 +63,20 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-xcode-spm-
 
-      - name: Build Debug
-          uses: ./.github/workflows/build-step.yml
-          with:
-            configuration: Debug
+      - name: Build
+        working-directory: macos/InterviewCompanion
+        timeout-minutes: 20
+        run: |
+          echo "=== Resolving SPM Dependencies ==="
+          xcodebuild -resolvePackageDependencies -project InterviewCompanion.xcodeproj -scheme InterviewCompanion
+          echo ""
+          echo "=== Building InterviewCompanion ==="
+          xcodebuild -scheme InterviewCompanion \
+            -project InterviewCompanion.xcodeproj \
+            -destination 'platform=macOS' \
+            -configuration Debug \
+            clean build \
+            2>&1 | tail -100
 
       - name: Run Unit Tests
         working-directory: macos/InterviewCompanion
