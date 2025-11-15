@@ -2,15 +2,15 @@ name: Swift Tests
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'macos/**'
-      - '.github/workflows/swift-tests.yml'
+      - "macos/**"
+      - ".github/workflows/swift-tests.yml"
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'macos/**'
-      - '.github/workflows/swift-tests.yml'
+      - "macos/**"
+      - ".github/workflows/swift-tests.yml"
 
 jobs:
   test:
@@ -24,7 +24,7 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.1'
+          xcode-version: "16.1"
 
       - name: Swift Version
         run: swift --version
@@ -47,7 +47,7 @@ jobs:
             -project InterviewCompanion.xcodeproj \
             -destination 'platform=macOS' \
             -configuration Release \
-            build
+            clean build
 
       - name: Run Unit Tests
         working-directory: macos/InterviewCompanion
@@ -197,7 +197,7 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.1'
+          xcode-version: "16.1"
 
       - name: Swift Version
         run: swift --version
