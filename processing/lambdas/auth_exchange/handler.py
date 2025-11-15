@@ -68,8 +68,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         try:
             body = _parse_body(event)
         except ValueError as e:
-            xray_recorder.put_annotation('auth_result', 'validation_error')
-            xray_recorder.put_annotation('error_type', 'ValueError')
             return _error_response(400, str(e))
 
         # Extract and validate Firebase ID token
@@ -107,7 +105,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         if not MACOS_APP_ROLE_ARN:
             return _error_response(500, "Server misconfiguration: MACOS_APP_ROLE_ARN not set")
 
-        # Call STS AssumeRoleWithWebIdentity with X-Ray tracing
+        # Call STS AssumeRoleWithWebIdentity
         try:
             response = sts_client.assume_role_with_web_identity(
                 RoleArn=MACOS_APP_ROLE_ARN,
@@ -118,10 +116,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         except ClientError as e:
             error_code = e.response["Error"]["Code"]
             error_message = e.response["Error"]["Message"]
-
-            # Add X-Ray annotations for error tracking
-            xray_recorder.put_annotation('auth_result', 'failure')
-            xray_recorder.put_annotation('error_code', error_code)
 
             if error_code == "InvalidIdentityToken":
                 return _error_response(401, "Invalid Firebase ID token")
@@ -136,14 +130,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         credentials = response["Credentials"]
         assumed_role_user = response["AssumedRoleUser"]
 
-        # Add searchable X-Ray annotations for filtering traces
-        xray_recorder.put_annotation('user_id', session_name)
-        xray_recorder.put_annotation('auth_result', 'success')
-
-        # Add metadata (not searchable, but visible in trace details)
-        if provider:
-            xray_recorder.put_metadata('firebase_provider', provider)
-
         # Emit user.signed_in event to EventBridge (async, fire-and-forget)
         # Extract optional user profile fields
         user_email = body.get("email")
@@ -152,14 +138,13 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         provider = body.get("provider")
 
         try:
-            with xray_recorder.capture('emit_user_signed_in_event'):
-                _emit_user_signed_in_event(
-                    user_id=session_name,
-                    email=user_email,
-                    display_name=display_name,
-                    photo_url=photo_url,
-                    provider=provider
-                )
+            _emit_user_signed_in_event(
+                user_id=session_name,
+                email=user_email,
+                display_name=display_name,
+                photo_url=photo_url,
+                provider=provider
+            )
         except Exception as e:
             # Log error but don't fail the token exchange
             print(f"Failed to emit user.signed_in event: {str(e)}")
