@@ -12,10 +12,14 @@ final class MeetingRecorderTests: XCTestCase {
     // Put teardown code here. This method is called after the invocation of each test method in the class.
   }
 
-  func testExample() throws {
-    // This is an example of a functional test case.
-    // Use XCTAssert and related functions to verify your tests produce the correct results.
-    XCTFail("Placeholder test - needs implementation")
+  func testConfigSharedReturnsValidInstance() throws {
+    // Test that Config.shared returns a non-nil instance with expected properties
+    let config = Config.shared
+    
+    XCTAssertNotNil(config)
+    XCTAssertEqual(config.chunkDurationSeconds, 60.0)
+    XCTAssertEqual(config.maxRecordingDurationHours, 8.0)
+    XCTAssertFalse(config.awsRegion.isEmpty)
   }
 
   func testPerformanceExample() throws {

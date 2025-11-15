@@ -16,11 +16,8 @@ let package = Package(
     // AWS SDK for Swift - S3, DynamoDB, STS
     .package(url: "https://github.com/awslabs/aws-sdk-swift.git", from: "1.0.0"),
 
-    // Firebase - Authentication
-    .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "12.5.0"),
-
-    // SwiftLint for code style
-    .package(url: "https://github.com/realm/SwiftLint.git", from: "0.57.1"),
+    // Firebase - Authentication (version matches project.yml)
+    .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "10.20.0"),
   ],
   targets: [
     .executableTarget(

@@ -50,7 +50,7 @@ final class Config: ObservableObject {
   // MARK: - Recording Settings
 
   var chunkDurationSeconds: TimeInterval {
-    30.0  // 30-second chunks for incremental upload
+    60.0  // 60-second chunks for incremental upload (per spec.md line 157, tasks.md line 54)
   }
 
   var maxRecordingDurationHours: Double {
