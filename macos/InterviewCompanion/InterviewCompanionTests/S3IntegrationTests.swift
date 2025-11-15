@@ -99,7 +99,7 @@ final class S3IntegrationTests: XCTestCase {
         let testFileURL = tempDirectory.appendingPathComponent("test-chunk-10mb.mp4")
         try testData.write(to: testFileURL)
 
-        let chunk = await ChunkMetadata(
+        let chunk = ChunkMetadata(
             chunkId: "integration-test-chunk-0000",
             filePath: testFileURL,
             sizeBytes: 10_000_000,
@@ -117,7 +117,7 @@ final class S3IntegrationTests: XCTestCase {
         )
 
         // Track for cleanup
-        await createdObjects.append(result.s3Key)
+        createdObjects.append(result.s3Key)
 
         // Then - Verify upload succeeded
         XCTAssertFalse(result.s3Key.isEmpty, "S3 key should not be empty")
@@ -126,7 +126,7 @@ final class S3IntegrationTests: XCTestCase {
         XCTAssertGreaterThan(result.uploadDuration, 0, "Upload duration should be positive")
 
         // Verify object exists in S3
-        let headInput = await HeadObjectInput(bucket: testBucket, key: result.s3Key)
+        let headInput = HeadObjectInput(bucket: testBucket, key: result.s3Key)
         let headOutput = try await s3Client.headObject(input: headInput)
 
         XCTAssertEqual(headOutput.contentLength, 10_000_000, "S3 object size should match uploaded size")
@@ -308,7 +308,7 @@ final class S3IntegrationTests: XCTestCase {
         let testFileURL = tempDirectory.appendingPathComponent("test-security.mp4")
         try testData.write(to: testFileURL)
 
-        let chunk = await ChunkMetadata(
+        let chunk = ChunkMetadata(
             chunkId: "security-test-chunk",
             filePath: testFileURL,
             sizeBytes: 1_000_000,
@@ -325,15 +325,15 @@ final class S3IntegrationTests: XCTestCase {
             userId: maliciousUserId
         )
 
-        await createdObjects.append(result.s3Key)
+        createdObjects.append(result.s3Key)
 
         // Then - Verify path traversal was sanitized
         XCTAssertFalse(result.s3Key.contains(".."), "S3 key should not contain .. sequences")
-//        XCTAssertFalse(result.s3Key.contains("/etc"), "S3 key should not contain /etc")
-//        XCTAssertFalse(result.s3Key.contains("passwd"), "S3 key should not contain passwd")
+        XCTAssertFalse(result.s3Key.contains("/etc"), "S3 key should not contain /etc")
+        XCTAssertFalse(result.s3Key.contains("passwd"), "S3 key should not contain passwd")
 
         // Verify it still uploaded successfully (with sanitized path)
-        let headInput = await HeadObjectInput(bucket: testBucket, key: result.s3Key)
+        let headInput = HeadObjectInput(bucket: testBucket, key: result.s3Key)
         _ = try await s3Client.headObject(input: headInput)
 
         print("✅ Path traversal prevented:")

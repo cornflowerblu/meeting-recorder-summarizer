@@ -65,6 +65,7 @@ struct RecordControlView: View {
                     }
                 }
             }
+            .frame(width: 450, height: 550)
         }
         .onAppear {
             updateDiskSpace()

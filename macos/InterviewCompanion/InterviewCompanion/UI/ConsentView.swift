@@ -71,8 +71,7 @@ struct ConsentView: View {
             Link("Read our Privacy Policy", destination: URL(string: "https://example.com/privacy")!)
                 .font(.caption)
                 .foregroundColor(.blue)
-
-            Spacer()
+                .padding(.bottom, 12)
 
             // Action Buttons
             HStack(spacing: 16) {
@@ -93,7 +92,8 @@ struct ConsentView: View {
             }
             .padding(.bottom, 20)
         }
-        .frame(width: 450, height: 500)
+        .frame(width: 450)
+        .frame(minHeight: 500, maxHeight: 500)
         .background(Color(NSColor.windowBackgroundColor))
     }
 
@@ -101,7 +101,7 @@ struct ConsentView: View {
 
     private var firstRunMessage: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Welcome to Meeting Recorder")
+            Text("Welcome to Interview Companion")
                 .font(.headline)
 
             Text("This app requires permission to record your screen.")
