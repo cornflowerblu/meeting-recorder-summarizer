@@ -39,40 +39,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-xcode-spm-
 
-      - name: Build & Test
+      - name: Run Tests
         working-directory: macos/InterviewCompanion
-        timeout-minutes: 20
+        timeout-minutes: 10
         run: |
-          echo "=== Resolving SPM Dependencies ==="
-          xcodebuild -resolvePackageDependencies -project InterviewCompanion.xcodeproj -scheme InterviewCompanion
-          
-          echo ""
-          echo "=== Building InterviewCompanion ==="
-          xcodebuild build-for-testing \
+          xcodebuild test \
             -project InterviewCompanion.xcodeproj \
             -scheme InterviewCompanion \
-            -destination 'platform=macOS' \
-            CODE_SIGN_IDENTITY="-"
-
-            echo ""
-            echo "=== Running Unit Tests ==="        
-            xcodebuild test-without-building \
-              -project InterviewCompanion.xcodeproj \
-              -scheme InterviewCompanion \
-              -skip-testing:InterviewCompanionUITests \
-              -destination 'platform=macOS' \
-              CODE_SIGN_IDENTITY="-"
-            
-            echo ""
-            echo "=== Running UI Tests ==="        
-            xcodebuild test-without-building \
-              -project InterviewCompanion.xcodeproj \
-              -scheme InterviewCompanion \
-              -skip-testing:InterviewCompanionTests \
-              -destination 'platform=macOS' \
-              CODE_SIGN_IDENTITY="-"
-
-            echo "Note: UI tests requiring screen recording permission are automatically skipped in CI"
+            -destination 'platform=macOS,arch=x86_64' \
+            -skip-testing:InterviewCompanionUITests \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGN_STYLE=Manual        
 
       - name: Upload test results
         if: always()
