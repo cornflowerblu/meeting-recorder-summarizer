@@ -142,7 +142,8 @@ resource "aws_iam_role_policy" "macos_app_dynamodb" {
         ]
         Condition = {
           "ForAllValues:StringLike" = {
-            "dynamodb:LeadingKeys" = ["$${aws:username}"]
+            # GSI partition keys use "USER#{userId}" format
+            "dynamodb:LeadingKeys" = ["USER#$${aws:username}"]
           }
         }
       }
