@@ -45,8 +45,8 @@ jobs:
         run: |
           echo "=== Resolving SPM Dependencies ==="
           xcodebuild -resolvePackageDependencies -project InterviewCompanion.xcodeproj -scheme InterviewCompanion
+          
           echo ""
-
           echo "=== Building InterviewCompanion ==="
           xcodebuild build-for-testing \
             -project InterviewCompanion.xcodeproj \
@@ -54,8 +54,8 @@ jobs:
             -destination 'platform=macOS' \
             CODE_SIGN_IDENTITY="-"
 
+            echo ""
             echo "=== Running Unit Tests ==="        
-            - name: Run Tests
             xcodebuild test-without-building \
               -project InterviewCompanion.xcodeproj \
               -scheme InterviewCompanion \
@@ -63,8 +63,8 @@ jobs:
               -destination 'platform=macOS' \
               CODE_SIGN_IDENTITY="-"
             
+            echo ""
             echo "=== Running UI Tests ==="        
-            - name: Run UI Tests
             xcodebuild test-without-building \
               -project InterviewCompanion.xcodeproj \
               -scheme InterviewCompanion \
@@ -72,7 +72,7 @@ jobs:
               -destination 'platform=macOS' \
               CODE_SIGN_IDENTITY="-"
 
-          echo "Note: UI tests requiring screen recording permission are automatically skipped in CI"
+            echo "Note: UI tests requiring screen recording permission are automatically skipped in CI"
 
       - name: Upload test results
         if: always()
