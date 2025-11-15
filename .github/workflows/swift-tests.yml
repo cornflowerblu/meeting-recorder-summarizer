@@ -48,8 +48,7 @@ jobs:
             -scheme InterviewCompanion \
             -destination 'platform=macOS,arch=x86_64' \
             -skip-testing:InterviewCompanionUITests \
-            CODE_SIGN_IDENTITY="-" \
-            CODE_SIGN_STYLE=Manual        
+            CODE_SIGN_IDENTITY="-"        
 
       - name: Upload test results
         if: always()
