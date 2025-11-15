@@ -73,8 +73,7 @@ resource "aws_cloudwatch_event_rule" "chunk_uploaded" {
       }
       object = {
         key = [{
-          prefix = "users/"
-          }, {
+          prefix = "users/",
           suffix = ".mp4"
         }]
       }
@@ -99,8 +98,8 @@ resource "aws_cloudwatch_event_target" "chunk_upload_handler" {
 
   # Retry configuration
   retry_policy {
-    maxmaximum_event_age_in_seconds = 3600 # 1 hour
-    maximum_retry_attempts          = 3
+    maximum_age_in_seconds = 3600 # 1 hour
+    maximum_retry_attempts = 3
   }
 }
 
@@ -122,6 +121,29 @@ resource "aws_sqs_queue" "chunk_upload_dlq" {
   tags = merge(local.common_tags, {
     Name        = "${local.resource_prefix}-chunk-upload-dlq"
     Description = "Dead letter queue for failed chunk upload events"
+  })
+}
+
+# SQS Queue Policy: Allow EventBridge to send messages
+resource "aws_sqs_queue_policy" "chunk_upload_dlq" {
+  queue_url = aws_sqs_queue.chunk_upload_dlq.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid    = "AllowEventBridgeToSendMessage"
+      Effect = "Allow"
+      Principal = {
+        Service = "events.amazonaws.com"
+      }
+      Action   = "sqs:SendMessage"
+      Resource = aws_sqs_queue.chunk_upload_dlq.arn
+      Condition = {
+        ArnEquals = {
+          "aws:SourceArn" = aws_cloudwatch_event_rule.chunk_uploaded.arn
+        }
+      }
+    }]
   })
 }
 

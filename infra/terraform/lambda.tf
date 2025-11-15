@@ -372,7 +372,7 @@ resource "aws_iam_role_policy" "session_completion_detector_permissions" {
       {
         Effect   = "Allow"
         Action   = "states:StartExecution"
-        Resource = "*" # TODO: Restrict to specific Step Functions ARN once created
+        Resource = aws_sfn_state_machine.ai_processing_pipeline.arn
       }
     ]
   })
