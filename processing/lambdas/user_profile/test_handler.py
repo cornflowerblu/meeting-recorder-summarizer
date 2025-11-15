@@ -4,7 +4,6 @@ Handles user.signed_in events from EventBridge
 """
 
 import json
-import os
 from datetime import datetime, timezone
 from unittest.mock import Mock, patch, MagicMock
 
