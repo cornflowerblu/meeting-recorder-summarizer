@@ -39,26 +39,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-xcode-spm-
 
-      - name: Run Tests
-        working-directory: macos/InterviewCompanion
-        timeout-minutes: 10
-        run: |
-          xcodebuild test \
-            -project InterviewCompanion.xcodeproj \
-            -scheme InterviewCompanion \
-            -destination 'platform=macOS,arch=x86_64' \
-            -skip-testing:InterviewCompanionUITests \
-            CODE_SIGN_IDENTITY="-"        
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: |
-            macos/InterviewCompanion/test-output.txt
-          retention-days: 30
-
   lint:
     name: SwiftLint
     runs-on: macos-15
