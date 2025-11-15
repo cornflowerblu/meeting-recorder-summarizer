@@ -395,8 +395,12 @@ def parse_claude_response(
             "Claude returned invalid JSON",
             extra={
                 'recording_id': recording_id,
-                'claude_response': claude_text[:500],  # First 500 chars
-                'error': str(e)
+                'claude_response_preview': claude_text[:500],  # First 500 chars
+                'claude_response_full': claude_text,
+                'error': str(e),
+                'json_error_lineno': getattr(e, 'lineno', None),
+                'json_error_colno': getattr(e, 'colno', None),
+                'json_error_pos': getattr(e, 'pos', None)
             }
         )
         raise ValueError(f"Invalid JSON from Claude: {e}")
