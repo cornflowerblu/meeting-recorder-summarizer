@@ -134,3 +134,70 @@ resource "aws_dynamodb_table" "meetings" {
 #   "gsi3pk": "USER#user_12345",
 #   "gsi3sk": "TAG#standup"  // Denormalized for each tag
 # }
+
+# DynamoDB Table for Users
+# Stores Firebase user authentication and profile information
+
+resource "aws_dynamodb_table" "users" {
+  name         = "${local.resource_prefix}-users"
+  billing_mode = "PAY_PER_REQUEST" # On-demand pricing for variable workload
+  hash_key     = "userId"          # Partition key: Firebase UID
+
+  # Primary Key Attribute
+  attribute {
+    name = "userId"
+    type = "S" # String: Firebase UID
+  }
+
+  # Email lookup GSI attribute
+  attribute {
+    name = "email"
+    type = "S" # String: User email address
+  }
+
+  # Global Secondary Index: Email lookup
+  global_secondary_index {
+    name            = "EmailIndex"
+    hash_key        = "email"
+    projection_type = "ALL"
+  }
+
+  # Point-in-Time Recovery
+  point_in_time_recovery {
+    enabled = var.enable_point_in_time_recovery
+  }
+
+  # Server-Side Encryption
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = var.use_customer_managed_kms ? aws_kms_key.dynamodb[0].arn : null
+  }
+
+  # TTL Configuration (for cleaning up deleted users)
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
+
+  # Tags
+  tags = merge(local.common_tags, {
+    Name        = "${local.resource_prefix}-users"
+    Description = "User authentication and profile data"
+  })
+
+  # Prevent accidental deletion
+  lifecycle {
+    prevent_destroy = false # Set to true in production
+  }
+}
+
+# Users Table Item Example (for documentation)
+# {
+#   "userId": "firebase_uid_abc123",
+#   "email": "user@example.com",
+#   "displayName": "John Doe",
+#   "createdAt": "2025-11-14T20:00:00Z",
+#   "lastLoginDate": "2025-11-14T20:30:00Z",
+#   "photoURL": "https://...",
+#   "provider": "google.com"
+# }

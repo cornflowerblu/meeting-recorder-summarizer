@@ -42,3 +42,4 @@ terraform.rc
 
 ## Downloaded binaries
 *.zip
+tfplan

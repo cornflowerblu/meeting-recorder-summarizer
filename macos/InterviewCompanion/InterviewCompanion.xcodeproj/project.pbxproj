@@ -1,0 +1,726 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		FD38BBD42EC81B58001EC309 /* AWSEventBridge in Frameworks */ = {isa = PBXBuildFile; productRef = FD38BBD32EC81B58001EC309 /* AWSEventBridge */; };
+		FD5BFF432EC8135B00566C0C /* IntegrationTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF422EC8135B00566C0C /* IntegrationTests.xctestplan */; };
+		FD5BFF452EC8140200566C0C /* UITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF442EC8140200566C0C /* UITests.xctestplan */; };
+		FD5BFF472EC8141F00566C0C /* UnitTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF462EC8141F00566C0C /* UnitTests.xctestplan */; };
+		FD7B51662EC8180000B126A1 /* AllTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD7B51652EC8180000B126A1 /* AllTests.xctestplan */; };
+		FDEE5D722EC7E616002959B6 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = FDEE5D712EC7E616002959B6 /* FirebaseAuth */; };
+		FDEE5D752EC7E684002959B6 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = FDEE5D742EC7E684002959B6 /* GoogleSignIn */; };
+		FDEE5D782EC7E777002959B6 /* AWSDynamoDB in Frameworks */ = {isa = PBXBuildFile; productRef = FDEE5D772EC7E777002959B6 /* AWSDynamoDB */; };
+		FDEE5D7A2EC7E777002959B6 /* AWSS3 in Frameworks */ = {isa = PBXBuildFile; productRef = FDEE5D792EC7E777002959B6 /* AWSS3 */; };
+		FDEE5D7C2EC7E777002959B6 /* AWSSTS in Frameworks */ = {isa = PBXBuildFile; productRef = FDEE5D7B2EC7E777002959B6 /* AWSSTS */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		FDEE5D542EC7E40D002959B6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FDEE5D3E2EC7E40C002959B6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FDEE5D452EC7E40C002959B6;
+			remoteInfo = InterviewCompanion;
+		};
+		FDEE5D5E2EC7E40D002959B6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FDEE5D3E2EC7E40C002959B6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FDEE5D452EC7E40C002959B6;
+			remoteInfo = InterviewCompanion;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		FD5BFF422EC8135B00566C0C /* IntegrationTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = IntegrationTests.xctestplan; sourceTree = "<group>"; };
+		FD5BFF442EC8140200566C0C /* UITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITests.xctestplan; sourceTree = "<group>"; };
+		FD5BFF462EC8141F00566C0C /* UnitTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UnitTests.xctestplan; sourceTree = "<group>"; };
+		FD7B51652EC8180000B126A1 /* AllTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AllTests.xctestplan; sourceTree = "<group>"; };
+		FDEE5D462EC7E40C002959B6 /* InterviewCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InterviewCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FDEE5D532EC7E40D002959B6 /* InterviewCompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InterviewCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FDEE5D5D2EC7E40D002959B6 /* InterviewCompanionUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InterviewCompanionUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		FDEE5DEA2EC7EC34002959B6 /* Exceptions for "InterviewCompanion" folder in "InterviewCompanion" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = FDEE5D452EC7E40C002959B6 /* InterviewCompanion */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		FDEE5D482EC7E40C002959B6 /* InterviewCompanion */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				FDEE5DEA2EC7EC34002959B6 /* Exceptions for "InterviewCompanion" folder in "InterviewCompanion" target */,
+			);
+			path = InterviewCompanion;
+			sourceTree = "<group>";
+		};
+		FDEE5D562EC7E40D002959B6 /* InterviewCompanionTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = InterviewCompanionTests;
+			sourceTree = "<group>";
+		};
+		FDEE5D602EC7E40D002959B6 /* InterviewCompanionUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = InterviewCompanionUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FDEE5D432EC7E40C002959B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FDEE5D7C2EC7E777002959B6 /* AWSSTS in Frameworks */,
+				FDEE5D722EC7E616002959B6 /* FirebaseAuth in Frameworks */,
+				FD38BBD42EC81B58001EC309 /* AWSEventBridge in Frameworks */,
+				FDEE5D782EC7E777002959B6 /* AWSDynamoDB in Frameworks */,
+				FDEE5D7A2EC7E777002959B6 /* AWSS3 in Frameworks */,
+				FDEE5D752EC7E684002959B6 /* GoogleSignIn in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FDEE5D502EC7E40D002959B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FDEE5D5A2EC7E40D002959B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		FDEE5D3D2EC7E40C002959B6 = {
+			isa = PBXGroup;
+			children = (
+				FD7B51652EC8180000B126A1 /* AllTests.xctestplan */,
+				FD5BFF462EC8141F00566C0C /* UnitTests.xctestplan */,
+				FD5BFF442EC8140200566C0C /* UITests.xctestplan */,
+				FD5BFF422EC8135B00566C0C /* IntegrationTests.xctestplan */,
+				FDEE5D482EC7E40C002959B6 /* InterviewCompanion */,
+				FDEE5D562EC7E40D002959B6 /* InterviewCompanionTests */,
+				FDEE5D602EC7E40D002959B6 /* InterviewCompanionUITests */,
+				FDEE5D472EC7E40C002959B6 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FDEE5D472EC7E40C002959B6 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FDEE5D462EC7E40C002959B6 /* InterviewCompanion.app */,
+				FDEE5D532EC7E40D002959B6 /* InterviewCompanionTests.xctest */,
+				FDEE5D5D2EC7E40D002959B6 /* InterviewCompanionUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		FDEE5D452EC7E40C002959B6 /* InterviewCompanion */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FDEE5D672EC7E40D002959B6 /* Build configuration list for PBXNativeTarget "InterviewCompanion" */;
+			buildPhases = (
+				FDEE5D422EC7E40C002959B6 /* Sources */,
+				FDEE5D432EC7E40C002959B6 /* Frameworks */,
+				FDEE5D442EC7E40C002959B6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				FDEE5D482EC7E40C002959B6 /* InterviewCompanion */,
+			);
+			name = InterviewCompanion;
+			packageProductDependencies = (
+				FDEE5D712EC7E616002959B6 /* FirebaseAuth */,
+				FDEE5D742EC7E684002959B6 /* GoogleSignIn */,
+				FDEE5D772EC7E777002959B6 /* AWSDynamoDB */,
+				FDEE5D792EC7E777002959B6 /* AWSS3 */,
+				FDEE5D7B2EC7E777002959B6 /* AWSSTS */,
+				FD38BBD32EC81B58001EC309 /* AWSEventBridge */,
+			);
+			productName = InterviewCompanion;
+			productReference = FDEE5D462EC7E40C002959B6 /* InterviewCompanion.app */;
+			productType = "com.apple.product-type.application";
+		};
+		FDEE5D522EC7E40D002959B6 /* InterviewCompanionTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FDEE5D6A2EC7E40D002959B6 /* Build configuration list for PBXNativeTarget "InterviewCompanionTests" */;
+			buildPhases = (
+				FDEE5D4F2EC7E40D002959B6 /* Sources */,
+				FDEE5D502EC7E40D002959B6 /* Frameworks */,
+				FDEE5D512EC7E40D002959B6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FDEE5D552EC7E40D002959B6 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				FDEE5D562EC7E40D002959B6 /* InterviewCompanionTests */,
+			);
+			name = InterviewCompanionTests;
+			packageProductDependencies = (
+			);
+			productName = InterviewCompanionTests;
+			productReference = FDEE5D532EC7E40D002959B6 /* InterviewCompanionTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		FDEE5D5C2EC7E40D002959B6 /* InterviewCompanionUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FDEE5D6D2EC7E40D002959B6 /* Build configuration list for PBXNativeTarget "InterviewCompanionUITests" */;
+			buildPhases = (
+				FDEE5D592EC7E40D002959B6 /* Sources */,
+				FDEE5D5A2EC7E40D002959B6 /* Frameworks */,
+				FDEE5D5B2EC7E40D002959B6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FDEE5D5F2EC7E40D002959B6 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				FDEE5D602EC7E40D002959B6 /* InterviewCompanionUITests */,
+			);
+			name = InterviewCompanionUITests;
+			packageProductDependencies = (
+			);
+			productName = InterviewCompanionUITests;
+			productReference = FDEE5D5D2EC7E40D002959B6 /* InterviewCompanionUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FDEE5D3E2EC7E40C002959B6 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2610;
+				LastUpgradeCheck = 2610;
+				TargetAttributes = {
+					FDEE5D452EC7E40C002959B6 = {
+						CreatedOnToolsVersion = 26.1.1;
+					};
+					FDEE5D522EC7E40D002959B6 = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = FDEE5D452EC7E40C002959B6;
+					};
+					FDEE5D5C2EC7E40D002959B6 = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = FDEE5D452EC7E40C002959B6;
+					};
+				};
+			};
+			buildConfigurationList = FDEE5D412EC7E40C002959B6 /* Build configuration list for PBXProject "InterviewCompanion" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = FDEE5D3D2EC7E40C002959B6;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				FDEE5D702EC7E616002959B6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				FDEE5D732EC7E684002959B6 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				FDEE5D762EC7E777002959B6 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = FDEE5D472EC7E40C002959B6 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FDEE5D452EC7E40C002959B6 /* InterviewCompanion */,
+				FDEE5D522EC7E40D002959B6 /* InterviewCompanionTests */,
+				FDEE5D5C2EC7E40D002959B6 /* InterviewCompanionUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FDEE5D442EC7E40C002959B6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FD5BFF432EC8135B00566C0C /* IntegrationTests.xctestplan in Resources */,
+				FD5BFF452EC8140200566C0C /* UITests.xctestplan in Resources */,
+				FD5BFF472EC8141F00566C0C /* UnitTests.xctestplan in Resources */,
+				FD7B51662EC8180000B126A1 /* AllTests.xctestplan in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FDEE5D512EC7E40D002959B6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FDEE5D5B2EC7E40D002959B6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		FDEE5D422EC7E40C002959B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FDEE5D4F2EC7E40D002959B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FDEE5D592EC7E40D002959B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		FDEE5D552EC7E40D002959B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FDEE5D452EC7E40C002959B6 /* InterviewCompanion */;
+			targetProxy = FDEE5D542EC7E40D002959B6 /* PBXContainerItemProxy */;
+		};
+		FDEE5D5F2EC7E40D002959B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FDEE5D452EC7E40C002959B6 /* InterviewCompanion */;
+			targetProxy = FDEE5D5E2EC7E40D002959B6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		FDEE5D652EC7E40D002959B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = H7JMZ6X53B;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		FDEE5D662EC7E40D002959B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = H7JMZ6X53B;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		FDEE5D682EC7E40D002959B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = InterviewCompanion/InterviewCompanion.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H7JMZ6X53B;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;
+				ENABLE_FILE_ACCESS_MOVIES_FOLDER = readwrite;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = YES;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = YES;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = InterviewCompanion/Info.plist;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slingshotgroup.interviewcompanion;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		FDEE5D692EC7E40D002959B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = InterviewCompanion/InterviewCompanion.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H7JMZ6X53B;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;
+				ENABLE_FILE_ACCESS_MOVIES_FOLDER = readwrite;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = YES;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = YES;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readwrite;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = InterviewCompanion/Info.plist;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slingshotgroup.interviewcompanion;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		FDEE5D6B2EC7E40D002959B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H7JMZ6X53B;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slingshot.InterviewCompanionTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/InterviewCompanion.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/InterviewCompanion";
+			};
+			name = Debug;
+		};
+		FDEE5D6C2EC7E40D002959B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H7JMZ6X53B;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slingshot.InterviewCompanionTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/InterviewCompanion.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/InterviewCompanion";
+			};
+			name = Release;
+		};
+		FDEE5D6E2EC7E40D002959B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H7JMZ6X53B;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slingshot.InterviewCompanionUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = InterviewCompanion;
+			};
+			name = Debug;
+		};
+		FDEE5D6F2EC7E40D002959B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H7JMZ6X53B;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slingshot.InterviewCompanionUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = InterviewCompanion;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		FDEE5D412EC7E40C002959B6 /* Build configuration list for PBXProject "InterviewCompanion" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FDEE5D652EC7E40D002959B6 /* Debug */,
+				FDEE5D662EC7E40D002959B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FDEE5D672EC7E40D002959B6 /* Build configuration list for PBXNativeTarget "InterviewCompanion" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FDEE5D682EC7E40D002959B6 /* Debug */,
+				FDEE5D692EC7E40D002959B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FDEE5D6A2EC7E40D002959B6 /* Build configuration list for PBXNativeTarget "InterviewCompanionTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FDEE5D6B2EC7E40D002959B6 /* Debug */,
+				FDEE5D6C2EC7E40D002959B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FDEE5D6D2EC7E40D002959B6 /* Build configuration list for PBXNativeTarget "InterviewCompanionUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FDEE5D6E2EC7E40D002959B6 /* Debug */,
+				FDEE5D6F2EC7E40D002959B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		FDEE5D702EC7E616002959B6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.6.0;
+			};
+		};
+		FDEE5D732EC7E684002959B6 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
+		FDEE5D762EC7E777002959B6 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/awslabs/aws-sdk-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.85;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		FD38BBD32EC81B58001EC309 /* AWSEventBridge */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FDEE5D762EC7E777002959B6 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
+			productName = AWSEventBridge;
+		};
+		FDEE5D712EC7E616002959B6 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FDEE5D702EC7E616002959B6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		FDEE5D742EC7E684002959B6 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FDEE5D732EC7E684002959B6 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		FDEE5D772EC7E777002959B6 /* AWSDynamoDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FDEE5D762EC7E777002959B6 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
+			productName = AWSDynamoDB;
+		};
+		FDEE5D792EC7E777002959B6 /* AWSS3 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FDEE5D762EC7E777002959B6 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
+			productName = AWSS3;
+		};
+		FDEE5D7B2EC7E777002959B6 /* AWSSTS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FDEE5D762EC7E777002959B6 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
+			productName = AWSSTS;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = FDEE5D3E2EC7E40C002959B6 /* Project object */;
+}

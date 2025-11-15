@@ -156,14 +156,58 @@ pip install pytest pytest-cov ruff
 
 **4. Run tests**
 ```bash
-# Swift tests
+# Swift unit tests
 cd macos
-swift test
+xcodebuild test \
+  -scheme InterviewCompanion \
+  -destination 'platform=macOS' \
+  -only-testing:InterviewCompanionTests
+
+# Swift UI tests
+xcodebuild test \
+  -scheme InterviewCompanion \
+  -destination 'platform=macOS' \
+  -only-testing:InterviewCompanionUITests
 
 # Python tests
 cd ../processing
 pytest
 ```
+
+**4a. Run integration tests (requires AWS credentials)**
+
+Integration tests verify actual S3 uploads and require AWS credentials. To keep credentials secure:
+
+**Option 1: User-Specific Xcode Scheme (Recommended for Xcode)**
+1. In Xcode: **Product → Scheme → Manage Schemes**
+2. Duplicate "InterviewCompanion" scheme
+3. Name it "InterviewCompanion (Local)"
+4. **Uncheck "Shared"** (keeps it out of git)
+5. Edit scheme → Test → Arguments tab
+6. Add environment variables:
+   - `AWS_ACCESS_KEY_ID`
+   - `AWS_SECRET_ACCESS_KEY`
+   - `AWS_REGION` = `us-east-1`
+   - `TEST_S3_BUCKET` = `meeting-recorder-test-integration`
+7. Run integration tests using your local scheme
+
+**Option 2: Shell Environment Variables (Command Line)**
+```bash
+# Set credentials in your shell
+export AWS_ACCESS_KEY_ID="your-test-access-key"
+export AWS_SECRET_ACCESS_KEY="your-test-secret-key"
+export AWS_REGION="us-east-1"
+export TEST_S3_BUCKET="meeting-recorder-test-integration"
+
+# Run integration tests
+cd macos
+xcodebuild test \
+  -scheme InterviewCompanion \
+  -destination 'platform=macOS' \
+  -only-testing:InterviewCompanionTests/S3IntegrationTests
+```
+
+> ⚠️ **Never commit AWS credentials to git!** User-specific schemes are stored in `xcuserdata/` which is gitignored.
 
 **5. Deploy infrastructure (Phase 2+)**
 ```bash

@@ -104,7 +104,7 @@ resource "aws_iam_role_policy" "macos_app_s3" {
   })
 }
 
-# Policy for macOS app DynamoDB access
+# Policy for macOS app DynamoDB access (meetings table)
 resource "aws_iam_role_policy" "macos_app_dynamodb" {
   name = "dynamodb-access"
   role = aws_iam_role.macos_app.id
@@ -130,6 +130,50 @@ resource "aws_iam_role_policy" "macos_app_dynamodb" {
         Condition = {
           "ForAllValues:StringLike" = {
             "dynamodb:LeadingKeys" = ["$${aws:username}#*"]
+          }
+        }
+      }
+    ]
+  })
+}
+
+# Policy for macOS app DynamoDB access (users table)
+# Users can only read/write their own user profile (userId = aws:username)
+resource "aws_iam_role_policy" "macos_app_dynamodb_users" {
+  name = "dynamodb-users-access"
+  role = aws_iam_role.macos_app.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowUserProfileOperations"
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem"
+        ]
+        Resource = aws_dynamodb_table.users.arn
+        Condition = {
+          "ForAllValues:StringEquals" = {
+            "dynamodb:LeadingKeys" = ["$${aws:username}"]
+          }
+        }
+      },
+      {
+        Sid    = "AllowQueryOwnProfile"
+        Effect = "Allow"
+        Action = [
+          "dynamodb:Query"
+        ]
+        Resource = [
+          aws_dynamodb_table.users.arn,
+          "${aws_dynamodb_table.users.arn}/index/*"
+        ]
+        Condition = {
+          "ForAllValues:StringEquals" = {
+            "dynamodb:LeadingKeys" = ["$${aws:username}"]
           }
         }
       }
@@ -208,6 +252,26 @@ resource "aws_iam_role_policy" "auth_exchange_lambda_sts" {
           "sts:GetFederationToken"
         ]
         Resource = aws_iam_role.macos_app.arn
+      }
+    ]
+  })
+}
+
+# Policy for auth exchange Lambda to publish events to EventBridge
+resource "aws_iam_role_policy" "auth_exchange_lambda_eventbridge" {
+  name = "eventbridge-publish"
+  role = aws_iam_role.auth_exchange_lambda.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowEventBridgePublish"
+        Effect = "Allow"
+        Action = [
+          "events:PutEvents"
+        ]
+        Resource = aws_cloudwatch_event_bus.auth_events.arn
       }
     ]
   })
