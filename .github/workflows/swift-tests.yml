@@ -60,6 +60,9 @@ jobs:
         working-directory: macos/InterviewCompanion
         timeout-minutes: 15
         run: |
+          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "=== Running Unit, Integration, UI Tests ==="        
           xcodebuild test \
             -project macos/InterviewCompanion/InterviewCompanion.xcodeproj \
             -scheme InterviewCompanion \
@@ -68,47 +71,6 @@ jobs:
             2>&1 | tee test-output.txt
 
           echo "Note: UI tests requiring screen recording permission are automatically skipped in CI"
-
-      - name: Test Summary
-        if: always()
-        working-directory: macos/InterviewCompanion
-        run: |
-          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          # Unit Tests
-          if [ -f test-output.txt ]; then
-            echo "### Unit Tests" >> $GITHUB_STEP_SUMMARY
-            if grep -q "Test Suite.*passed" test-output.txt; then
-              PASSED=$(grep -E "Executed|Test Suite.*passed" test-output.txt | tail -1 || echo "")
-              echo "✅ **Passed**" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              echo "$PASSED" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-            else
-              echo "❌ **Failed**" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "See logs for details" >> $GITHUB_STEP_SUMMARY
-            fi
-            echo "" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          # UI Tests
-          if [ -f ui-test-output.txt ]; then
-            echo "### UI Tests" >> $GITHUB_STEP_SUMMARY
-            SKIPPED=$(grep -c "XCTSkip" ui-test-output.txt || echo "0")
-            if grep -q "Test Suite.*passed" ui-test-output.txt; then
-              PASSED=$(grep -E "Executed|Test Suite.*passed" ui-test-output.txt | tail -1 || echo "")
-              echo "✅ **Passed** ($SKIPPED tests skipped - screen recording permission not available)" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              echo "$PASSED" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-            else
-              echo "⚠️ **Some tests skipped** ($SKIPPED tests require screen recording permission)" >> $GITHUB_STEP_SUMMARY
-            fi
-          fi
 
       - name: Upload test results
         if: always()
@@ -169,15 +131,7 @@ jobs:
         with:
           name: swiftlint-results
           path: macos/swiftlint-results.txt
-          retention-days: 30
-
-  integration-tests:
-    name: Integration Tests
-    runs-on: macos-15
-    needs: test
-    if: github.event_name == 'pull_request'
-    # Only run if AWS credentials are configured
-    # Set these as repository secrets: AWS_TEST_ACCESS_KEY_ID, AWS_TEST_SECRET_ACCESS_KEY
+          retention-days: 30    
 
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_TEST_ACCESS_KEY_ID }}
