@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		FD38BBD42EC81B58001EC309 /* AWSEventBridge in Frameworks */ = {isa = PBXBuildFile; productRef = FD38BBD32EC81B58001EC309 /* AWSEventBridge */; };
-		FD5BFF412EC812AD00566C0C /* DefaultTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF402EC812AD00566C0C /* DefaultTestPlan.xctestplan */; };
 		FD5BFF432EC8135B00566C0C /* IntegrationTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF422EC8135B00566C0C /* IntegrationTests.xctestplan */; };
 		FD5BFF452EC8140200566C0C /* UITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF442EC8140200566C0C /* UITests.xctestplan */; };
 		FD5BFF472EC8141F00566C0C /* UnitTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF462EC8141F00566C0C /* UnitTests.xctestplan */; };
@@ -38,7 +37,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		FD5BFF402EC812AD00566C0C /* DefaultTestPlan.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = DefaultTestPlan.xctestplan; sourceTree = "<group>"; };
 		FD5BFF422EC8135B00566C0C /* IntegrationTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = IntegrationTests.xctestplan; sourceTree = "<group>"; };
 		FD5BFF442EC8140200566C0C /* UITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITests.xctestplan; sourceTree = "<group>"; };
 		FD5BFF462EC8141F00566C0C /* UnitTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UnitTests.xctestplan; sourceTree = "<group>"; };
@@ -117,7 +115,6 @@
 				FD5BFF462EC8141F00566C0C /* UnitTests.xctestplan */,
 				FD5BFF442EC8140200566C0C /* UITests.xctestplan */,
 				FD5BFF422EC8135B00566C0C /* IntegrationTests.xctestplan */,
-				FD5BFF402EC812AD00566C0C /* DefaultTestPlan.xctestplan */,
 				FDEE5D482EC7E40C002959B6 /* InterviewCompanion */,
 				FDEE5D562EC7E40D002959B6 /* InterviewCompanionTests */,
 				FDEE5D602EC7E40D002959B6 /* InterviewCompanionUITests */,
@@ -267,7 +264,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				FD5BFF432EC8135B00566C0C /* IntegrationTests.xctestplan in Resources */,
-				FD5BFF412EC812AD00566C0C /* DefaultTestPlan.xctestplan in Resources */,
 				FD5BFF452EC8140200566C0C /* UITests.xctestplan in Resources */,
 				FD5BFF472EC8141F00566C0C /* UnitTests.xctestplan in Resources */,
 				FD7B51662EC8180000B126A1 /* AllTests.xctestplan in Resources */,

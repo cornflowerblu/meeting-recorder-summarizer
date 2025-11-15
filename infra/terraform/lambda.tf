@@ -63,7 +63,7 @@ resource "aws_lambda_function" "user_profile" {
   description   = "Handle user.signed_in events and update Users table"
   role          = aws_iam_role.user_profile_lambda.arn
   handler       = "handler.handler"
-  runtime       = "python3.12"
+  runtime       = "python3.11"
   timeout       = 10
   memory_size   = 256
 
