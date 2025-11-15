@@ -39,7 +39,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-xcode-spm-
 
-      - name: Build
+      - name: Build & Test
         working-directory: macos/InterviewCompanion
         timeout-minutes: 20
         run: |
