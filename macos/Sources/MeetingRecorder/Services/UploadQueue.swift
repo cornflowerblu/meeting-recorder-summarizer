@@ -47,10 +47,12 @@ final class UploadQueue: ObservableObject {
     /// Upload a chunk to S3
     /// Backend will handle retry, stitching, etc. via EventBridge events
     func enqueue(_ chunk: ChunkMetadata) async throws {
-        await Logger.shared.info("Uploading chunk", metadata: [
-            "recordingId": chunk.recordingId,
-            "chunkIndex": String(chunk.chunkIndex)
-        ])
+        await Logger.shared.info(
+            "Uploading chunk",
+            metadata: [
+                "recordingId": chunk.recordingId,
+                "chunkIndex": String(chunk.chunkIndex),
+            ])
 
         isUploading = true
 
@@ -62,10 +64,12 @@ final class UploadQueue: ObservableObject {
                 contentType: "video/quicktime"
             )
 
-            await Logger.shared.info("Chunk uploaded successfully", metadata: [
-                "s3Key": result.s3Key,
-                "fileSize": String(result.fileSize)
-            ])
+            await Logger.shared.info(
+                "Chunk uploaded successfully",
+                metadata: [
+                    "s3Key": result.s3Key,
+                    "fileSize": String(result.fileSize),
+                ])
 
             uploadedChunks += 1
 
@@ -76,10 +80,12 @@ final class UploadQueue: ObservableObject {
             // - Backend handles: retry logic, stitching, processing orchestration
 
         } catch {
-            await Logger.shared.error("Chunk upload failed", metadata: [
-                "error": error.localizedDescription,
-                "chunkIndex": String(chunk.chunkIndex)
-            ])
+            await Logger.shared.error(
+                "Chunk upload failed",
+                metadata: [
+                    "error": error.localizedDescription,
+                    "chunkIndex": String(chunk.chunkIndex),
+                ])
             throw UploadQueueError.uploadFailed(error.localizedDescription)
         }
 
@@ -95,8 +101,8 @@ final class UploadQueue: ObservableObject {
     // MARK: - Testing Support
 
     #if DEBUG
-    static func testing() -> UploadQueue {
-        UploadQueue(s3Uploader: S3Uploader())
-    }
+        static func testing() -> UploadQueue {
+            UploadQueue(s3Uploader: S3Uploader())
+        }
     #endif
 }
