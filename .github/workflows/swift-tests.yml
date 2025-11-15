@@ -56,28 +56,16 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             build
 
-      - name: Run Unit Tests
+      - name: Run ALL Tests
         working-directory: macos/InterviewCompanion
         timeout-minutes: 15
         run: |
           xcodebuild test \
+            -project macos/InterviewCompanion/InterviewCompanion.xcodeproj \
             -scheme InterviewCompanion \
-            -project InterviewCompanion.xcodeproj \
             -destination 'platform=macOS' \
-            -only-testing:InterviewCompanionTests \
+            CODE_SIGN_IDENTITY="-" \
             2>&1 | tee test-output.txt
-
-      - name: Run UI Tests
-        working-directory: macos/InterviewCompanion
-        timeout-minutes: 10
-        run: |
-          # UI tests will skip tests that require screen recording permission
-          xcodebuild test \
-            -scheme InterviewCompanion \
-            -project InterviewCompanion.xcodeproj \
-            -destination 'platform=macOS' \
-            -only-testing:InterviewCompanionUITests \
-            2>&1 | tee ui-test-output.txt || true
 
           echo "Note: UI tests requiring screen recording permission are automatically skipped in CI"
 
@@ -247,11 +235,12 @@ jobs:
           fi
 
           echo "✅ Running integration tests with AWS credentials"
-          xcodebuild test \
+            xcodebuild test \
+            -project macos/InterviewCompanion/InterviewCompanion.xcodeproj \
             -scheme InterviewCompanion \
-            -project InterviewCompanion.xcodeproj \
             -destination 'platform=macOS' \
             -only-testing:S3IntegrationTests \
+            CODE_SIGN_IDENTITY="-" \
             2>&1 | tee integration-test-output.txt
 
       - name: Integration Test Summary
