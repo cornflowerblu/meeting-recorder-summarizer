@@ -99,8 +99,8 @@ resource "aws_cloudwatch_event_target" "chunk_upload_handler" {
 
   # Retry configuration
   retry_policy {
-    maxmaximum_event_age_in_seconds = 3600 # 1 hour
-    maximum_retry_attempts          = 3
+    maximum_event_age_in_seconds = 3600 # 1 hour
+    maximum_retry_attempts       = 3
   }
 }
 
