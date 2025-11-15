@@ -46,20 +46,18 @@ jobs:
           echo "=== Resolving SPM Dependencies ==="
           xcodebuild -resolvePackageDependencies -project InterviewCompanion.xcodeproj -scheme InterviewCompanion
           echo ""
+
           echo "=== Building InterviewCompanion ==="
           xcodebuild build-for-testing \
-            -project macos/InterviewCompanion/InterviewCompanion.xcodeproj \
+            -project InterviewCompanion.xcodeproj \
             -scheme InterviewCompanion \
             -destination 'platform=macOS' \
             CODE_SIGN_IDENTITY="-"
 
-            working-directory: macos/InterviewCompanion
-            timeout-minutes: 15
-            run: |
             echo "=== Running Unit Tests ==="        
             - name: Run Tests
             xcodebuild test-without-building \
-              -project macos/InterviewCompanion/InterviewCompanion.xcodeproj \
+              -project InterviewCompanion.xcodeproj \
               -scheme InterviewCompanion \
               -skip-testing:InterviewCompanionUITests \
               -destination 'platform=macOS' \
@@ -68,7 +66,7 @@ jobs:
             echo "=== Running UI Tests ==="        
             - name: Run UI Tests
             xcodebuild test-without-building \
-              -project macos/InterviewCompanion/InterviewCompanion.xcodeproj \
+              -project InterviewCompanion.xcodeproj \
               -scheme InterviewCompanion \
               -skip-testing:InterviewCompanionTests \
               -destination 'platform=macOS' \
