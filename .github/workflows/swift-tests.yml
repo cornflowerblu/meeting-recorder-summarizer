@@ -59,7 +59,8 @@ jobs:
             -destination 'platform=macOS' \
             -configuration Debug \
             -allowProvisioningUpdates \
-            clean build \
+            - CODE_SIGN_IDENTITY="-" \
+            build \
             2>&1 | tail -100
 
       - name: Run Unit Tests
