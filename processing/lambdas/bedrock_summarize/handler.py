@@ -5,7 +5,7 @@ Implementation of T037 - Claude-based meeting summarization with structured outp
 
 import json
 import uuid
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from datetime import datetime
 
 import boto3
