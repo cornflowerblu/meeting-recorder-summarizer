@@ -64,7 +64,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "=== Running Unit, Integration, UI Tests ==="        
           xcodebuild test \
-            -project macos/InterviewCompanion/InterviewCompanion.xcodeproj \
+            -project InterviewCompanion.xcodeproj \
             -scheme InterviewCompanion \
             -destination 'platform=macOS' \
             CODE_SIGN_IDENTITY="-" \
@@ -79,7 +79,6 @@ jobs:
           name: test-results
           path: |
             macos/InterviewCompanion/test-output.txt
-            macos/InterviewCompanion/ui-test-output.txt
           retention-days: 30
 
   lint:
