@@ -114,6 +114,7 @@ final class AuthService: ObservableObject {
             )
 
             // Exchange Firebase token for AWS credentials
+            // Lambda will emit user.signed_in event to EventBridge
             try await exchangeTokenForCredentials(user: authResult.user)
 
             self.currentUser = authResult.user
@@ -144,6 +145,7 @@ final class AuthService: ObservableObject {
             )
 
             // Exchange Firebase token for AWS credentials
+            // Lambda will emit user.signed_in event to EventBridge
             try await exchangeTokenForCredentials(user: result.user)
 
             self.currentUser = result.user
@@ -174,6 +176,7 @@ final class AuthService: ObservableObject {
             )
 
             // Exchange Firebase token for AWS credentials
+            // Lambda will emit user.signed_in event to EventBridge
             try await exchangeTokenForCredentials(user: result.user)
 
             self.currentUser = result.user
@@ -302,10 +305,27 @@ final class AuthService: ObservableObject {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let requestBody = [
+        // Build request body with user profile data for EventBridge event
+        var requestBody: [String: String] = [
             "id_token": idToken,
             "session_name": user.uid,
         ]
+
+        // Add optional user profile fields
+        if let email = user.email {
+            requestBody["email"] = email
+        }
+        if let displayName = user.displayName {
+            requestBody["display_name"] = displayName
+        }
+        if let photoURL = user.photoURL?.absoluteString {
+            requestBody["photo_url"] = photoURL
+        }
+        // Get provider from first provider data entry
+        if let providerId = user.providerData.first?.providerID {
+            requestBody["provider"] = providerId
+        }
+
         request.httpBody = try JSONEncoder().encode(requestBody)
 
         var (data, response) = try await URLSession.shared.data(for: request)

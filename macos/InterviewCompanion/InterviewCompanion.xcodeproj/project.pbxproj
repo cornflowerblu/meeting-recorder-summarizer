@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FD38BBD42EC81B58001EC309 /* AWSEventBridge in Frameworks */ = {isa = PBXBuildFile; productRef = FD38BBD32EC81B58001EC309 /* AWSEventBridge */; };
 		FD5BFF412EC812AD00566C0C /* DefaultTestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF402EC812AD00566C0C /* DefaultTestPlan.xctestplan */; };
 		FD5BFF432EC8135B00566C0C /* IntegrationTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF422EC8135B00566C0C /* IntegrationTests.xctestplan */; };
 		FD5BFF452EC8140200566C0C /* UITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF442EC8140200566C0C /* UITests.xctestplan */; };
@@ -85,6 +86,7 @@
 			files = (
 				FDEE5D7C2EC7E777002959B6 /* AWSSTS in Frameworks */,
 				FDEE5D722EC7E616002959B6 /* FirebaseAuth in Frameworks */,
+				FD38BBD42EC81B58001EC309 /* AWSEventBridge in Frameworks */,
 				FDEE5D782EC7E777002959B6 /* AWSDynamoDB in Frameworks */,
 				FDEE5D7A2EC7E777002959B6 /* AWSS3 in Frameworks */,
 				FDEE5D752EC7E684002959B6 /* GoogleSignIn in Frameworks */,
@@ -158,6 +160,7 @@
 				FDEE5D772EC7E777002959B6 /* AWSDynamoDB */,
 				FDEE5D792EC7E777002959B6 /* AWSS3 */,
 				FDEE5D7B2EC7E777002959B6 /* AWSSTS */,
+				FD38BBD32EC81B58001EC309 /* AWSEventBridge */,
 			);
 			productName = InterviewCompanion;
 			productReference = FDEE5D462EC7E40C002959B6 /* InterviewCompanion.app */;
@@ -691,6 +694,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		FD38BBD32EC81B58001EC309 /* AWSEventBridge */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FDEE5D762EC7E777002959B6 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
+			productName = AWSEventBridge;
+		};
 		FDEE5D712EC7E616002959B6 /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = FDEE5D702EC7E616002959B6 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
