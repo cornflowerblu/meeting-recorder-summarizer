@@ -63,16 +63,6 @@ struct AWSConfig {
         return RuntimeConfig.shared.dynamoDBTableName
     }
 
-    /// DynamoDB table name for users
-    /// Fetched from SSM Parameter Store: /meeting-recorder/{environment}/dynamodb/users-table-name
-    static var dynamoDBUsersTableName: String {
-        return RuntimeConfig.shared.dynamoDBUsersTableName
-    }
-
-    /// DynamoDB partition key format
-    static func dynamoDBPartitionKey(userId: String, recordingId: String) -> String {
-        return "\(userId)#\(recordingId)"
-    }
 
     /// DynamoDB sort key for metadata items
     static let dynamoDBMetadataSortKey = "METADATA"
@@ -209,7 +199,6 @@ final class RuntimeConfig: @unchecked Sendable {
 
     private var cachedS3BucketName: String?
     private var cachedDynamoDBTableName: String?
-    private var cachedDynamoDBUsersTableName: String?
     private let queue = DispatchQueue(label: "com.slingshotgroup.interviewcompanion.runtimeconfig")
     private var ssmClient: SSMClient?
 
@@ -282,32 +271,6 @@ final class RuntimeConfig: @unchecked Sendable {
     }
 
     /// DynamoDB users table name from Parameter Store
-    var dynamoDBUsersTableName: String {
-        return queue.sync {
-            if let cached = cachedDynamoDBUsersTableName {
-                return cached
-            }
-
-            // Fetch from SSM Parameter Store
-            let parameterName = "/meeting-recorder/\(AWSConfig.environment)/dynamodb/users-table-name"
-
-            if let value = fetchParameter(name: parameterName) {
-                cachedDynamoDBUsersTableName = value
-                return value
-            }
-
-            // Fallback to hardcoded value with warning
-            Logger.app.warning(
-                "Failed to fetch DynamoDB users table name from Parameter Store, using fallback",
-                file: #file,
-                function: #function,
-                line: #line
-            )
-            let fallback = "meeting-recorder-\(AWSConfig.environment)-users"
-            cachedDynamoDBUsersTableName = fallback
-            return fallback
-        }
-    }
 
     /// Fetch a parameter from SSM Parameter Store
     /// Uses a semaphore to block until the async AWS call completes
@@ -363,7 +326,6 @@ final class RuntimeConfig: @unchecked Sendable {
         queue.sync {
             cachedS3BucketName = nil
             cachedDynamoDBTableName = nil
-            cachedDynamoDBUsersTableName = nil
         }
     }
 }
