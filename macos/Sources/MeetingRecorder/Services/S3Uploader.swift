@@ -39,7 +39,7 @@ actor S3Uploader {
     // MARK: - Configuration
 
     private let clientFactory = S3ClientFactory.shared
-    private let bucketName: String?
+    private let bucketName: String
     private let multipartThreshold: Int64
     private let partSize: Int64 = 5 * 1024 * 1024 // 5 MB parts
     private let maxRetries: Int
@@ -82,24 +82,17 @@ actor S3Uploader {
         maxRetries: Int = 3,
         retryDelay: TimeInterval = 2.0
     ) {
-        self.bucketName = bucketName
-        self.multipartThreshold = multipartThreshold ?? AWSConfig.Upload.multipartThresholdBytes
+        self.bucketName = bucketName ?? AWSConfig.s3BucketName
+        self.multipartThreshold = multipartThreshold ?? Config.shared.multipartUploadThresholdBytes
         self.maxRetries = maxRetries
         self.retryDelay = retryDelay
 
         Task {
             await Logger.shared.debug("S3Uploader initialized", metadata: [
-                "bucket": self.bucketName ?? "default",
+                "bucket": self.bucketName,
                 "multipartThreshold": String(self.multipartThreshold)
             ])
         }
-    }
-
-    // MARK: - Private Helpers
-
-    @MainActor
-    private func getBucketName() -> String {
-        bucketName ?? Config.shared.s3BucketName
     }
 
     // MARK: - Public API
@@ -198,7 +191,7 @@ actor S3Uploader {
         // Create put object input
         let input = PutObjectInput(
             body: .data(data),
-            bucket: await self.getBucketName(),
+            bucket: bucketName,
             contentType: contentType,
             key: s3Key,
             serverSideEncryption: .aes256,
@@ -260,7 +253,7 @@ actor S3Uploader {
 
         // Step 1: Initiate multipart upload
         let createInput = CreateMultipartUploadInput(
-            bucket: await self.getBucketName(),
+            bucket: bucketName,
             contentType: contentType,
             key: s3Key,
             serverSideEncryption: .aes256,
@@ -290,7 +283,7 @@ actor S3Uploader {
 
             // Step 3: Complete multipart upload
             let completeInput = CompleteMultipartUploadInput(
-                bucket: await self.getBucketName(),
+                bucket: bucketName,
                 key: s3Key,
                 multipartUpload: S3ClientTypes.CompletedMultipartUpload(parts: completedParts),
                 uploadId: uploadId
@@ -322,7 +315,7 @@ actor S3Uploader {
             ])
 
             let abortInput = AbortMultipartUploadInput(
-                bucket: await self.getBucketName(),
+                bucket: bucketName,
                 key: s3Key,
                 uploadId: uploadId
             )
@@ -374,7 +367,7 @@ actor S3Uploader {
             // Upload part with retry
             let uploadedPart = try await uploadPartWithRetry(
                 client: client,
-                bucket: await self.getBucketName(),
+                bucket: bucketName,
                 key: s3Key,
                 uploadId: uploadId,
                 partNumber: partNumber,

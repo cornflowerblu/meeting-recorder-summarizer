@@ -60,6 +60,16 @@ description: "Task plan for 'Meeting Recorder with AI Intelligence'"
 - [x] T017 [P] [US1] Add consent + indicator UI test in `macos/Tests/MeetingRecorderUITests/IndicatorFlowUITests.swift`
 - [x] T018 [P] [US1] Add catalog creation integration test in `macos/Tests/MeetingRecorderTests/CatalogServiceTests.swift`
 
+- [x] T015 [P] [US1] Add segmentation unit tests in `macos/Tests/MeetingRecorderTests/ScreenRecorderTests.swift`
+- [x] T016 [P] [US1] Add upload queue persistence tests in `macos/Tests/MeetingRecorderTests/UploadQueueTests.swift`
+- [x] T017 [P] [US1] Add consent + indicator UI test in `macos/Tests/MeetingRecorderUITests/IndicatorFlowUITests.swift`
+- [x] T018 [P] [US1] Add catalog creation integration test in `macos/Tests/MeetingRecorderTests/CatalogServiceTests.swift`
+
+- [ ] T060 [P] [US1] Unit test: screen segmentation at 60s in macos/Tests/ScreenRecorderTests.swift
+- [ ] T061 [P] [US1] Unit test: upload queue backoff and resume from manifest in macos/Tests/UploadQueueTests.swift
+- [ ] T062 [P] [US1] UI test: consent flow and persistent indicator visibility in macos/UITests/ConsentAndIndicatorUITests.swift
+- [ ] T063 [P] [US1] Integration test: CatalogService.createSession writes pending item in macos/Tests/CatalogServiceTests.swift
+
 ### Implementation for User Story 1
 
 - [x] T019 [P] [US1] Build consent acknowledgement view in `macos/Sources/MeetingRecorder/UI/ConsentView.swift`

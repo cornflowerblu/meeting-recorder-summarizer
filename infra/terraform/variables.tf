@@ -49,6 +49,32 @@ variable "s3_lifecycle_days" {
   default     = 90
 }
 
+# Network Configuration for ECS
+
+variable "vpc_id" {
+  description = "VPC ID for ECS tasks (use default VPC if not specified)"
+  type        = string
+  default     = ""
+}
+
+variable "private_subnet_ids" {
+  description = "Private subnet IDs for ECS tasks (use default subnets if not specified)"
+  type        = list(string)
+  default     = []
+}
+
+# Common Tags
+
+variable "common_tags" {
+  description = "Common tags applied to all resources"
+  type        = map(string)
+  default = {
+    Project     = "meeting-recorder"
+    Environment = "dev"
+    ManagedBy   = "terraform"
+  }
+}
+
 # Firebase Configuration
 
 variable "firebase_project_id" {

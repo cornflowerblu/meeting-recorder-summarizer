@@ -63,7 +63,7 @@ actor CatalogService {
     // MARK: - Properties
 
     private let dynamoClientFactory = DynamoDBClientFactory.shared
-    private let tableName: String?
+    private let tableName: String
 
     // MARK: - Errors
 
@@ -87,20 +87,13 @@ actor CatalogService {
     // MARK: - Initialization
 
     init(tableName: String? = nil) {
-        self.tableName = tableName
+        self.tableName = tableName ?? AWSConfig.dynamoDBTableName
 
         Task {
             await Logger.shared.debug("CatalogService initialized", metadata: [
-                "tableName": self.tableName ?? "default"
+                "tableName": self.tableName
             ])
         }
-    }
-
-    // MARK: - Private Helpers
-
-    @MainActor
-    private func getTableName() -> String {
-        tableName ?? AWSConfig.dynamoDBTableName
     }
 
     // MARK: - Create Session
@@ -117,7 +110,7 @@ actor CatalogService {
         let isoFormatter = ISO8601DateFormatter()
 
         // Build item
-        var item: [String: DynamoDBClientTypes.AttributeValue] = [
+        var item: [String: AWSDynamoDB.AttributeValue] = [
             "PK": .s("\(session.userId)#\(session.recordingId)"),
             "SK": .s("METADATA"),
             "recording_id": .s(session.recordingId),
@@ -147,7 +140,7 @@ actor CatalogService {
 
         let input = PutItemInput(
             item: item,
-            tableName: await self.getTableName()
+            tableName: tableName
         )
 
         do {
@@ -178,7 +171,7 @@ actor CatalogService {
 
         let client = try await dynamoClientFactory.getClient()
 
-        let key: [String: DynamoDBClientTypes.AttributeValue] = [
+        let key: [String: AWSDynamoDB.AttributeValue] = [
             "PK": .s("\(userId)#\(recordingId)"),
             "SK": .s("METADATA")
         ]
@@ -196,7 +189,7 @@ actor CatalogService {
                 ":updated_at": .s(now)
             ],
             key: key,
-            tableName: await self.getTableName(),
+            tableName: tableName,
             updateExpression: "SET #status = :status, #updated_at = :updated_at"
         )
 
@@ -229,7 +222,7 @@ actor CatalogService {
 
         let client = try await dynamoClientFactory.getClient()
 
-        let key: [String: DynamoDBClientTypes.AttributeValue] = [
+        let key: [String: AWSDynamoDB.AttributeValue] = [
             "PK": .s("\(userId)#\(recordingId)"),
             "SK": .s("METADATA")
         ]
@@ -238,7 +231,7 @@ actor CatalogService {
         let now = isoFormatter.string(from: Date())
 
         // Build model versions map
-        var modelVersionsMap: [String: DynamoDBClientTypes.AttributeValue] = [:]
+        var modelVersionsMap: [String: AWSDynamoDB.AttributeValue] = [:]
         for (key, value) in results.modelVersions {
             modelVersionsMap[key] = .s(value)
         }
@@ -265,7 +258,7 @@ actor CatalogService {
                 ":updated_at": .s(now)
             ],
             key: key,
-            tableName: await self.getTableName(),
+            tableName: tableName,
             updateExpression: """
                 SET #status = :status,
                     #transcript_s3_key = :transcript_s3_key,
@@ -306,7 +299,7 @@ actor CatalogService {
 
         let client = try await dynamoClientFactory.getClient()
 
-        let key: [String: DynamoDBClientTypes.AttributeValue] = [
+        let key: [String: AWSDynamoDB.AttributeValue] = [
             "PK": .s("\(userId)#\(recordingId)"),
             "SK": .s("METADATA")
         ]
@@ -324,7 +317,7 @@ actor CatalogService {
                 ":updated_at": .s(now)
             ],
             key: key,
-            tableName: await self.getTableName(),
+            tableName: tableName,
             updateExpression: "SET #duration = :duration, #updated_at = :updated_at"
         )
 
@@ -352,14 +345,14 @@ actor CatalogService {
 
         let client = try await dynamoClientFactory.getClient()
 
-        let key: [String: DynamoDBClientTypes.AttributeValue] = [
+        let key: [String: AWSDynamoDB.AttributeValue] = [
             "PK": .s("\(userId)#\(recordingId)"),
             "SK": .s("METADATA")
         ]
 
         let input = GetItemInput(
             key: key,
-            tableName: await self.getTableName()
+            tableName: tableName
         )
 
         do {
@@ -398,7 +391,7 @@ actor CatalogService {
             keyConditionExpression: "begins_with(#pk, :user_prefix)",
             limit: limit,
             scanIndexForward: false, // Descending order (newest first)
-            tableName: await self.getTableName()
+            tableName: tableName
         )
 
         do {
@@ -431,7 +424,7 @@ actor CatalogService {
 
     // MARK: - Private Helpers
 
-    private func parseSession(from item: [String: DynamoDBClientTypes.AttributeValue]) throws -> RecordingSession {
+    private func parseSession(from item: [String: AWSDynamoDB.AttributeValue]) throws -> RecordingSession {
         let isoFormatter = ISO8601DateFormatter()
 
         guard let recordingId = extractString(item["recording_id"]),
@@ -481,22 +474,22 @@ actor CatalogService {
         return session
     }
 
-    private func extractString(_ attribute: DynamoDBClientTypes.AttributeValue?) -> String? {
+    private func extractString(_ attribute: AWSDynamoDB.AttributeValue?) -> String? {
         guard case .s(let value) = attribute else { return nil }
         return value
     }
 
-    private func extractInt(_ attribute: DynamoDBClientTypes.AttributeValue?) -> Int? {
+    private func extractInt(_ attribute: AWSDynamoDB.AttributeValue?) -> Int? {
         guard case .n(let value) = attribute else { return nil }
         return Int(value)
     }
 
-    private func extractDouble(_ attribute: DynamoDBClientTypes.AttributeValue?) -> Double? {
+    private func extractDouble(_ attribute: AWSDynamoDB.AttributeValue?) -> Double? {
         guard case .n(let value) = attribute else { return nil }
         return Double(value)
     }
 
-    private func extractStringList(_ attribute: DynamoDBClientTypes.AttributeValue?) -> [String]? {
+    private func extractStringList(_ attribute: AWSDynamoDB.AttributeValue?) -> [String]? {
         guard case .ss(let value) = attribute else { return nil }
         return value
     }
