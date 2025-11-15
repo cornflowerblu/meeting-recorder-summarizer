@@ -24,7 +24,7 @@ jobs:
       - name: Install certificate and provisioning profile
         env:
           CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE }}
-          CERTIFICATE_PWD: ""
+          CERTIFICATE_PWD: ${{ secrets.CERTIFICATE_PASSWORD }} 
           PROVISIONING_PROFILE_BASE64: ${{ secrets.MACOS_PROVISIONING_PROFILE }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
