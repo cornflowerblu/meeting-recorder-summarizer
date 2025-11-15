@@ -20,6 +20,7 @@ class AVFoundationCaptureService: NSObject, ScreenCaptureService {
     weak var delegate: ScreenCaptureDelegate?
 
     private var captureSession: AVCaptureSession?
+    private var videoOutput: AVCaptureVideoDataOutput?
     private var assetWriter: AVAssetWriter?
     private var videoInput: AVAssetWriterInput?
     private var currentChunkURL: URL?
@@ -33,6 +34,15 @@ class AVFoundationCaptureService: NSObject, ScreenCaptureService {
     private var chunkStartTime: CMTime?
     private var sessionStartTime: Date?
     private var totalDuration: TimeInterval = 0
+
+    // Video processing
+    private let videoProcessingQueue = DispatchQueue(
+        label: "com.interviewcompanion.videocapture",
+        qos: .userInitiated
+    )
+    private var processedFrameCount: Int = 0
+    private var droppedFrameCount: Int = 0
+    private var createdChunkURLs: [URL] = []
 
     // Video quality configuration (from Config)
     private var frameRate: Int32 { Config.shared.recording.frameRate }
@@ -104,6 +114,7 @@ class AVFoundationCaptureService: NSObject, ScreenCaptureService {
         // Stop session
         captureSession?.stopRunning()
         captureSession = nil
+        videoOutput = nil
 
         isCapturing = false
         isPaused = false
@@ -165,7 +176,29 @@ class AVFoundationCaptureService: NSObject, ScreenCaptureService {
             throw CaptureError.captureSessionFailed("Cannot add screen input to session")
         }
 
+        // Create and configure video data output
+        let output = AVCaptureVideoDataOutput()
+
+        // Configure video settings - use 32BGRA for compatibility with asset writer
+        output.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+        ]
+
+        // Set the sample buffer delegate on our video processing queue
+        output.setSampleBufferDelegate(self, queue: videoProcessingQueue)
+
+        // Don't drop frames if processing is slow (we'll handle this in delegate)
+        output.alwaysDiscardsLateVideoFrames = false
+
+        // Add output to session
+        if session.canAddOutput(output) {
+            session.addOutput(output)
+        } else {
+            throw CaptureError.captureSessionFailed("Cannot add video output to session")
+        }
+
         self.captureSession = session
+        self.videoOutput = output
     }
 
     private func startNewChunk(index: Int) async throws {
@@ -176,6 +209,7 @@ class AVFoundationCaptureService: NSObject, ScreenCaptureService {
 
         currentChunkURL = chunkURL
         currentChunkIndex = index
+        createdChunkURLs.append(chunkURL)
 
         // Create asset writer
         guard let writer = try? AVAssetWriter(url: chunkURL, fileType: .mp4) else {
@@ -279,18 +313,33 @@ class AVFoundationCaptureService: NSObject, ScreenCaptureService {
 // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
 
 extension AVFoundationCaptureService: AVCaptureVideoDataOutputSampleBufferDelegate {
-    // NOTE: Full sample buffer processing will be implemented in the next phase
-    // For now, we're focusing on the protocol and test infrastructure
     nonisolated func captureOutput(
         _ output: AVCaptureOutput,
         didOutput sampleBuffer: CMSampleBuffer,
         from connection: AVCaptureConnection
     ) {
-        // TODO: Implement sample buffer processing with proper concurrency handling
-        // This will require:
-        // 1. A serial queue for writing samples
-        // 2. Proper CMSampleBuffer retention/copying
-        // 3. Time-based chunk rotation logic
+        // Check if paused - if so, don't write frames
+        Task { @MainActor in
+            guard !isPaused else { return }
+
+            // Get current video input and check if ready
+            guard let videoInput = videoInput, videoInput.isReadyForMoreMediaData else {
+                return
+            }
+
+            // Write the sample buffer to the asset writer
+            if videoInput.append(sampleBuffer) {
+                processedFrameCount += 1
+
+                // Get current time for chunk rotation check
+                let presentationTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+
+                // Check if we need to rotate chunks
+                if shouldRotateChunk(currentTime: presentationTime) {
+                    await rotateChunk(at: presentationTime)
+                }
+            }
+        }
     }
 
     nonisolated func captureOutput(
@@ -299,7 +348,97 @@ extension AVFoundationCaptureService: AVCaptureVideoDataOutputSampleBufferDelega
         from connection: AVCaptureConnection
     ) {
         Task { @MainActor in
-            delegate?.captureDidEncounterError(.frameDrop(1))
+            droppedFrameCount += 1
+            delegate?.captureDidEncounterError(.frameDrop(droppedFrameCount))
         }
     }
 }
+
+// MARK: - Testing Support
+
+#if DEBUG
+/// Extensions for testing - these expose internal state for verification
+extension AVFoundationCaptureService {
+    func hasVideoOutput() async -> Bool {
+        return videoOutput != nil
+    }
+
+    func getVideoOutputSettings() async throws -> [String: Any] {
+        guard let output = videoOutput else {
+            throw CaptureError.captureSessionFailed("No video output configured")
+        }
+        return output.videoSettings ?? [:]
+    }
+
+    func hasVideoOutputDelegate() async -> Bool {
+        return videoOutput?.sampleBufferDelegate != nil
+    }
+
+    func canProcessSampleBuffer(_ sampleBuffer: CMSampleBuffer) async -> Bool {
+        // Check if we have a video input and it's ready
+        guard let input = videoInput else {
+            return false
+        }
+        return input.isReadyForMoreMediaData
+    }
+
+    func processSampleBuffer(_ sampleBuffer: CMSampleBuffer) async throws {
+        // Simulate processing by appending to video input
+        guard let input = videoInput else {
+            throw CaptureError.captureSessionFailed("No video input configured")
+        }
+
+        // Wait for input to be ready (with timeout for tests)
+        var retries = 0
+        while !input.isReadyForMoreMediaData && retries < 50 {
+            try await Task.sleep(nanoseconds: 10_000_000) // 10ms
+            retries += 1
+        }
+
+        guard input.isReadyForMoreMediaData else {
+            throw CaptureError.captureSessionFailed("Video input not ready after timeout")
+        }
+
+        if !input.append(sampleBuffer) {
+            throw CaptureError.captureSessionFailed("Failed to append sample buffer")
+        }
+
+        processedFrameCount += 1
+
+        // Check for chunk rotation
+        let presentationTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+        if shouldRotateChunk(currentTime: presentationTime) {
+            await rotateChunk(at: presentationTime)
+        }
+    }
+
+    func getProcessedFrameCount() async -> Int {
+        return processedFrameCount
+    }
+
+    func getDroppedFrameCount() async -> Int {
+        return droppedFrameCount
+    }
+
+    func simulateWriterNotReady() async throws {
+        // Mark video input as not ready by stopping the asset writer temporarily
+        videoInput?.markAsFinished()
+    }
+
+    func getVideoProcessingQueueLabel() async throws -> String {
+        return videoProcessingQueue.label
+    }
+
+    func getCurrentChunkIndex() async -> Int {
+        return currentChunkIndex
+    }
+
+    func getCreatedChunkCount() async -> Int {
+        return createdChunkURLs.count
+    }
+
+    func getChunkFileURLs() async -> [URL] {
+        return createdChunkURLs
+    }
+}
+#endif
