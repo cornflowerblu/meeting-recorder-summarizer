@@ -5,6 +5,7 @@ A macOS app for recording screen during calls with AI-powered transcription, sum
 ## Overview
 
 Meeting Recorder enables you to capture your own screen during calls for personal reference, then automatically generate:
+
 - **Transcripts** with speaker labels
 - **Meeting summaries** with timestamp links
 - **Action items** with owners and due dates
@@ -15,6 +16,7 @@ All processing happens in your AWS account with full data privacy and control.
 ## Key Features
 
 ### 🎥 Private Screen Recording
+
 - Explicit per-session consent with first-run acknowledgment
 - Persistent on-screen recording indicator (always visible)
 - Pause/resume capability
@@ -22,18 +24,21 @@ All processing happens in your AWS account with full data privacy and control.
 - Automatic background sync to S3
 
 ### 🤖 AI-Powered Analysis
+
 - **Amazon Transcribe** for accurate speech-to-text with speaker labels
 - **Amazon Bedrock (Claude Sonnet 4.5)** for intelligent summarization
 - Timestamp-linked summary elements for quick navigation
 - Custom vocabulary support for domain-specific terms
 
 ### 🔍 Searchable Catalog
+
 - Browse sessions by date, participants, or tags
 - Quick filter and search across all meetings
 - Metadata editing (title, participants, tags)
 - Cost estimation before processing
 
 ### 🔐 Privacy & Security
+
 - Single-user, your AWS account only
 - Data encrypted at rest (S3 SSE)
 - Data encrypted in transit (TLS 1.2+)
@@ -41,6 +46,7 @@ All processing happens in your AWS account with full data privacy and control.
 - Firebase Auth with Google Sign-In for cross-device sync
 
 ### 🛡️ Error Recovery
+
 - Automatic retry with exponential backoff
 - Resume uploads after app restart
 - Processing status monitoring
@@ -49,12 +55,14 @@ All processing happens in your AWS account with full data privacy and control.
 ## Architecture
 
 ### macOS App (Swift)
+
 - **Native Swift + AVFoundation** for high-quality screen capture
 - **SwiftUI** for modern, responsive UI
 - **Firebase Auth** for authentication
 - **AWS SDK Swift** for direct S3/DynamoDB access (no custom API layer)
 
 ### AWS Processing Pipeline
+
 - **S3**: Durable storage for recordings and artifacts
 - **DynamoDB**: Metadata catalog with GSI indexes for search
 - **EventBridge → Step Functions**: Event-driven orchestration
@@ -64,6 +72,7 @@ All processing happens in your AWS account with full data privacy and control.
 - **Amazon Bedrock**: Claude Sonnet 4.5 for summarization
 
 ### Data Flow
+
 ```
 macOS App → S3 (chunks) → EventBridge → Step Functions
     ↓                                         ↓
@@ -134,18 +143,21 @@ meeting-recorder-summarizer/
 ### Development Setup
 
 **1. Clone the repository**
+
 ```bash
 git clone https://github.com/cornflowerblu/meeting-recorder-summarizer.git
 cd meeting-recorder-summarizer
 ```
 
 **2. Build the macOS app**
+
 ```bash
 cd macos
 swift build
 ```
 
 **3. Set up Python environment**
+
 ```bash
 cd ../processing
 python3 -m venv venv
@@ -155,9 +167,10 @@ pip install pytest pytest-cov ruff
 ```
 
 **4. Run tests**
+
 ```bash
 # Swift unit tests
-cd macos
+cd macos/InterviewCompanion
 xcodebuild test \
   -scheme InterviewCompanion \
   -destination 'platform=macOS' \
@@ -179,6 +192,7 @@ pytest
 Integration tests verify actual S3 uploads and require AWS credentials. To keep credentials secure:
 
 **Option 1: User-Specific Xcode Scheme (Recommended for Xcode)**
+
 1. In Xcode: **Product → Scheme → Manage Schemes**
 2. Duplicate "InterviewCompanion" scheme
 3. Name it "InterviewCompanion (Local)"
@@ -192,6 +206,7 @@ Integration tests verify actual S3 uploads and require AWS credentials. To keep 
 7. Run integration tests using your local scheme
 
 **Option 2: Shell Environment Variables (Command Line)**
+
 ```bash
 # Set credentials in your shell
 export AWS_ACCESS_KEY_ID="your-test-access-key"
@@ -210,6 +225,7 @@ xcodebuild test \
 > ⚠️ **Never commit AWS credentials to git!** User-specific schemes are stored in `xcuserdata/` which is gitignored.
 
 **5. Deploy infrastructure (Phase 2+)**
+
 ```bash
 cd infra/terraform
 terraform init
@@ -220,6 +236,7 @@ terraform apply
 ## Implementation Status
 
 ### ✅ Phase 1: Setup (Complete)
+
 - [x] Repository structure
 - [x] Swift package with macOS app
 - [x] Python Lambda scaffolding
@@ -227,6 +244,7 @@ terraform apply
 - [x] Linting configuration
 
 ### ✅ Phase 2: Foundational (Complete)
+
 - [x] Terraform infrastructure
 - [x] S3 buckets and DynamoDB tables
 - [x] IAM roles and policies
@@ -234,6 +252,7 @@ terraform apply
 - [x] AWS SDK configuration
 
 ### 📋 Upcoming Phases
+
 - **Phase 3**: User Story 1 - Recording with consent and indicator (P1 - MVP)
 - **Phase 4**: User Story 2 - AI transcription and summarization (P1)
 - **Phase 5**: User Story 3 - Metadata capture and cost estimation (P2)
@@ -245,6 +264,7 @@ See [`specs/001-meeting-recorder-ai/tasks.md`](specs/001-meeting-recorder-ai/tas
 ## Cost Estimation
 
 Approximate AWS costs for typical usage:
+
 - **Amazon Transcribe**: ~$0.72/hour of audio
 - **Amazon Bedrock (Claude Sonnet 4.5)**: ~$0.003/summary
 - **S3 Storage**: ~$0.023/GB/month

@@ -105,6 +105,8 @@ resource "aws_iam_role_policy" "macos_app_s3" {
 }
 
 # Policy for macOS app DynamoDB access (meetings table)
+# SECURITY: Users can ONLY access items where partition key starts with their Firebase UID
+# RoleSessionName is set to Firebase UID in auth_exchange Lambda
 resource "aws_iam_role_policy" "macos_app_dynamodb" {
   name = "dynamodb-access"
   role = aws_iam_role.macos_app.id
@@ -119,9 +121,20 @@ resource "aws_iam_role_policy" "macos_app_dynamodb" {
           "dynamodb:GetItem",
           "dynamodb:PutItem",
           "dynamodb:UpdateItem",
-          "dynamodb:DeleteItem",
-          "dynamodb:Query",
-          "dynamodb:Scan"
+          "dynamodb:DeleteItem"
+        ]
+        Resource = aws_dynamodb_table.meetings.arn
+        Condition = {
+          "ForAllValues:StringLike" = {
+            "dynamodb:LeadingKeys" = ["$${aws:username}#*"]
+          }
+        }
+      },
+      {
+        Sid    = "AllowUserQueryOperations"
+        Effect = "Allow"
+        Action = [
+          "dynamodb:Query"
         ]
         Resource = [
           aws_dynamodb_table.meetings.arn,
@@ -129,50 +142,6 @@ resource "aws_iam_role_policy" "macos_app_dynamodb" {
         ]
         Condition = {
           "ForAllValues:StringLike" = {
-            "dynamodb:LeadingKeys" = ["$${aws:username}#*"]
-          }
-        }
-      }
-    ]
-  })
-}
-
-# Policy for macOS app DynamoDB access (users table)
-# Users can only read/write their own user profile (userId = aws:username)
-resource "aws_iam_role_policy" "macos_app_dynamodb_users" {
-  name = "dynamodb-users-access"
-  role = aws_iam_role.macos_app.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "AllowUserProfileOperations"
-        Effect = "Allow"
-        Action = [
-          "dynamodb:GetItem",
-          "dynamodb:PutItem",
-          "dynamodb:UpdateItem"
-        ]
-        Resource = aws_dynamodb_table.users.arn
-        Condition = {
-          "ForAllValues:StringEquals" = {
-            "dynamodb:LeadingKeys" = ["$${aws:username}"]
-          }
-        }
-      },
-      {
-        Sid    = "AllowQueryOwnProfile"
-        Effect = "Allow"
-        Action = [
-          "dynamodb:Query"
-        ]
-        Resource = [
-          aws_dynamodb_table.users.arn,
-          "${aws_dynamodb_table.users.arn}/index/*"
-        ]
-        Condition = {
-          "ForAllValues:StringEquals" = {
             "dynamodb:LeadingKeys" = ["$${aws:username}"]
           }
         }
@@ -180,6 +149,9 @@ resource "aws_iam_role_policy" "macos_app_dynamodb_users" {
     ]
   })
 }
+
+# Note: Users table access removed - user profile management now handled by
+# user_profile Lambda via EventBridge. App only needs meetings table access.
 
 # Policy for macOS app SSM Parameter Store access
 resource "aws_iam_role_policy" "macos_app_ssm" {
