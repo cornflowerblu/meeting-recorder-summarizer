@@ -58,6 +58,7 @@ jobs:
             -project InterviewCompanion.xcodeproj \
             -destination 'platform=macOS' \
             -configuration Debug \
+            -allowProvisioningUpdates \
             clean build \
             2>&1 | tail -100
 
@@ -236,6 +237,7 @@ jobs:
             -project InterviewCompanion.xcodeproj \
             -destination 'platform=macOS' \
             -configuration Debug \
+            -allowProvisioningUpdates \            
             clean build \
             2>&1 | tail -100
 
