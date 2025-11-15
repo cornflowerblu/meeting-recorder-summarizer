@@ -28,6 +28,11 @@ resource "aws_lambda_function" "auth_exchange" {
     }
   }
 
+  # Enable AWS X-Ray tracing for observability
+  tracing_config {
+    mode = "Active" # Active tracing mode creates trace for every request
+  }
+
   tags = merge(local.common_tags, {
     Name        = "${local.resource_prefix}-auth-exchange"
     Description = "Firebase auth token exchange"
@@ -76,6 +81,11 @@ resource "aws_lambda_function" "user_profile" {
       USERS_TABLE_NAME = aws_dynamodb_table.users.name
       LOG_LEVEL        = var.environment == "prod" ? "INFO" : "DEBUG"
     }
+  }
+
+  # Enable AWS X-Ray tracing for observability
+  tracing_config {
+    mode = "Active" # Active tracing mode creates trace for every request
   }
 
   tags = merge(local.common_tags, {
@@ -128,6 +138,12 @@ resource "aws_iam_role" "user_profile_lambda" {
 resource "aws_iam_role_policy_attachment" "user_profile_lambda_basic" {
   role       = aws_iam_role.user_profile_lambda.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Attach AWS X-Ray write permissions for tracing
+resource "aws_iam_role_policy_attachment" "user_profile_lambda_xray" {
+  role       = aws_iam_role.user_profile_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
 }
 
 # DynamoDB access policy for UserProfile Lambda

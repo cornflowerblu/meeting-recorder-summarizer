@@ -208,6 +208,12 @@ resource "aws_iam_role_policy_attachment" "auth_exchange_lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# Attach AWS X-Ray write permissions for tracing
+resource "aws_iam_role_policy_attachment" "auth_exchange_lambda_xray" {
+  role       = aws_iam_role.auth_exchange_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+}
+
 # Policy for auth exchange Lambda to assume web identity
 resource "aws_iam_role_policy" "auth_exchange_lambda_sts" {
   name = "sts-assume-role"
