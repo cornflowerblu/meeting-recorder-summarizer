@@ -34,9 +34,6 @@ let package = Package(
         .product(name: "FirebaseCore", package: "firebase-ios-sdk"),
       ],
       path: "Sources/MeetingRecorder",
-      resources: [
-        .process("Resources")
-      ],
       swiftSettings: [
         .enableUpcomingFeature("StrictConcurrency"),
         .enableUpcomingFeature("BareSlashRegexLiterals"),
