@@ -9,7 +9,7 @@ Also emits user.signed_in events to EventBridge for downstream processing.
 import json
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 import boto3
@@ -68,8 +68,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         try:
             body = _parse_body(event)
         except ValueError as e:
-            xray_recorder.put_annotation('auth_result', 'validation_error')
-            xray_recorder.put_annotation('error_type', 'ValueError')
             return _error_response(400, str(e))
 
         # Extract and validate Firebase ID token
@@ -97,28 +95,27 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
         # Sanitize session name: AWS allows alphanumeric, =,.@-_
         # Remove any other characters to prevent injection
-        session_name = re.sub(r'[^a-zA-Z0-9=,.@_-]', '_', session_name[:64])
+        sanitized_session_name = re.sub(r'[^a-zA-Z0-9=,.@_-]', '_', session_name[:64])
+        
+        # Ensure sanitized name is not empty after sanitization
+        if not sanitized_session_name:
+            return _error_response(400, "Invalid session_name: contains no valid characters")
 
         # Validate environment configuration
         if not MACOS_APP_ROLE_ARN:
             return _error_response(500, "Server misconfiguration: MACOS_APP_ROLE_ARN not set")
 
-        # Call STS AssumeRoleWithWebIdentity with X-Ray tracing
+        # Call STS AssumeRoleWithWebIdentity
         try:
-            with xray_recorder.capture('sts_assume_role'):
-                response = sts_client.assume_role_with_web_identity(
-                    RoleArn=MACOS_APP_ROLE_ARN,
-                    RoleSessionName=session_name,
-                    WebIdentityToken=id_token,
-                    DurationSeconds=SESSION_DURATION,
-                )
+            response = sts_client.assume_role_with_web_identity(
+                RoleArn=MACOS_APP_ROLE_ARN,
+                RoleSessionName=sanitized_session_name,
+                WebIdentityToken=id_token,
+                DurationSeconds=SESSION_DURATION,
+            )
         except ClientError as e:
             error_code = e.response["Error"]["Code"]
             error_message = e.response["Error"]["Message"]
-
-            # Add X-Ray annotations for error tracking
-            xray_recorder.put_annotation('auth_result', 'failure')
-            xray_recorder.put_annotation('error_code', error_code)
 
             if error_code == "InvalidIdentityToken":
                 return _error_response(401, "Invalid Firebase ID token")
@@ -133,14 +130,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         credentials = response["Credentials"]
         assumed_role_user = response["AssumedRoleUser"]
 
-        # Add searchable X-Ray annotations for filtering traces
-        xray_recorder.put_annotation('user_id', session_name)
-        xray_recorder.put_annotation('auth_result', 'success')
-
-        # Add metadata (not searchable, but visible in trace details)
-        if provider:
-            xray_recorder.put_metadata('firebase_provider', provider)
-
         # Emit user.signed_in event to EventBridge (async, fire-and-forget)
         # Extract optional user profile fields
         user_email = body.get("email")
@@ -149,14 +138,13 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         provider = body.get("provider")
 
         try:
-            with xray_recorder.capture('emit_user_signed_in_event'):
-                _emit_user_signed_in_event(
-                    user_id=session_name,
-                    email=user_email,
-                    display_name=display_name,
-                    photo_url=photo_url,
-                    provider=provider
-                )
+            _emit_user_signed_in_event(
+                user_id=session_name,
+                email=user_email,
+                display_name=display_name,
+                photo_url=photo_url,
+                provider=provider
+            )
         except Exception as e:
             # Log error but don't fail the token exchange
             print(f"Failed to emit user.signed_in event: {str(e)}")
@@ -229,17 +217,18 @@ def _emit_user_signed_in_event(
     # Build event detail with all available user data
     detail = {
         "userId": user_id,
-        "timestamp": datetime.utcnow().isoformat() + "Z"
+        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     }
 
-    if email:
-        detail["email"] = email
-    if display_name:
-        detail["displayName"] = display_name
-    if photo_url:
-        detail["photoURL"] = photo_url
-    if provider:
-        detail["provider"] = provider
+    # Only add optional fields if they are non-empty strings
+    if email and isinstance(email, str) and email.strip():
+        detail["email"] = email.strip()
+    if display_name and isinstance(display_name, str) and display_name.strip():
+        detail["displayName"] = display_name.strip()
+    if photo_url and isinstance(photo_url, str) and photo_url.strip():
+        detail["photoURL"] = photo_url.strip()
+    if provider and isinstance(provider, str) and provider.strip():
+        detail["provider"] = provider.strip()
 
     # Publish event to EventBridge
     eventbridge_client.put_events(

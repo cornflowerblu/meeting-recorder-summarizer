@@ -1,35 +1,60 @@
 # Terraform build artifacts
 .build/
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.hypothesis/
+
+# Lambda deployment packages
+*.zip
+deployment/
+build/
+dist/
+
 # Python Lambda dependencies (installed with pip install -t)
-# Ignore all pip-installed packages in Lambda directories
+# Vendored dependencies should not be in git - installed during deployment packaging
 processing/lambdas/**/boto3/
 processing/lambdas/**/boto3-*.dist-info/
 processing/lambdas/**/botocore/
 processing/lambdas/**/botocore-*.dist-info/
 processing/lambdas/**/aws_xray_sdk/
 processing/lambdas/**/aws_xray_sdk-*.dist-info/
+processing/lambdas/**/urllib3/
+processing/lambdas/**/urllib3-*.dist-info/
 processing/lambdas/**/s3transfer/
 processing/lambdas/**/s3transfer-*.dist-info/
 processing/lambdas/**/jmespath/
 processing/lambdas/**/jmespath-*.dist-info/
-processing/lambdas/**/urllib3/
-processing/lambdas/**/urllib3-*.dist-info/
-processing/lambdas/**/wrapt/
-processing/lambdas/**/wrapt-*.dist-info/
 processing/lambdas/**/dateutil/
 processing/lambdas/**/python_dateutil-*.dist-info/
-processing/lambdas/**/six-*.dist-info/
+processing/lambdas/**/wrapt/
+processing/lambdas/**/wrapt-*.dist-info/
 processing/lambdas/**/six.py
+processing/lambdas/**/six-*.dist-info/
 processing/lambdas/**/bin/
 
-# Python deployment packages
-processing/lambdas/**/deployment.zip
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# Python cache and test artifacts
-**/__pycache__/
-**/*.pyc
-**/*.pyo
-**/.pytest_cache/
-**/.coverage
-**/htmlcov/
+# OS
+.DS_Store
+Thumbs.db

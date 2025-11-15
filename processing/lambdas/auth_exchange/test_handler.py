@@ -506,3 +506,175 @@ class TestHelperFunctions:
 
         body = json.loads(response["body"])
         assert body["error"] == "Test error message"
+
+
+class TestEventBridgeEmission:
+    """Tests for EventBridge user.signed_in event emission."""
+
+    @patch("handler.eventbridge_client")
+    def test_emit_event_with_all_fields(self, mock_eventbridge):
+        """Test EventBridge event emission with all optional fields."""
+        # Arrange
+        mock_eventbridge.put_events.return_value = {"FailedEntryCount": 0}
+
+        # Act
+        handler._emit_user_signed_in_event(
+            user_id="firebase_user_123",
+            email="user@example.com",
+            display_name="John Doe",
+            photo_url="https://example.com/photo.jpg",
+            provider="google.com"
+        )
+
+        # Assert
+        mock_eventbridge.put_events.assert_called_once()
+        call_args = mock_eventbridge.put_events.call_args[1]
+        entries = call_args["Entries"]
+
+        assert len(entries) == 1
+        entry = entries[0]
+
+        assert entry["Source"] == "interview-companion.auth"
+        assert entry["DetailType"] == "user.signed_in"
+
+        detail = json.loads(entry["Detail"])
+        assert detail["userId"] == "firebase_user_123"
+        assert detail["email"] == "user@example.com"
+        assert detail["displayName"] == "John Doe"
+        assert detail["photoURL"] == "https://example.com/photo.jpg"
+        assert detail["provider"] == "google.com"
+        assert "timestamp" in detail
+
+    @patch("handler.eventbridge_client")
+    def test_emit_event_minimal_fields(self, mock_eventbridge):
+        """Test EventBridge event emission with only required fields."""
+        # Arrange
+        mock_eventbridge.put_events.return_value = {"FailedEntryCount": 0}
+
+        # Act
+        handler._emit_user_signed_in_event(user_id="firebase_user_123")
+
+        # Assert
+        mock_eventbridge.put_events.assert_called_once()
+        call_args = mock_eventbridge.put_events.call_args[1]
+        entries = call_args["Entries"]
+
+        entry = entries[0]
+        detail = json.loads(entry["Detail"])
+
+        # Should only have required fields
+        assert detail["userId"] == "firebase_user_123"
+        assert "timestamp" in detail
+        assert "email" not in detail
+        assert "displayName" not in detail
+        assert "photoURL" not in detail
+        assert "provider" not in detail
+
+    @patch("handler.eventbridge_client")
+    def test_emit_event_excludes_empty_strings(self, mock_eventbridge):
+        """Test that empty strings are excluded from event detail."""
+        # Arrange
+        mock_eventbridge.put_events.return_value = {"FailedEntryCount": 0}
+
+        # Act
+        handler._emit_user_signed_in_event(
+            user_id="firebase_user_123",
+            email="",  # Empty string
+            display_name="   ",  # Whitespace only
+            photo_url="https://example.com/photo.jpg",
+            provider=""
+        )
+
+        # Assert
+        call_args = mock_eventbridge.put_events.call_args[1]
+        entry = call_args["Entries"][0]
+        detail = json.loads(entry["Detail"])
+
+        # Should only include non-empty fields
+        assert detail["userId"] == "firebase_user_123"
+        assert detail["photoURL"] == "https://example.com/photo.jpg"
+        assert "email" not in detail
+        assert "displayName" not in detail
+        assert "provider" not in detail
+
+    @patch("handler.eventbridge_client")
+    def test_emit_event_trims_whitespace(self, mock_eventbridge):
+        """Test that optional fields are trimmed of leading/trailing whitespace."""
+        # Arrange
+        mock_eventbridge.put_events.return_value = {"FailedEntryCount": 0}
+
+        # Act
+        handler._emit_user_signed_in_event(
+            user_id="firebase_user_123",
+            email="  user@example.com  ",
+            display_name="  John Doe  ",
+            photo_url="  https://example.com/photo.jpg  ",
+            provider="  google.com  "
+        )
+
+        # Assert
+        call_args = mock_eventbridge.put_events.call_args[1]
+        entry = call_args["Entries"][0]
+        detail = json.loads(entry["Detail"])
+
+        # All fields should be trimmed
+        assert detail["email"] == "user@example.com"
+        assert detail["displayName"] == "John Doe"
+        assert detail["photoURL"] == "https://example.com/photo.jpg"
+        assert detail["provider"] == "google.com"
+
+    @patch("handler.eventbridge_client")
+    def test_emit_event_excludes_non_strings(self, mock_eventbridge):
+        """Test that non-string optional fields are excluded."""
+        # Arrange
+        mock_eventbridge.put_events.return_value = {"FailedEntryCount": 0}
+
+        # Act - pass non-string values to test type validation
+        # Type ignore for intentional incorrect types in test  # type: ignore[arg-type]
+        handler._emit_user_signed_in_event(
+            user_id="firebase_user_123",
+            email=123,  # type: ignore[arg-type]
+            display_name=None,
+            photo_url="https://example.com/photo.jpg",
+            provider=["google.com"]  # type: ignore[arg-type]
+        )
+
+        # Assert
+        call_args = mock_eventbridge.put_events.call_args[1]
+        entry = call_args["Entries"][0]
+        detail = json.loads(entry["Detail"])
+
+        # Should only include valid string field
+        assert detail["userId"] == "firebase_user_123"
+        assert detail["photoURL"] == "https://example.com/photo.jpg"
+        assert "email" not in detail
+        assert "displayName" not in detail
+        assert "provider" not in detail
+
+    @patch("handler.MACOS_APP_ROLE_ARN", "arn:aws:iam::123456789012:role/MacOSAppRole")
+    @patch("handler.eventbridge_client")
+    @patch("handler.sts_client")
+    def test_event_emission_failure_does_not_fail_auth(
+        self, mock_sts, mock_eventbridge, lambda_context, mock_sts_response
+    ):
+        """Test that EventBridge emission failure doesn't fail token exchange."""
+        # Arrange
+        event = {
+            "body": json.dumps({
+                "id_token": "valid_firebase_token_" + "x" * 100,
+                "session_name": "firebase_user_12345",
+                "email": "user@example.com"
+            })
+        }
+        mock_sts.assume_role_with_web_identity.return_value = mock_sts_response
+        mock_eventbridge.put_events.side_effect = Exception(
+            "EventBridge unavailable"
+        )
+
+        # Act
+        response = handler.lambda_handler(event, lambda_context)
+
+        # Assert - token exchange should still succeed
+        assert response["statusCode"] == 200
+        body = json.loads(response["body"])
+        assert "credentials" in body

@@ -15,7 +15,7 @@ on:
 jobs:
   test:
     name: Run Swift Tests
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Checkout code
@@ -127,7 +127,7 @@ jobs:
 
   lint:
     name: SwiftLint
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Checkout code
@@ -178,7 +178,7 @@ jobs:
 
   integration-tests:
     name: Integration Tests
-    runs-on: macos-14
+    runs-on: macos-15
     needs: test
     if: github.event_name == 'pull_request'
     # Only run if AWS credentials are configured
