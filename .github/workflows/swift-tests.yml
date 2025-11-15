@@ -59,7 +59,7 @@ jobs:
             -destination 'platform=macOS' \
             -configuration Debug \
             -allowProvisioningUpdates \
-            - CODE_SIGN_IDENTITY="-" \
+            CODE_SIGN_IDENTITY="-" \
             build \
             2>&1 | tail -100
 
