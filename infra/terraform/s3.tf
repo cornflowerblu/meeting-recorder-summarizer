@@ -151,3 +151,10 @@ resource "aws_s3_bucket_logging" "recordings" {
   target_bucket = aws_s3_bucket.recordings.id
   target_prefix = "logs/s3-access/"
 }
+
+# EventBridge Notifications (T028a)
+# Enable EventBridge for chunk upload events
+resource "aws_s3_bucket_notification" "recordings_eventbridge" {
+  bucket      = aws_s3_bucket.recordings.id
+  eventbridge = true
+}

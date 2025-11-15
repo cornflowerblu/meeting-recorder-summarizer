@@ -160,3 +160,220 @@ resource "aws_iam_role_policy" "user_profile_lambda_dynamodb" {
     ]
   })
 }
+
+#############################################################################
+# Phase 3.5: Chunk Upload Handler Lambda (T028c)
+#############################################################################
+
+resource "aws_lambda_function" "chunk_upload_handler" {
+  function_name = "${local.resource_prefix}-chunk-upload-handler"
+  description   = "Validate and track chunk uploads from S3 events"
+  role          = aws_iam_role.chunk_upload_handler_lambda.arn
+  handler       = "handler.lambda_handler"
+  runtime       = "python3.11"
+  timeout       = 30
+  memory_size   = 256
+
+  filename         = "${path.module}/../../processing/lambdas/chunk_upload_handler/deployment.zip"
+  source_code_hash = fileexists("${path.module}/../../processing/lambdas/chunk_upload_handler/deployment.zip") ? filebase64sha256("${path.module}/../../processing/lambdas/chunk_upload_handler/deployment.zip") : null
+
+  environment {
+    variables = {
+      CHUNKS_TABLE_NAME            = aws_dynamodb_table.chunks.name
+      MEETINGS_TABLE_NAME          = aws_dynamodb_table.meetings.name
+      SESSION_COMPLETION_LAMBDA_ARN = aws_lambda_function.session_completion_detector.arn
+      LOG_LEVEL                    = var.environment == "prod" ? "INFO" : "DEBUG"
+    }
+  }
+
+  tracing_config {
+    mode = "Active"
+  }
+
+  tags = merge(local.common_tags, {
+    Name        = "${local.resource_prefix}-chunk-upload-handler"
+    Description = "Chunk upload validation"
+  })
+}
+
+resource "aws_cloudwatch_log_group" "chunk_upload_handler" {
+  name              = "/aws/lambda/${aws_lambda_function.chunk_upload_handler.function_name}"
+  retention_in_days = var.environment == "prod" ? 30 : 7
+
+  tags = merge(local.common_tags, {
+    Name = "${local.resource_prefix}-chunk-upload-handler-logs"
+  })
+}
+
+# IAM Role for Chunk Upload Handler
+resource "aws_iam_role" "chunk_upload_handler_lambda" {
+  name = "${local.resource_prefix}-chunk-upload-handler-lambda-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = merge(local.common_tags, {
+    Name = "${local.resource_prefix}-chunk-upload-handler-lambda-role"
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "chunk_upload_handler_basic" {
+  role       = aws_iam_role.chunk_upload_handler_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "chunk_upload_handler_xray" {
+  role       = aws_iam_role.chunk_upload_handler_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+}
+
+# DynamoDB and Lambda invoke permissions
+resource "aws_iam_role_policy" "chunk_upload_handler_permissions" {
+  name = "chunk-upload-handler-permissions"
+  role = aws_iam_role.chunk_upload_handler_lambda.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:UpdateItem"
+        ]
+        Resource = [
+          aws_dynamodb_table.chunks.arn,
+          aws_dynamodb_table.meetings.arn
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:GetObjectMetadata"
+        ]
+        Resource = "${aws_s3_bucket.recordings.arn}/*"
+      },
+      {
+        Effect   = "Allow"
+        Action   = "lambda:InvokeFunction"
+        Resource = aws_lambda_function.session_completion_detector.arn
+      }
+    ]
+  })
+}
+
+#############################################################################
+# Phase 3.5: Session Completion Detector Lambda (T028d)
+#############################################################################
+
+resource "aws_lambda_function" "session_completion_detector" {
+  function_name = "${local.resource_prefix}-session-completion-detector"
+  description   = "Detect when all chunks uploaded and trigger processing"
+  role          = aws_iam_role.session_completion_detector_lambda.arn
+  handler       = "handler.lambda_handler"
+  runtime       = "python3.11"
+  timeout       = 60
+  memory_size   = 512
+
+  filename         = "${path.module}/../../processing/lambdas/session_completion_detector/deployment.zip"
+  source_code_hash = fileexists("${path.module}/../../processing/lambdas/session_completion_detector/deployment.zip") ? filebase64sha256("${path.module}/../../processing/lambdas/session_completion_detector/deployment.zip") : null
+
+  environment {
+    variables = {
+      CHUNKS_TABLE_NAME   = aws_dynamodb_table.chunks.name
+      MEETINGS_TABLE_NAME = aws_dynamodb_table.meetings.name
+      LOG_LEVEL           = var.environment == "prod" ? "INFO" : "DEBUG"
+    }
+  }
+
+  tracing_config {
+    mode = "Active"
+  }
+
+  tags = merge(local.common_tags, {
+    Name        = "${local.resource_prefix}-session-completion-detector"
+    Description = "Session completion detection"
+  })
+}
+
+resource "aws_cloudwatch_log_group" "session_completion_detector" {
+  name              = "/aws/lambda/${aws_lambda_function.session_completion_detector.function_name}"
+  retention_in_days = var.environment == "prod" ? 30 : 7
+
+  tags = merge(local.common_tags, {
+    Name = "${local.resource_prefix}-session-completion-detector-logs"
+  })
+}
+
+# IAM Role for Session Completion Detector
+resource "aws_iam_role" "session_completion_detector_lambda" {
+  name = "${local.resource_prefix}-session-completion-detector-lambda-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = merge(local.common_tags, {
+    Name = "${local.resource_prefix}-session-completion-detector-lambda-role"
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "session_completion_detector_basic" {
+  role       = aws_iam_role.session_completion_detector_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "session_completion_detector_xray" {
+  role       = aws_iam_role.session_completion_detector_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+}
+
+# DynamoDB and Step Functions permissions
+resource "aws_iam_role_policy" "session_completion_detector_permissions" {
+  name = "session-completion-detector-permissions"
+  role = aws_iam_role.session_completion_detector_lambda.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:Query",
+          "dynamodb:GetItem",
+          "dynamodb:UpdateItem"
+        ]
+        Resource = [
+          aws_dynamodb_table.chunks.arn,
+          aws_dynamodb_table.meetings.arn
+        ]
+      },
+      {
+        Effect   = "Allow"
+        Action   = "states:StartExecution"
+        Resource = "*" # TODO: Restrict to specific Step Functions ARN once created
+      }
+    ]
+  })
+}
