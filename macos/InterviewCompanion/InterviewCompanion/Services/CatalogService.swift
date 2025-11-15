@@ -13,7 +13,7 @@ import Foundation
 ///
 /// **Table**: meetings
 /// **Primary Key**: pk (Partition Key), sk (Sort Key)
-/// **GSI-1 (DateSearch)**: user_id (PK), created_at (SK)
+/// **GSI-1 (DateSearchIndex)**: gsi1pk (PK), gsi1sk (SK)
 ///
 /// **Item Structure**:
 /// ```
@@ -25,6 +25,8 @@ import Foundation
 ///   "created_at": "2025-11-14T10:30:00Z",
 ///   "duration_ms": 180000,
 ///   "status": "pending|uploading|processing|completed|failed",
+///   "gsi1pk": "USER#user-uuid",
+///   "gsi1sk": "2025-11-14T10:30:00Z",
 ///   "s3_paths": {
 ///     "chunks_prefix": "s3://bucket/users/uid/chunks/rec-id/",
 ///     "video_path": "s3://bucket/users/uid/videos/rec-id.mp4",
@@ -77,17 +79,22 @@ final class CatalogService: ObservableObject, @unchecked Sendable {
         let sk = "METADATA"
         let s3ChunksPrefix = AWSConfig.s3ChunksPath(userId: userId, recordingId: recordingId)
 
+        let createdAtStr = ISO8601DateFormatter().string(from: createdAt)
+
         var item: [String: DynamoDBClientTypes.AttributeValue] = [
             "pk": .s(pk),
             "sk": .s(sk),
             "recording_id": .s(recordingId),
             "user_id": .s(userId),
-            "created_at": .s(ISO8601DateFormatter().string(from: createdAt)),
+            "created_at": .s(createdAtStr),
             "duration_ms": .n("0"),
             "status": .s(RecordingStatus.pending.rawValue),
             "s3_paths": .m([
                 "chunks_prefix": .s(s3ChunksPrefix)
-            ])
+            ]),
+            // GSI-1 attributes for DateSearchIndex
+            "gsi1pk": .s("USER#\(userId)"),
+            "gsi1sk": .s(createdAtStr)
         ]
 
         // Add optional fields if provided
@@ -201,10 +208,10 @@ final class CatalogService: ObservableObject, @unchecked Sendable {
     func listSessions() async throws -> [CatalogItem] {
         let input = QueryInput(
             expressionAttributeValues: [
-                ":user_id": .s(userId)
+                ":user_id": .s("USER#\(userId)")
             ],
-            indexName: "DateSearch",  // GSI-1
-            keyConditionExpression: "user_id = :user_id",
+            indexName: "DateSearchIndex",  // GSI-1
+            keyConditionExpression: "gsi1pk = :user_id",
             scanIndexForward: false,  // Descending order (most recent first)
             tableName: tableName
         )
