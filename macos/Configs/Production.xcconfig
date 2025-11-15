@@ -1,0 +1,5 @@
+// Production configuration
+AWS_REGION = us-east-1
+AWS_S3_BUCKET = meeting-recordings-prod
+AWS_DYNAMODB_TABLE = meetings-prod
+FIREBASE_CONFIG_FILE = GoogleService-Info-Prod.plist

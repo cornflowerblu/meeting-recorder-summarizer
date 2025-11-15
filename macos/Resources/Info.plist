@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDisplayName</key>
+    <string>Meeting Recorder</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.meetingrecorder.app</string>
+    <key>CFBundleVersion</key>
+    <string>1.0.0</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    
+    <!-- Screen Recording Permission -->
+    <key>NSScreenCaptureUsageDescription</key>
+    <string>Meeting Recorder needs to record your screen to capture meeting content for transcription and summarization.</string>
+    
+    <!-- Microphone Permission -->
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Meeting Recorder needs microphone access to record audio during screen recordings.</string>
+    
+    <!-- Camera Permission (optional for future webcam overlay) -->
+    <key>NSCameraUsageDescription</key>
+    <string>Meeting Recorder needs camera access for optional webcam overlay during recordings.</string>
+    
+    <!-- Allow background execution for upload completion -->
+    <key>LSUIElement</key>
+    <false/>
+    
+    <!-- Minimum macOS Version -->
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+</dict>
+</plist>

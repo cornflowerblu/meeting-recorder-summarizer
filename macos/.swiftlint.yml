@@ -1,0 +1,45 @@
+disabled_rules:
+  - trailing_whitespace
+  - line_length
+  - todo
+  - force_cast
+  - force_try
+
+opt_in_rules:
+  - empty_count
+  - file_header
+  - first_where
+  - contains_over_first_not_nil
+  - sorted_first_last
+
+included:
+  - Sources/
+  - Tests/
+
+excluded:
+  - .build
+  - .swiftpm
+
+line_length:
+  warning: 120
+  error: 150
+
+file_length:
+  warning: 500
+  error: 800
+
+function_body_length:
+  warning: 100
+  error: 200
+
+type_body_length:
+  warning: 300
+  error: 500
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 50
+    error: 100

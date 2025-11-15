@@ -1,0 +1,5 @@
+// Development configuration
+AWS_REGION = us-east-1
+AWS_S3_BUCKET = meeting-recordings-dev
+AWS_DYNAMODB_TABLE = meetings-dev
+FIREBASE_CONFIG_FILE = GoogleService-Info-Dev.plist
