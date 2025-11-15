@@ -27,11 +27,16 @@ let package = Package(
         .product(name: "AWSDynamoDB", package: "aws-sdk-swift"),
         .product(name: "AWSSTS", package: "aws-sdk-swift"),
         .product(name: "AWSClientRuntime", package: "aws-sdk-swift"),
+        .product(name: "AWSSDKIdentity", package: "aws-sdk-swift"),
         .product(name: "FirebaseAuth", package: "firebase-ios-sdk"),
       ],
       path: "Sources/MeetingRecorder",
+      resources: [
+        .process("Resources")
+      ],
       swiftSettings: [
-        .enableUpcomingFeature("StrictConcurrency"),
+        // TODO: Re-enable StrictConcurrency once AWS SDK for Swift adds Sendable conformance
+        // .enableUpcomingFeature("StrictConcurrency"),
         .enableUpcomingFeature("BareSlashRegexLiterals"),
       ]
     ),
