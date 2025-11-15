@@ -1,0 +1,36 @@
+{
+  "configurations": [
+    {
+      "id": "B514E92D-6FE1-40DF-98D5-74AEDF8C6124",
+      "name": "Configuration 1",
+      "options": {
+        "environmentVariableEntries": [
+          {
+            "key": "TEST_S3_BUCKET",
+            "value": "meeting-recorder-test-integration"
+          }
+        ]
+      }
+    }
+  ],
+  "defaultOptions": {
+    "testTimeoutsEnabled": true
+  },
+  "testTargets": [
+    {
+      "target": {
+        "containerPath": "container:InterviewCompanion.xcodeproj",
+        "identifier": "FDEE5D5C2EC7E40D002959B6",
+        "name": "InterviewCompanionUITests"
+      }
+    },
+    {
+      "target": {
+        "containerPath": "container:InterviewCompanion.xcodeproj",
+        "identifier": "FDEE5D522EC7E40D002959B6",
+        "name": "InterviewCompanionTests"
+      }
+    }
+  ],
+  "version": 1
+}
