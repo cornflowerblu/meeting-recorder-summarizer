@@ -1,6 +1,8 @@
 import Foundation
 import AWSSSM
 import AWSClientRuntime
+import AWSSDKIdentity
+import SmithyIdentity
 
 /// AWS Configuration Constants
 /// MR-18 (T011)
@@ -15,6 +17,20 @@ struct AWSConfig {
 
     /// Primary AWS region for all resources
     static let region = "us-east-1"
+
+    // MARK: - Credential Management
+
+    /// Creates a StaticAWSCredentialIdentityResolver from Firebase-exchanged AWS credentials
+    /// - Parameter credentials: AWS credentials obtained from Firebase token exchange
+    /// - Returns: A credential identity resolver for use with AWS service clients
+    static func createCredentialResolver(from credentials: AWSCredentials) throws -> StaticAWSCredentialIdentityResolver {
+        let awsCredentialIdentity = AWSCredentialIdentity(
+            accessKey: credentials.accessKeyId,
+            secret: credentials.secretAccessKey,
+            sessionToken: credentials.sessionToken
+        )
+        return try StaticAWSCredentialIdentityResolver(awsCredentialIdentity)
+    }
 
     // MARK: - S3 Configuration
 
@@ -203,17 +219,98 @@ final class RuntimeConfig: @unchecked Sendable {
     private var ssmClient: SSMClient?
 
     private init() {
-        // Initialize SSM client for parameter fetching
+        // SSM client will be initialized with credentials when setCredentials() is called
+    }
+
+    /// Initialize SSM client with Firebase-exchanged AWS credentials
+    /// - Parameter credentials: AWS credentials from token exchange
+    func setCredentials(_ credentials: AWSCredentials) {
+        queue.sync {
+            do {
+                let credentialResolver = try AWSConfig.createCredentialResolver(from: credentials)
+                let config = try SSMClient.SSMClientConfiguration(
+                    awsCredentialIdentityResolver: credentialResolver,
+                    region: AWSConfig.region
+                )
+                ssmClient = SSMClient(config: config)
+                Logger.app.info(
+                    "SSM client initialized with credentials",
+                    file: #file,
+                    function: #function,
+                    line: #line
+                )
+            } catch {
+                Logger.app.error(
+                    "Failed to initialize SSM client with credentials: \(error.localizedDescription)",
+                    file: #file,
+                    function: #function,
+                    line: #line
+                )
+            }
+        }
+    }
+
+    /// Prefetch runtime configuration parameters asynchronously
+    /// This should be called after setCredentials() to avoid blocking the main thread
+    func prefetchParameters() async {
+        guard let ssmClient = ssmClient else {
+            Logger.app.warning(
+                "SSM client not initialized, cannot prefetch parameters",
+                file: #file,
+                function: #function,
+                line: #line
+            )
+            return
+        }
+
+        // Fetch both parameters in parallel
+        async let s3Bucket = fetchParameterAsync(
+            name: "/\(AWSConfig.environment == "dev" ? "meeting-recorder" : "meeting-recorder")/\(AWSConfig.environment)/s3/bucket-name",
+            client: ssmClient
+        )
+        async let dynamoTable = fetchParameterAsync(
+            name: "/meeting-recorder/\(AWSConfig.environment)/dynamodb/meetings-table-name",
+            client: ssmClient
+        )
+
+        // Wait for both to complete
+        let (s3Value, dynamoValue) = await (s3Bucket, dynamoTable)
+
+        // Cache the results
+        queue.sync {
+            if let s3 = s3Value {
+                cachedS3BucketName = s3
+            }
+            if let dynamo = dynamoValue {
+                cachedDynamoDBTableName = dynamo
+            }
+        }
+    }
+
+    /// Async helper to fetch a single parameter
+    private func fetchParameterAsync(name: String, client: SSMClient) async -> String? {
         do {
-            ssmClient = try SSMClient(region: AWSConfig.region)
+            let input = GetParameterInput(name: name, withDecryption: false)
+            let output = try await client.getParameter(input: input)
+
+            if let value = output.parameter?.value {
+                Logger.app.info(
+                    "Successfully fetched parameter: \(name) = \(value)",
+                    file: #file,
+                    function: #function,
+                    line: #line
+                )
+                return value
+            }
         } catch {
             Logger.app.error(
-                "Failed to initialize SSM client: \(error.localizedDescription)",
+                "Failed to fetch parameter \(name): \(error.localizedDescription)",
                 file: #file,
                 function: #function,
                 line: #line
             )
         }
+        return nil
     }
 
     /// S3 bucket name from Parameter Store
@@ -289,7 +386,7 @@ final class RuntimeConfig: @unchecked Sendable {
         let semaphore = DispatchSemaphore(value: 0)
         var result: String?
 
-        Task {
+        Task.detached {
             do {
                 let input = GetParameterInput(name: name, withDecryption: false)
                 let output = try await ssmClient.getParameter(input: input)

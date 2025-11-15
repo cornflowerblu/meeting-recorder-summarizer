@@ -1,6 +1,8 @@
 import SwiftUI
 import AWSS3
 import AWSDynamoDB
+import AWSSDKIdentity
+import SmithyIdentity
 import FirebaseCore
 import GoogleSignIn
 import FirebaseAuth
@@ -98,7 +100,7 @@ struct InterviewCompanionApp: App {
                     // Bypass authentication for UI tests
                     MainView(userId: "ui-test-user", authService: authService)
                 } else if authService.isAuthenticated, let userId = authService.userId {
-                    MainView(userId: userId, authService: authService)
+                    MainViewLoader(userId: userId, authService: authService)
                 } else {
                     SignInView(authService: authService)
                 }
@@ -118,6 +120,38 @@ struct InterviewCompanionApp: App {
         .windowResizability(.contentSize)
         .commands {
             // TODO: Add menu commands (Preferences, About, etc.)
+        }
+    }
+}
+
+// MARK: - Main View Loader
+
+/// Loads runtime configuration before showing MainView to avoid blocking the main thread
+@MainActor
+struct MainViewLoader: View {
+    let userId: String
+    let authService: AuthService
+
+    @State private var isConfigLoaded = false
+
+    var body: some View {
+        Group {
+            if isConfigLoaded {
+                MainView(userId: userId, authService: authService)
+            } else {
+                VStack(spacing: 16) {
+                    ProgressView()
+                    Text("Loading configuration...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .task {
+            // Prefetch AWS runtime configuration parameters in the background
+            await RuntimeConfig.shared.prefetchParameters()
+            isConfigLoaded = true
         }
     }
 }
@@ -145,23 +179,60 @@ struct MainView: View {
             storageService: storageService
         )
 
-        // TODO: Implement STS credential provider after Lambda deployment
-        // For now, AWS SDK will use credentials from:
-        // 1. Environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN)
-        // 2. AWS credentials file (~/.aws/credentials)
-        // 3. IAM role (if running on EC2/ECS)
-        //
-        // After Lambda deployment, we need to:
-        // 1. Get credentials from AuthService.getAWSCredentials()
-        // 2. Set them as environment variables before AWS client initialization
-        // 3. Refresh environment variables before credential expiry
-        //
-        // AWS SDK for Swift doesn't have a public CredentialsProvider protocol,
-        // so we'll need to use environment variables or implement a custom solution
+        // Get credentials from AuthService (Firebase token exchange)
+        // These are temporary AWS credentials obtained from the auth_exchange Lambda
+        guard let credentials = try? authService.getAWSCredentials() else {
+            Logger.app.error(
+                "Failed to get AWS credentials from AuthService",
+                file: #file,
+                function: #function,
+                line: #line
+            )
+            fatalError("AWS credentials not available. Please sign in again.")
+        }
 
-        // Create AWS clients using default credential provider chain
-        let s3Client = try! S3Client(region: AWSConfig.region)
-        let dynamoDBClient = try! DynamoDBClient(region: AWSConfig.region)
+        // Initialize RuntimeConfig with credentials for SSM Parameter Store access
+        RuntimeConfig.shared.setCredentials(credentials)
+
+        // Create credential resolver for AWS service clients
+        let credentialResolver: StaticAWSCredentialIdentityResolver
+        do {
+            credentialResolver = try AWSConfig.createCredentialResolver(from: credentials)
+        } catch {
+            Logger.app.error(
+                "Failed to create credential resolver: \(error.localizedDescription)",
+                file: #file,
+                function: #function,
+                line: #line
+            )
+            fatalError("Failed to initialize AWS credential resolver")
+        }
+
+        // Create AWS service clients with credentials from Firebase token exchange
+        let s3Client: S3Client
+        let dynamoDBClient: DynamoDBClient
+
+        do {
+            let s3Config = try S3Client.S3ClientConfiguration(
+                awsCredentialIdentityResolver: credentialResolver,
+                region: AWSConfig.region
+            )
+            s3Client = S3Client(config: s3Config)
+
+            let dynamoDBConfig = try DynamoDBClient.DynamoDBClientConfiguration(
+                awsCredentialIdentityResolver: credentialResolver,
+                region: AWSConfig.region
+            )
+            dynamoDBClient = DynamoDBClient(config: dynamoDBConfig)
+        } catch {
+            Logger.app.error(
+                "Failed to create AWS clients: \(error.localizedDescription)",
+                file: #file,
+                function: #function,
+                line: #line
+            )
+            fatalError("Failed to initialize AWS service clients")
+        }
 
         let uploader = S3Uploader(s3Client: s3Client)
         let uploadQueue = UploadQueue(
