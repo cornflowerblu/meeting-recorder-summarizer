@@ -40,31 +40,34 @@ jobs:
             ${{ runner.os }}-xcode-spm-
 
       - name: Build
-        working-directory: macos
+        working-directory: macos/InterviewCompanion
         timeout-minutes: 20
         run: |
           xcodebuild -scheme InterviewCompanion \
+            -project InterviewCompanion.xcodeproj \
             -destination 'platform=macOS' \
             -configuration Release \
             build
 
       - name: Run Unit Tests
-        working-directory: macos
+        working-directory: macos/InterviewCompanion
         timeout-minutes: 15
         run: |
           xcodebuild test \
             -scheme InterviewCompanion \
+            -project InterviewCompanion.xcodeproj \
             -destination 'platform=macOS' \
             -only-testing:InterviewCompanionTests \
             2>&1 | tee test-output.txt
 
       - name: Run UI Tests
-        working-directory: macos
+        working-directory: macos/InterviewCompanion
         timeout-minutes: 10
         run: |
           # UI tests will skip tests that require screen recording permission
           xcodebuild test \
             -scheme InterviewCompanion \
+            -project InterviewCompanion.xcodeproj \
             -destination 'platform=macOS' \
             -only-testing:InterviewCompanionUITests \
             2>&1 | tee ui-test-output.txt || true
@@ -73,7 +76,7 @@ jobs:
 
       - name: Test Summary
         if: always()
-        working-directory: macos
+        working-directory: macos/InterviewCompanion
         run: |
           echo "## Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -118,8 +121,8 @@ jobs:
         with:
           name: test-results
           path: |
-            macos/test-output.txt
-            macos/ui-test-output.txt
+            macos/InterviewCompanion/test-output.txt
+            macos/InterviewCompanion/ui-test-output.txt
           retention-days: 30
 
   lint:
@@ -210,16 +213,17 @@ jobs:
             ${{ runner.os }}-xcode-spm-
 
       - name: Build
-        working-directory: macos
+        working-directory: macos/InterviewCompanion
         timeout-minutes: 20
         run: |
           xcodebuild -scheme InterviewCompanion \
+            -project InterviewCompanion.xcodeproj \
             -destination 'platform=macOS' \
             -configuration Release \
             build
 
       - name: Run integration tests
-        working-directory: macos
+        working-directory: macos/InterviewCompanion
         timeout-minutes: 10
         run: |
           if [ -z "$AWS_ACCESS_KEY_ID" ]; then
@@ -231,13 +235,14 @@ jobs:
           echo "✅ Running integration tests with AWS credentials"
           xcodebuild test \
             -scheme InterviewCompanion \
+            -project InterviewCompanion.xcodeproj \
             -destination 'platform=macOS' \
             -only-testing:S3IntegrationTests \
             2>&1 | tee integration-test-output.txt
 
       - name: Integration Test Summary
         if: always()
-        working-directory: macos
+        working-directory: macos/InterviewCompanion
         run: |
           echo "## Integration Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -261,7 +266,7 @@ jobs:
 
       - name: Cleanup S3 test objects
         if: always()
-        working-directory: macos
+        working-directory: macos/InterviewCompanion
         run: |
           if [ -n "$AWS_ACCESS_KEY_ID" ]; then
             echo "🗑️  Cleaning up S3 test objects..."
@@ -275,7 +280,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: integration-test-results
-          path: macos/integration-test-output.txt
+          path: macos/InterviewCompanion/integration-test-output.txt
           retention-days: 30
 
   status-check:
