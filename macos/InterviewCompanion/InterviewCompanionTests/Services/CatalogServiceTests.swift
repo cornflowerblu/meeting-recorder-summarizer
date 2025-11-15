@@ -274,13 +274,78 @@ final class CatalogServiceTests: XCTestCase {
         // When
         _ = try await catalogService.listSessions()
 
-        // Then - Verify query used GSI-1 (DateSearch)
+        // Then - Verify query used GSI-1 (DateSearchIndex)
         guard let indexName = mockDynamoDB.lastQueryIndexName else {
             XCTFail("Query should have specified an index")
             return
         }
 
-        XCTAssertEqual(indexName, "DateSearch")
+        XCTAssertEqual(indexName, "DateSearchIndex", "Query must use DateSearchIndex GSI")
+    }
+
+    func testListSessionsQueryParameters() async throws {
+        // Given
+        mockDynamoDB.mockQueryItems = []
+
+        // When
+        _ = try await catalogService.listSessions()
+
+        // Then - Verify query parameters
+        guard let keyCondition = mockDynamoDB.lastQueryKeyCondition else {
+            XCTFail("Query should have a key condition expression")
+            return
+        }
+
+        guard let expressionValues = mockDynamoDB.lastQueryExpressionValues else {
+            XCTFail("Query should have expression attribute values")
+            return
+        }
+
+        // Verify correct key condition uses gsi1pk
+        XCTAssertEqual(keyCondition, "gsi1pk = :user_id", "Query must use gsi1pk for GSI")
+
+        // Verify user_id value has USER# prefix
+        guard let userIdValue = expressionValues[":user_id"]?.stringValue else {
+            XCTFail("Query must have :user_id expression value")
+            return
+        }
+
+        XCTAssertEqual(userIdValue, "USER#\(testUserId)", "User ID must have USER# prefix for GSI")
+
+        // Verify scanIndexForward is false (descending order)
+        XCTAssertEqual(mockDynamoDB.lastQueryScanForward, false, "Query should sort descending")
+    }
+
+    func testCreateSessionPopulatesGSIAttributes() async throws {
+        // Given
+        let createdAt = Date()
+        let expectedCreatedAtStr = ISO8601DateFormatter().string(from: createdAt)
+
+        // When
+        _ = try await catalogService.createSession(
+            recordingId: testRecordingId,
+            createdAt: createdAt
+        )
+
+        // Then - Verify GSI attributes are present
+        guard let item = mockDynamoDB.lastPutItem else {
+            XCTFail("No item was put to DynamoDB")
+            return
+        }
+
+        // Verify gsi1pk (partition key for DateSearchIndex)
+        guard let gsi1pk = item["gsi1pk"]?.stringValue else {
+            XCTFail("Item must have gsi1pk attribute for GSI-1")
+            return
+        }
+        XCTAssertEqual(gsi1pk, "USER#\(testUserId)", "gsi1pk must have USER# prefix")
+
+        // Verify gsi1sk (sort key for DateSearchIndex)
+        guard let gsi1sk = item["gsi1sk"]?.stringValue else {
+            XCTFail("Item must have gsi1sk attribute for GSI-1")
+            return
+        }
+        XCTAssertEqual(gsi1sk, expectedCreatedAtStr, "gsi1sk must be ISO8601 timestamp")
     }
 
     // MARK: - User Isolation Tests
@@ -413,6 +478,9 @@ final class MockDynamoDBClient: DynamoDBClientProtocol, @unchecked Sendable {
     var allPutItems: [[String: DynamoDBAttributeValue]] = []
     var lastUpdateExpression: String?
     var lastQueryIndexName: String?
+    var lastQueryKeyCondition: String?
+    var lastQueryExpressionValues: [String: DynamoDBAttributeValue]?
+    var lastQueryScanForward: Bool?
 
     var mockQueryItems: [[String: DynamoDBAttributeValue]] = []
 
@@ -456,6 +524,9 @@ final class MockDynamoDBClient: DynamoDBClientProtocol, @unchecked Sendable {
 
         queryCallCount += 1
         lastQueryIndexName = input.indexName
+        lastQueryKeyCondition = input.keyConditionExpression
+        lastQueryExpressionValues = input.expressionAttributeValues
+        lastQueryScanForward = input.scanIndexForward
 
         return AWSDynamoDB.QueryOutput(items: mockQueryItems)
     }

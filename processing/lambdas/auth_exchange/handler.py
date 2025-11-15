@@ -9,15 +9,14 @@ Also emits user.signed_in events to EventBridge for downstream processing.
 import json
 import os
 import re
-from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 import boto3
-from botocore.exceptions import ClientError
 
 # AWS X-Ray SDK for distributed tracing
-from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.core import patch_all
+from botocore.exceptions import ClientError
 
 # Patch all AWS SDK calls (boto3) - auto-traces STS, EventBridge, etc.
 patch_all()
@@ -32,7 +31,7 @@ sts_client = boto3.client("sts")
 eventbridge_client = boto3.client("events")
 
 
-def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     """
     Exchange Firebase ID token for temporary AWS credentials.
 
@@ -96,7 +95,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # Sanitize session name: AWS allows alphanumeric, =,.@-_
         # Remove any other characters to prevent injection
         sanitized_session_name = re.sub(r'[^a-zA-Z0-9=,.@_-]', '_', session_name[:64])
-        
+
         # Ensure sanitized name is not empty after sanitization
         if not sanitized_session_name:
             return _error_response(400, "Invalid session_name: contains no valid characters")
@@ -147,7 +146,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             )
         except Exception as e:
             # Log error but don't fail the token exchange
-            print(f"Failed to emit user.signed_in event: {str(e)}")
+            print(f"Failed to emit user.signed_in event: {e!s}")
 
         # Return success response
         return {
@@ -170,11 +169,11 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
 
     except Exception as e:
-        print(f"Unexpected error: {str(e)}")
-        return _error_response(500, f"Internal server error: {str(e)}")
+        print(f"Unexpected error: {e!s}")
+        return _error_response(500, f"Internal server error: {e!s}")
 
 
-def _parse_body(event: Dict[str, Any]) -> Dict[str, Any]:
+def _parse_body(event: dict[str, Any]) -> dict[str, Any]:
     """
     Parse request body from event.
 
@@ -196,10 +195,10 @@ def _parse_body(event: Dict[str, Any]) -> Dict[str, Any]:
 
 def _emit_user_signed_in_event(
     user_id: str,
-    email: Optional[str] = None,
-    display_name: Optional[str] = None,
-    photo_url: Optional[str] = None,
-    provider: Optional[str] = None
+    email: str | None = None,
+    display_name: str | None = None,
+    photo_url: str | None = None,
+    provider: str | None = None
 ) -> None:
     """
     Emit user.signed_in event to EventBridge.
@@ -217,7 +216,7 @@ def _emit_user_signed_in_event(
     # Build event detail with all available user data
     detail = {
         "userId": user_id,
-        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z")
     }
 
     # Only add optional fields if they are non-empty strings
@@ -245,7 +244,7 @@ def _emit_user_signed_in_event(
     print(f"Emitted user.signed_in event for user: {user_id}")
 
 
-def _error_response(status_code: int, message: str) -> Dict[str, Any]:
+def _error_response(status_code: int, message: str) -> dict[str, Any]:
     """Create standardized error response."""
     return {
         "statusCode": status_code,

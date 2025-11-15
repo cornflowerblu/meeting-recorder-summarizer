@@ -4,13 +4,12 @@ Handles user.signed_in events from EventBridge
 """
 
 import json
-from datetime import datetime, timezone
-from unittest.mock import Mock, patch, MagicMock
-
-import pytest
-from botocore.exceptions import ClientError
+from datetime import UTC, datetime, timezone
+from unittest.mock import MagicMock, Mock, patch
 
 import handler
+import pytest
+from botocore.exceptions import ClientError
 
 
 @pytest.fixture
@@ -307,10 +306,10 @@ class TestTimestampHandling:
 
         # Act
         with patch('handler.datetime') as mock_datetime:
-            mock_now = datetime(2025, 11, 14, 20, 30, 0, tzinfo=timezone.utc)
+            mock_now = datetime(2025, 11, 14, 20, 30, 0, tzinfo=UTC)
             mock_datetime.now.return_value = mock_now
             mock_datetime.timezone = timezone
-            
+
             response = handler.handler(event, lambda_context)
 
         # Assert
