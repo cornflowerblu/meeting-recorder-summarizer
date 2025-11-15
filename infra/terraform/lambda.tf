@@ -261,7 +261,7 @@ resource "aws_iam_role_policy" "chunk_upload_handler_permissions" {
         Effect = "Allow"
         Action = [
           "s3:GetObject",
-          "s3:GetObjectMetadata"
+          "s3:GetObjectAttributes"
         ]
         Resource = "${aws_s3_bucket.recordings.arn}/*"
       },
@@ -292,9 +292,10 @@ resource "aws_lambda_function" "session_completion_detector" {
 
   environment {
     variables = {
-      CHUNKS_TABLE_NAME   = aws_dynamodb_table.chunks.name
-      MEETINGS_TABLE_NAME = aws_dynamodb_table.meetings.name
-      LOG_LEVEL           = var.environment == "prod" ? "INFO" : "DEBUG"
+      CHUNKS_TABLE_NAME            = aws_dynamodb_table.chunks.name
+      MEETINGS_TABLE_NAME          = aws_dynamodb_table.meetings.name
+      LOG_LEVEL                    = var.environment == "prod" ? "INFO" : "DEBUG"
+      PROCESSING_STATE_MACHINE_ARN = aws_sfn_state_machine.ai_processing_pipeline.arn
     }
   }
 
@@ -372,7 +373,7 @@ resource "aws_iam_role_policy" "session_completion_detector_permissions" {
       {
         Effect   = "Allow"
         Action   = "states:StartExecution"
-        Resource = "*" # TODO: Restrict to specific Step Functions ARN once created
+        Resource = aws_sfn_state_machine.ai_processing_pipeline.arn
       }
     ]
   })

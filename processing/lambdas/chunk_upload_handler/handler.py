@@ -14,7 +14,6 @@ import json
 import boto3
 import logging
 from datetime import datetime, timedelta
-from decimal import Decimal
 from typing import Dict, Any, Optional
 from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.core import patch_all
@@ -144,16 +143,8 @@ def validate_chunk(metadata: Dict[str, Any]) -> bool:
         logger.error(f"Invalid file size: {metadata['file_size']}")
         return False
 
-    # Optional: Validate S3 object exists and is accessible
-    try:
-        s3.head_object(
-            Bucket=metadata['bucket_name'],
-            Key=metadata['s3_key']
-        )
-    except Exception as e:
-        logger.error(f"S3 object not accessible: {e}")
-        return False
-
+    # S3 object existence is guaranteed by EventBridge trigger after PutObject
+    # No need for additional head_object check
     return True
 
 
@@ -208,7 +199,7 @@ def check_session_completion(recording_id: str, user_id: str) -> None:
     }
 
     try:
-        response = lambda_client.invoke(
+        lambda_client.invoke(
             FunctionName=SESSION_COMPLETION_LAMBDA_ARN,
             InvocationType='Event',  # Async invocation
             Payload=json.dumps(payload)
