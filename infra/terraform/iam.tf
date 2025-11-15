@@ -104,7 +104,9 @@ resource "aws_iam_role_policy" "macos_app_s3" {
   })
 }
 
-# Policy for macOS app DynamoDB access
+# Policy for macOS app DynamoDB access (meetings table)
+# SECURITY: Users can ONLY access items where partition key starts with their Firebase UID
+# RoleSessionName is set to Firebase UID in auth_exchange Lambda
 resource "aws_iam_role_policy" "macos_app_dynamodb" {
   name = "dynamodb-access"
   role = aws_iam_role.macos_app.id
@@ -119,9 +121,20 @@ resource "aws_iam_role_policy" "macos_app_dynamodb" {
           "dynamodb:GetItem",
           "dynamodb:PutItem",
           "dynamodb:UpdateItem",
-          "dynamodb:DeleteItem",
-          "dynamodb:Query",
-          "dynamodb:Scan"
+          "dynamodb:DeleteItem"
+        ]
+        Resource = aws_dynamodb_table.meetings.arn
+        Condition = {
+          "ForAllValues:StringLike" = {
+            "dynamodb:LeadingKeys" = ["$${aws:username}#*"]
+          }
+        }
+      },
+      {
+        Sid    = "AllowUserQueryOperations"
+        Effect = "Allow"
+        Action = [
+          "dynamodb:Query"
         ]
         Resource = [
           aws_dynamodb_table.meetings.arn,
@@ -129,13 +142,16 @@ resource "aws_iam_role_policy" "macos_app_dynamodb" {
         ]
         Condition = {
           "ForAllValues:StringLike" = {
-            "dynamodb:LeadingKeys" = ["$${aws:username}#*"]
+            "dynamodb:LeadingKeys" = ["$${aws:username}"]
           }
         }
       }
     ]
   })
 }
+
+# Note: Users table access removed - user profile management now handled by
+# user_profile Lambda via EventBridge. App only needs meetings table access.
 
 # Policy for macOS app SSM Parameter Store access
 resource "aws_iam_role_policy" "macos_app_ssm" {
@@ -192,6 +208,12 @@ resource "aws_iam_role_policy_attachment" "auth_exchange_lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# Attach AWS X-Ray write permissions for tracing
+resource "aws_iam_role_policy_attachment" "auth_exchange_lambda_xray" {
+  role       = aws_iam_role.auth_exchange_lambda.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess"
+}
+
 # Policy for auth exchange Lambda to assume web identity
 resource "aws_iam_role_policy" "auth_exchange_lambda_sts" {
   name = "sts-assume-role"
@@ -208,6 +230,26 @@ resource "aws_iam_role_policy" "auth_exchange_lambda_sts" {
           "sts:GetFederationToken"
         ]
         Resource = aws_iam_role.macos_app.arn
+      }
+    ]
+  })
+}
+
+# Policy for auth exchange Lambda to publish events to EventBridge
+resource "aws_iam_role_policy" "auth_exchange_lambda_eventbridge" {
+  name = "eventbridge-publish"
+  role = aws_iam_role.auth_exchange_lambda.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowEventBridgePublish"
+        Effect = "Allow"
+        Action = [
+          "events:PutEvents"
+        ]
+        Resource = aws_cloudwatch_event_bus.auth_events.arn
       }
     ]
   })

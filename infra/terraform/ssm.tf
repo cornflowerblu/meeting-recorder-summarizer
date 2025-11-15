@@ -14,16 +14,29 @@ resource "aws_ssm_parameter" "s3_bucket_name" {
   })
 }
 
-# DynamoDB table name parameter
+# DynamoDB meetings table name parameter
 resource "aws_ssm_parameter" "dynamodb_table_name" {
-  name        = "/${var.project_name}/${var.environment}/dynamodb/table-name"
+  name        = "/${var.project_name}/${var.environment}/dynamodb/meetings-table-name"
   description = "DynamoDB table name for meetings metadata"
   type        = "String"
   value       = aws_dynamodb_table.meetings.name
 
   tags = merge(local.common_tags, {
-    Name        = "${local.resource_prefix}-dynamodb-table-name-param"
-    Description = "DynamoDB table name for runtime config"
+    Name        = "${local.resource_prefix}-dynamodb-meetings-table-name-param"
+    Description = "DynamoDB meetings table name for runtime config"
+  })
+}
+
+# DynamoDB users table name parameter
+resource "aws_ssm_parameter" "dynamodb_users_table_name" {
+  name        = "/${var.project_name}/${var.environment}/dynamodb/users-table-name"
+  description = "DynamoDB table name for users"
+  type        = "String"
+  value       = aws_dynamodb_table.users.name
+
+  tags = merge(local.common_tags, {
+    Name        = "${local.resource_prefix}-dynamodb-users-table-name-param"
+    Description = "DynamoDB users table name for runtime config"
   })
 }
 

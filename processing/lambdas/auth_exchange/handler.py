@@ -3,22 +3,33 @@ Firebase to AWS STS credentials exchange Lambda
 MR-17 (T010)
 
 Exchanges Firebase ID tokens for temporary AWS credentials using STS AssumeRoleWithWebIdentity.
+Also emits user.signed_in events to EventBridge for downstream processing.
 """
 
 import json
 import os
 import re
-from typing import Any, Dict
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
 
 import boto3
 from botocore.exceptions import ClientError
 
+# AWS X-Ray SDK for distributed tracing
+from aws_xray_sdk.core import xray_recorder
+from aws_xray_sdk.core import patch_all
+
+# Patch all AWS SDK calls (boto3) - auto-traces STS, EventBridge, etc.
+patch_all()
+
 # Environment variables
 MACOS_APP_ROLE_ARN = os.environ.get("MACOS_APP_ROLE_ARN")
 SESSION_DURATION = int(os.environ.get("SESSION_DURATION", "3600"))  # 1 hour default
+EVENT_BUS_NAME = os.environ.get("EVENT_BUS_NAME", "default")
 
 # AWS clients
 sts_client = boto3.client("sts")
+eventbridge_client = boto3.client("events")
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -28,7 +39,11 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     Expected event body (JSON):
     {
         "id_token": "<firebase_id_token>",
-        "session_name": "<firebase_user_id>"  # REQUIRED: Firebase user ID for IAM isolation
+        "session_name": "<firebase_user_id>",  # REQUIRED: Firebase user ID for IAM isolation
+        "email": "<user@example.com>",         # OPTIONAL: For EventBridge events
+        "display_name": "<John Doe>",          # OPTIONAL: For EventBridge events
+        "photo_url": "<https://...>",          # OPTIONAL: For EventBridge events
+        "provider": "<google.com>"             # OPTIONAL: For EventBridge events
     }
 
     Returns:
@@ -80,7 +95,11 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
         # Sanitize session name: AWS allows alphanumeric, =,.@-_
         # Remove any other characters to prevent injection
-        session_name = re.sub(r'[^a-zA-Z0-9=,.@_-]', '_', session_name[:64])
+        sanitized_session_name = re.sub(r'[^a-zA-Z0-9=,.@_-]', '_', session_name[:64])
+        
+        # Ensure sanitized name is not empty after sanitization
+        if not sanitized_session_name:
+            return _error_response(400, "Invalid session_name: contains no valid characters")
 
         # Validate environment configuration
         if not MACOS_APP_ROLE_ARN:
@@ -90,7 +109,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         try:
             response = sts_client.assume_role_with_web_identity(
                 RoleArn=MACOS_APP_ROLE_ARN,
-                RoleSessionName=session_name,
+                RoleSessionName=sanitized_session_name,
                 WebIdentityToken=id_token,
                 DurationSeconds=SESSION_DURATION,
             )
@@ -110,6 +129,25 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # Extract credentials
         credentials = response["Credentials"]
         assumed_role_user = response["AssumedRoleUser"]
+
+        # Emit user.signed_in event to EventBridge (async, fire-and-forget)
+        # Extract optional user profile fields
+        user_email = body.get("email")
+        display_name = body.get("display_name")
+        photo_url = body.get("photo_url")
+        provider = body.get("provider")
+
+        try:
+            _emit_user_signed_in_event(
+                user_id=session_name,
+                email=user_email,
+                display_name=display_name,
+                photo_url=photo_url,
+                provider=provider
+            )
+        except Exception as e:
+            # Log error but don't fail the token exchange
+            print(f"Failed to emit user.signed_in event: {str(e)}")
 
         # Return success response
         return {
@@ -154,6 +192,57 @@ def _parse_body(event: Dict[str, Any]) -> Dict[str, Any]:
 
     # If body is already a dict, return as-is
     return body
+
+
+def _emit_user_signed_in_event(
+    user_id: str,
+    email: Optional[str] = None,
+    display_name: Optional[str] = None,
+    photo_url: Optional[str] = None,
+    provider: Optional[str] = None
+) -> None:
+    """
+    Emit user.signed_in event to EventBridge.
+
+    This event triggers downstream processing like user profile creation,
+    analytics, welcome emails, etc.
+
+    Args:
+        user_id: Firebase user ID
+        email: User email address (optional)
+        display_name: User display name (optional)
+        photo_url: User photo URL (optional)
+        provider: Authentication provider (optional)
+    """
+    # Build event detail with all available user data
+    detail = {
+        "userId": user_id,
+        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    }
+
+    # Only add optional fields if they are non-empty strings
+    if email and isinstance(email, str) and email.strip():
+        detail["email"] = email.strip()
+    if display_name and isinstance(display_name, str) and display_name.strip():
+        detail["displayName"] = display_name.strip()
+    if photo_url and isinstance(photo_url, str) and photo_url.strip():
+        detail["photoURL"] = photo_url.strip()
+    if provider and isinstance(provider, str) and provider.strip():
+        detail["provider"] = provider.strip()
+
+    # Publish event to EventBridge
+    eventbridge_client.put_events(
+        Entries=[
+            {
+                "Source": "interview-companion.auth",
+                "DetailType": "user.signed_in",
+                "Detail": json.dumps(detail),
+                "EventBusName": EVENT_BUS_NAME
+            }
+        ]
+    )
+
+    print(f"Emitted user.signed_in event for user: {user_id}")
 
 
 def _error_response(status_code: int, message: str) -> Dict[str, Any]:

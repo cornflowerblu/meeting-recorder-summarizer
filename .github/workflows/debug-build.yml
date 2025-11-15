@@ -6,7 +6,7 @@ on:
 jobs:
   debug:
     name: Debug Build Environment
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Checkout code
@@ -42,14 +42,28 @@ jobs:
           echo "=== Swift Package Manager ==="
           swift package --version
 
-      - name: Try Build
-        working-directory: macos
+      - name: List Project Structure
+        working-directory: macos/InterviewCompanion
         run: |
-          echo "=== Resolving Dependencies ==="
-          swift package resolve
+          echo "=== Project Directory Contents ==="
+          ls -la
           echo ""
-          echo "=== Package Info ==="
-          swift package describe
+          echo "=== Xcode Project Info ==="
+          xcodebuild -list -project InterviewCompanion.xcodeproj
           echo ""
-          echo "=== Building ==="
-          swift build -v 2>&1 | tail -50
+          echo "=== Available Schemes ==="
+          xcodebuild -list -json -project InterviewCompanion.xcodeproj | jq '.project.schemes'
+
+      - name: Try Build with xcodebuild
+        working-directory: macos/InterviewCompanion
+        run: |
+          echo "=== Resolving SPM Dependencies ==="
+          xcodebuild -resolvePackageDependencies -project InterviewCompanion.xcodeproj -scheme InterviewCompanion
+          echo ""
+          echo "=== Building InterviewCompanion ==="
+          xcodebuild -scheme InterviewCompanion \
+            -project InterviewCompanion.xcodeproj \
+            -destination 'platform=macOS' \
+            -configuration Debug \
+            clean build \
+            2>&1 | tail -100

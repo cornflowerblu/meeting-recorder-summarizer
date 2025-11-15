@@ -1,0 +1,68 @@
+{
+  "configurations": [
+    {
+      "id": "B55153A1-4402-45D0-AD9A-DBE65924471F",
+      "name": "Configuration 1",
+      "options": {}
+    }
+  ],
+  "defaultOptions": {
+    "environmentVariableEntries": [
+      {
+        "key": "TEST_S3_BUCKET",
+        "value": "meeting-recorder-test-integration"
+      }
+    ],
+    "testTimeoutsEnabled": true
+  },
+  "testTargets": [
+    {
+      "parallelizable": true,
+      "selectedTests": [
+        "S3IntegrationTests/testLargeMultipartUpload()",
+        "S3IntegrationTests/testMultipartUploadWithRealS3()",
+        "S3IntegrationTests/testPathTraversalPrevention()",
+        "S3IntegrationTests/testSmallFileUpload()",
+        "S3IntegrationTests/testUploadNonExistentFile()",
+        "S3IntegrationTests/testUploadToNonExistentBucket()",
+        "ScreenRecorderTests/testChunkCompletionNotification()",
+        "ScreenRecorderTests/testChunkDurationVariance()",
+        "ScreenRecorderTests/testCleanupOnCancellation()",
+        "ScreenRecorderTests/testCleanupOnStop()",
+        "ScreenRecorderTests/testDiskSpaceLowError()",
+        "ScreenRecorderTests/testDurationTracking()",
+        "ScreenRecorderTests/testErrorHandlingDuringRecording()",
+        "ScreenRecorderTests/testFrameDropWarning()",
+        "ScreenRecorderTests/testInitialState()",
+        "ScreenRecorderTests/testInvalidStateTransitions()",
+        "ScreenRecorderTests/testMultipleChunkGeneration()",
+        "ScreenRecorderTests/testNoMemoryLeaks()",
+        "ScreenRecorderTests/testPauseRecording()",
+        "ScreenRecorderTests/testProgressUpdates()",
+        "ScreenRecorderTests/testResumeRecording()",
+        "ScreenRecorderTests/testStartRecording()",
+        "ScreenRecorderTests/testStartRecordingWithoutPermission()",
+        "ScreenRecorderTests/testStopRecording()",
+        "UploadQueueTests/testConcurrentUploadLimit()",
+        "UploadQueueTests/testCorruptedManifestHandledGracefully()",
+        "UploadQueueTests/testCredentialRefreshOn403Error()",
+        "UploadQueueTests/testManifestSavedAfterEachUpload()",
+        "UploadQueueTests/testMaxBackoffDelayEnforced()",
+        "UploadQueueTests/testMultipartUploadSuccess()",
+        "UploadQueueTests/testMultipleChunksUploadInFIFOOrder()",
+        "UploadQueueTests/testNetworkErrorHandling()",
+        "UploadQueueTests/testPauseAndResumeQueue()",
+        "UploadQueueTests/testProgressUpdates()",
+        "UploadQueueTests/testResumeFromManifestAfterAppRestart()",
+        "UploadQueueTests/testRetryWithExponentialBackoff()",
+        "UploadQueueTests/testUploadFailsAfterMaxRetries()"
+      ],
+      "target": {
+        "containerPath": "container:InterviewCompanion.xcodeproj",
+        "identifier": "FDEE5D522EC7E40D002959B6",
+        "name": "InterviewCompanionTests"
+      }
+    }
+  ],
+  "version": 1
+}
