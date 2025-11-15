@@ -60,16 +60,6 @@ description: "Task plan for 'Meeting Recorder with AI Intelligence'"
 - [x] T017 [P] [US1] Add consent + indicator UI test in `macos/Tests/MeetingRecorderUITests/IndicatorFlowUITests.swift`
 - [x] T018 [P] [US1] Add catalog creation integration test in `macos/Tests/MeetingRecorderTests/CatalogServiceTests.swift`
 
-- [x] T015 [P] [US1] Add segmentation unit tests in `macos/Tests/MeetingRecorderTests/ScreenRecorderTests.swift`
-- [x] T016 [P] [US1] Add upload queue persistence tests in `macos/Tests/MeetingRecorderTests/UploadQueueTests.swift`
-- [x] T017 [P] [US1] Add consent + indicator UI test in `macos/Tests/MeetingRecorderUITests/IndicatorFlowUITests.swift`
-- [x] T018 [P] [US1] Add catalog creation integration test in `macos/Tests/MeetingRecorderTests/CatalogServiceTests.swift`
-
-- [ ] T060 [P] [US1] Unit test: screen segmentation at 60s in macos/Tests/ScreenRecorderTests.swift
-- [ ] T061 [P] [US1] Unit test: upload queue backoff and resume from manifest in macos/Tests/UploadQueueTests.swift
-- [ ] T062 [P] [US1] UI test: consent flow and persistent indicator visibility in macos/UITests/ConsentAndIndicatorUITests.swift
-- [ ] T063 [P] [US1] Integration test: CatalogService.createSession writes pending item in macos/Tests/CatalogServiceTests.swift
-
 ### Implementation for User Story 1
 
 - [x] T019 [P] [US1] Build consent acknowledgement view in `macos/Sources/MeetingRecorder/UI/ConsentView.swift`
@@ -89,6 +79,36 @@ description: "Task plan for 'Meeting Recorder with AI Intelligence'"
 
 ---
 
+## Phase 3.5: Backend Upload Queue & Event-Driven Orchestration
+
+**Purpose**: Implement serverless backend that handles chunk upload validation, session completion detection, and processing orchestration via EventBridge.
+
+**Architecture**: See `backend-architecture.md` for detailed design.
+
+**Dependencies**: Requires Phase 3 (client uploads chunks to S3); feeds into Phase 4 (triggers AI processing).
+
+### Infrastructure Setup
+
+- [ ] T028a [P] Configure S3 bucket EventBridge notifications in `infra/terraform/s3.tf`
+- [ ] T028b [P] Define EventBridge rules for chunk uploads in `infra/terraform/eventbridge.tf`
+- [ ] T028e [P] Create DynamoDB chunk tracking table in `infra/terraform/dynamodb.tf`
+
+### Lambda Functions
+
+- [ ] T028c Implement Chunk Upload Handler Lambda in `processing/lambdas/chunk_upload_handler/handler.py`
+- [ ] T028d Implement Session Completion Detector Lambda in `processing/lambdas/session_completion_detector/handler.py`
+
+### Error Handling & Monitoring
+
+- [ ] T028f [P] Add DLQ for EventBridge events and CloudWatch alarms in `infra/terraform/monitoring.tf`
+- [ ] T028g [P] Configure X-Ray tracing for chunk upload flow in `infra/terraform/xray.tf`
+
+**Checkpoint**: S3 chunk uploads trigger validation, session completion detection triggers existing Step Functions workflow from T035.
+
+**Parallel example**: T028a, T028b, T028e can deploy concurrently; T028c-d implement handlers; T028f-g add observability.
+
+---
+
 ## Phase 4: User Story 2 — Automated transcript, summary, actions, decisions (Priority: P1)
 
 **Goal**: Process completed recordings via AWS pipeline to produce transcript, summary, action items, and decisions with provenance.
@@ -97,10 +117,10 @@ description: "Task plan for 'Meeting Recorder with AI Intelligence'"
 
 ### Tests for User Story 2 (write first)
 
-- [ ] T029 [P] [US2] Validate transcript JSON against schema in `processing/tests/contracts/test_transcript_schema.py`
-- [ ] T030 [P] [US2] Validate summary JSON against schema in `processing/tests/contracts/test_summary_schema.py`
-- [ ] T031 [P] [US2] Verify status transitions across Step Functions in `processing/tests/integration/test_state_transitions.py`
-- [ ] T032 [P] [US2] Unit test Step Functions input builder in `processing/tests/unit/test_step_input_builder.py`
+- [x] T029 [P] [US2] Validate transcript JSON against schema in `processing/tests/contracts/test_transcript_schema.py`
+- [x] T030 [P] [US2] Validate summary JSON against schema in `processing/tests/contracts/test_summary_schema.py`
+- [x] T031 [P] [US2] Verify status transitions across Step Functions in `processing/tests/integration/test_state_transitions.py`
+- [x] T032 [P] [US2] Unit test Step Functions input builder in `processing/tests/unit/test_step_input_builder.py`
 
 ### Implementation for User Story 2
 
@@ -163,6 +183,11 @@ description: "Task plan for 'Meeting Recorder with AI Intelligence'"
 - [ ] T055 [US4] Build session detail view in `macos/Sources/MeetingRecorder/UI/SessionDetailView.swift`
 - [ ] T056 [US4] Build transcript viewer with timestamp links in `macos/Sources/MeetingRecorder/UI/TranscriptViewer.swift`
 - [ ] T057 [US4] Build video player with seek support in `macos/Sources/MeetingRecorder/UI/VideoPlayerView.swift`
+
+- [ ] T060 [P] [US1] Unit test: screen segmentation at 60s in macos/Tests/ScreenRecorderTests.swift
+- [ ] T061 [P] [US1] Unit test: upload queue backoff and resume from manifest in macos/Tests/UploadQueueTests.swift
+- [ ] T062 [P] [US1] UI test: consent flow and persistent indicator visibility in macos/UITests/ConsentAndIndicatorUITests.swift
+- [ ] T063 [P] [US1] Integration test: CatalogService.createSession writes pending item in macos/Tests/CatalogServiceTests.swift
 
 **Checkpoint**: Rich catalog browsing and playback experiences validated.
 
@@ -274,14 +299,18 @@ graph TD
 
 **Output path**: `/specs/001-meeting-recorder-ai/tasks.md`
 
-- **Total tasks**: 70
-- **Per user story**:
+- **Total tasks**: 77
+- **Per phase**:
+  - Setup: 6 tasks (T001–T006)
+  - Foundational: 8 tasks (T007–T014)
   - US1: 10 implementation + 4 tests = 14 tasks (T015–T028)
+  - Phase 3.5 (Backend): 7 tasks (T028a–T028g)
   - US2: 10 implementation + 4 tests = 14 tasks (T029–T042)
   - US3: 4 implementation + 2 tests = 6 tasks (T043–T048)
   - US4: 6 implementation + 3 tests = 9 tasks (T049–T057)
   - US5: 4 implementation + 3 tests = 7 tasks (T058–T064)
-- **Parallel tasks**: 40 marked `[P]` across phases for team concurrency.
+  - Polish: 6 tasks (T065–T070)
+- **Parallel tasks**: 44 marked `[P]` across phases for team concurrency.
 - **Independent test criteria**: Each story begins with TDD tasks covering unit, UI, and integration aspects aligned to acceptance scenarios.
 - **Suggested MVP scope**: Phases 1–3 (US1) deliver recording with consent; subsequent stories add automation, metadata, search, and reliability.
 - **Format validation**: All entries follow `- [ ] T### [P?] [US?] Description with path`.

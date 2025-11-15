@@ -28,6 +28,7 @@ class Config:
 
     # Processing
     TRANSCRIBE_LANGUAGE_CODE: str = os.environ.get("TRANSCRIBE_LANGUAGE_CODE", "en-US")
+    TRANSCRIBE_SERVICE_ROLE_ARN: str = os.environ.get("TRANSCRIBE_SERVICE_ROLE_ARN", "")
     BEDROCK_MODEL_ID: str = os.environ.get(
         "BEDROCK_MODEL_ID", "anthropic.claude-sonnet-4-20250514"
     )
@@ -35,6 +36,9 @@ class Config:
 
     # Step Functions
     STATE_MACHINE_ARN: str = os.environ.get("STATE_MACHINE_ARN", "")
+
+    # Pipeline Versioning
+    PIPELINE_VERSION: str = os.environ.get("PIPELINE_VERSION", "1.0.0")
 
     # Logging
     LOG_LEVEL: str = os.environ.get("LOG_LEVEL", "INFO")

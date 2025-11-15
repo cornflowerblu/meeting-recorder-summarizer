@@ -202,3 +202,85 @@ resource "aws_dynamodb_table" "users" {
 #   "photoURL": "https://...",
 #   "provider": "google.com"
 # }
+
+#############################################################################
+# Phase 3.5: Chunk Tracking Table (T028e)
+#############################################################################
+
+# DynamoDB Table for Chunk Upload Tracking
+# Used by Session Completion Detector to verify all chunks uploaded
+resource "aws_dynamodb_table" "chunks" {
+  name         = "${local.resource_prefix}-chunks"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "recordingId"
+  range_key    = "chunkIndex"
+
+  # Primary Key Attributes
+  attribute {
+    name = "recordingId"
+    type = "S" # String: recording ID
+  }
+
+  attribute {
+    name = "chunkIndex"
+    type = "N" # Number: chunk index (0, 1, 2, ...)
+  }
+
+  # GSI for user-level queries
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
+  attribute {
+    name = "uploadedAt"
+    type = "S" # ISO8601 timestamp
+  }
+
+  global_secondary_index {
+    name            = "UserChunksIndex"
+    hash_key        = "userId"
+    range_key       = "uploadedAt"
+    projection_type = "ALL"
+  }
+
+  # Point-in-Time Recovery
+  point_in_time_recovery {
+    enabled = var.enable_point_in_time_recovery
+  }
+
+  # Server-Side Encryption
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = var.use_customer_managed_kms ? aws_kms_key.dynamodb[0].arn : null
+  }
+
+  # TTL for automatic cleanup (delete chunks after 30 days)
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
+
+  tags = merge(local.common_tags, {
+    Name        = "${local.resource_prefix}-chunks"
+    Description = "Chunk upload tracking for session completion detection"
+  })
+
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
+# Chunks Table Item Example:
+# {
+#   "recordingId": "rec_abc123",
+#   "chunkIndex": 5,
+#   "userId": "user_12345",
+#   "s3Key": "users/user_12345/chunks/rec_abc123/chunk_005.mp4",
+#   "fileSize": 1048576,
+#   "checksum": "abc123def456",
+#   "uploadedAt": "2025-11-15T18:30:00Z",
+#   "status": "validated",
+#   "retryCount": 0,
+#   "ttl": 1734278400  // 30 days from upload
+# }

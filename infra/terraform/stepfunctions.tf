@@ -1,6 +1,7 @@
 # Step Functions State Machine for AI Processing Pipeline
 # Implements the complete workflow from video processing to summary generation
 
+
 # Data sources for VPC and subnets
 data "aws_vpc" "default" {
   count   = var.vpc_id == "" ? 1 : 0
@@ -15,9 +16,6 @@ data "aws_subnets" "default" {
   }
 }
 
-# Data source for current AWS account
-data "aws_caller_identity" "current" {}
-
 # Local values for VPC and subnet handling
 locals {
   vpc_id     = var.vpc_id != "" ? var.vpc_id : data.aws_vpc.default[0].id
@@ -29,55 +27,55 @@ resource "aws_sfn_state_machine" "ai_processing_pipeline" {
   role_arn = aws_iam_role.step_functions_role.arn
 
   definition = jsonencode({
-    Comment = "AI Processing Pipeline for Meeting Recordings"
-    StartAt = "ValidateInput"
-    TimeoutSeconds = 7200  # 2 hours max execution time
-    Version = "1.0"
+    Comment        = "AI Processing Pipeline for Meeting Recordings"
+    StartAt        = "ValidateInput"
+    TimeoutSeconds = 7200 # 2 hours max execution time
+    Version        = "1.0"
 
     States = {
       ValidateInput = {
-        Type = "Task"
-        Resource = aws_lambda_function.validate_input.arn
+        Type           = "Task"
+        Resource       = aws_lambda_function.validate_input.arn
         TimeoutSeconds = 30
         Retry = [
           {
-            ErrorEquals = ["Lambda.ServiceException", "Lambda.SdkClientException"]
+            ErrorEquals     = ["Lambda.ServiceException", "Lambda.SdkClientException"]
             IntervalSeconds = 2
-            MaxAttempts = 3
-            BackoffRate = 2.0
+            MaxAttempts     = 3
+            BackoffRate     = 2.0
           },
           {
-            ErrorEquals = ["States.TaskFailed"]
+            ErrorEquals     = ["States.TaskFailed"]
             IntervalSeconds = 5
-            MaxAttempts = 2
-            BackoffRate = 2.0
+            MaxAttempts     = 2
+            BackoffRate     = 2.0
           }
         ]
         Catch = [
           {
             ErrorEquals = ["ValidationError"]
-            Next = "ValidationFailed"
-            ResultPath = "$.error"
+            Next        = "ValidationFailed"
+            ResultPath  = "$.error"
           },
           {
             ErrorEquals = ["States.ALL"]
-            Next = "ProcessingFailed"
-            ResultPath = "$.error"
+            Next        = "ProcessingFailed"
+            ResultPath  = "$.error"
           }
         ]
         Next = "ProcessVideo"
       }
 
       ProcessVideo = {
-        Type = "Task"
+        Type     = "Task"
         Resource = "arn:aws:states:::ecs:runTask.sync"
         Parameters = {
           TaskDefinition = aws_ecs_task_definition.ffmpeg_processor.arn
-          Cluster = aws_ecs_cluster.processing_cluster.arn
-          LaunchType = "FARGATE"
+          Cluster        = aws_ecs_cluster.processing_cluster.arn
+          LaunchType     = "FARGATE"
           NetworkConfiguration = {
             AwsvpcConfiguration = {
-              Subnets = local.subnet_ids
+              Subnets        = local.subnet_ids
               SecurityGroups = [aws_security_group.ffmpeg_sg.id]
               AssignPublicIp = "ENABLED"
             }
@@ -88,23 +86,23 @@ resource "aws_sfn_state_machine" "ai_processing_pipeline" {
                 Name = "ffmpeg-container"
                 Environment = [
                   {
-                    Name = "RECORDING_ID"
+                    Name      = "RECORDING_ID"
                     "Value.$" = "$.recording_id"
                   },
                   {
-                    Name = "S3_BUCKET"
+                    Name      = "S3_BUCKET"
                     "Value.$" = "$.s3_bucket"
                   },
                   {
-                    Name = "USER_ID"
+                    Name      = "USER_ID"
                     "Value.$" = "$.user_id"
                   },
                   {
-                    Name = "CHUNK_COUNT"
+                    Name      = "CHUNK_COUNT"
                     "Value.$" = "$.chunk_count"
                   },
                   {
-                    Name = "AWS_REGION"
+                    Name  = "AWS_REGION"
                     Value = var.aws_region
                   }
                 ]
@@ -112,69 +110,69 @@ resource "aws_sfn_state_machine" "ai_processing_pipeline" {
             ]
           }
         }
-        TimeoutSeconds = 1800  # 30 minutes for video processing
+        TimeoutSeconds = 1800 # 30 minutes for video processing
         Retry = [
           {
-            ErrorEquals = ["ECS.TaskTimedOut", "ECS.TaskFailed"]
+            ErrorEquals     = ["ECS.TaskTimedOut", "ECS.TaskFailed"]
             IntervalSeconds = 60
-            MaxAttempts = 2
-            BackoffRate = 2.0
+            MaxAttempts     = 2
+            BackoffRate     = 2.0
           }
         ]
         Catch = [
           {
             ErrorEquals = ["States.ALL"]
-            Next = "ProcessingFailed"
-            ResultPath = "$.error"
+            Next        = "ProcessingFailed"
+            ResultPath  = "$.error"
           }
         ]
         Next = "StartTranscription"
       }
 
       StartTranscription = {
-        Type = "Task"
-        Resource = aws_lambda_function.start_transcribe.arn
+        Type           = "Task"
+        Resource       = aws_lambda_function.start_transcribe.arn
         TimeoutSeconds = 60
         Retry = [
           {
-            ErrorEquals = ["Transcribe.LimitExceededException"]
+            ErrorEquals     = ["Transcribe.LimitExceededException"]
             IntervalSeconds = 30
-            MaxAttempts = 5
-            BackoffRate = 2.0
+            MaxAttempts     = 5
+            BackoffRate     = 2.0
           },
           {
-            ErrorEquals = ["Lambda.ServiceException", "States.TaskFailed"]
+            ErrorEquals     = ["Lambda.ServiceException", "States.TaskFailed"]
             IntervalSeconds = 10
-            MaxAttempts = 3
-            BackoffRate = 2.0
+            MaxAttempts     = 3
+            BackoffRate     = 2.0
           }
         ]
         Catch = [
           {
             ErrorEquals = ["States.ALL"]
-            Next = "ProcessingFailed"
-            ResultPath = "$.error"
+            Next        = "ProcessingFailed"
+            ResultPath  = "$.error"
           }
         ]
         Next = "WaitForTranscription"
       }
 
       WaitForTranscription = {
-        Type = "Wait"
+        Type    = "Wait"
         Seconds = 30
-        Next = "CheckTranscriptionStatus"
+        Next    = "CheckTranscriptionStatus"
       }
 
       CheckTranscriptionStatus = {
-        Type = "Task"
-        Resource = aws_lambda_function.check_transcribe_status.arn
+        Type           = "Task"
+        Resource       = aws_lambda_function.check_transcribe_status.arn
         TimeoutSeconds = 30
         Retry = [
           {
-            ErrorEquals = ["Lambda.ServiceException", "States.TaskFailed"]
+            ErrorEquals     = ["Lambda.ServiceException", "States.TaskFailed"]
             IntervalSeconds = 5
-            MaxAttempts = 3
-            BackoffRate = 2.0
+            MaxAttempts     = 3
+            BackoffRate     = 2.0
           }
         ]
         Next = "TranscriptionChoice"
@@ -184,93 +182,93 @@ resource "aws_sfn_state_machine" "ai_processing_pipeline" {
         Type = "Choice"
         Choices = [
           {
-            Variable = "$.transcription_status"
+            Variable     = "$.transcription_status"
             StringEquals = "COMPLETED"
-            Next = "GenerateSummary"
+            Next         = "GenerateSummary"
           },
           {
-            Variable = "$.transcription_status"
+            Variable     = "$.transcription_status"
             StringEquals = "IN_PROGRESS"
-            Next = "WaitForTranscription"
+            Next         = "WaitForTranscription"
           },
           {
-            Variable = "$.transcription_status"
+            Variable     = "$.transcription_status"
             StringEquals = "FAILED"
-            Next = "ProcessingFailed"
+            Next         = "ProcessingFailed"
           }
         ]
         Default = "ProcessingFailed"
       }
 
       GenerateSummary = {
-        Type = "Task"
-        Resource = aws_lambda_function.bedrock_summarize.arn
-        TimeoutSeconds = 300  # 5 minutes for Bedrock processing
+        Type           = "Task"
+        Resource       = aws_lambda_function.bedrock_summarize.arn
+        TimeoutSeconds = 300 # 5 minutes for Bedrock processing
         Retry = [
           {
-            ErrorEquals = ["Bedrock.ThrottlingException", "Bedrock.ModelNotReadyException"]
+            ErrorEquals     = ["Bedrock.ThrottlingException", "Bedrock.ModelNotReadyException"]
             IntervalSeconds = 30
-            MaxAttempts = 5
-            BackoffRate = 2.0
+            MaxAttempts     = 5
+            BackoffRate     = 2.0
           },
           {
-            ErrorEquals = ["Lambda.ServiceException", "States.TaskFailed"]
+            ErrorEquals     = ["Lambda.ServiceException", "States.TaskFailed"]
             IntervalSeconds = 15
-            MaxAttempts = 3
-            BackoffRate = 2.0
+            MaxAttempts     = 3
+            BackoffRate     = 2.0
           }
         ]
         Catch = [
           {
             ErrorEquals = ["States.ALL"]
-            Next = "ProcessingFailed"
-            ResultPath = "$.error"
+            Next        = "ProcessingFailed"
+            ResultPath  = "$.error"
           }
         ]
         Next = "UpdateCatalog"
       }
 
       UpdateCatalog = {
-        Type = "Task"
-        Resource = aws_lambda_function.update_catalog.arn
+        Type           = "Task"
+        Resource       = aws_lambda_function.update_catalog.arn
         TimeoutSeconds = 60
         Retry = [
           {
-            ErrorEquals = ["DynamoDB.ProvisionedThroughputExceededException"]
+            ErrorEquals     = ["DynamoDB.ProvisionedThroughputExceededException"]
             IntervalSeconds = 10
-            MaxAttempts = 5
-            BackoffRate = 2.0
+            MaxAttempts     = 5
+            BackoffRate     = 2.0
           },
           {
-            ErrorEquals = ["Lambda.ServiceException", "States.TaskFailed"]
+            ErrorEquals     = ["Lambda.ServiceException", "States.TaskFailed"]
             IntervalSeconds = 5
-            MaxAttempts = 3
-            BackoffRate = 2.0
+            MaxAttempts     = 3
+            BackoffRate     = 2.0
           }
         ]
         Catch = [
           {
             ErrorEquals = ["States.ALL"]
-            Next = "ProcessingFailed"
-            ResultPath = "$.error"
+            Next        = "ProcessingFailed"
+            ResultPath  = "$.error"
           }
         ]
         Next = "ProcessingCompleted"
       }
 
       ProcessingCompleted = {
-        Type = "Succeed"
+        Type    = "Succeed"
         Comment = "AI processing pipeline completed successfully"
       }
 
       ValidationFailed = {
-        Type = "Fail"
+        Type  = "Fail"
         Cause = "Input validation failed"
         Error = "ValidationError"
       }
 
       ProcessingFailed = {
-        Type = "Fail"
+        Type  = "Fail"
         Cause = "AI processing pipeline failed"
         Error = "ProcessingError"
       }
@@ -280,7 +278,7 @@ resource "aws_sfn_state_machine" "ai_processing_pipeline" {
   logging_configuration {
     log_destination        = "${aws_cloudwatch_log_group.step_functions_logs.arn}:*"
     include_execution_data = true
-    level                 = "ERROR"
+    level                  = "ERROR"
   }
 
   tracing_configuration {
@@ -308,7 +306,7 @@ resource "aws_ecs_cluster" "processing_cluster" {
 
       log_configuration {
         cloud_watch_encryption_enabled = false
-        cloud_watch_log_group_name      = aws_cloudwatch_log_group.ecs_logs.name
+        cloud_watch_log_group_name     = aws_cloudwatch_log_group.ecs_logs.name
       }
     }
   }
@@ -346,8 +344,8 @@ resource "aws_ecs_task_definition" "ffmpeg_processor" {
   family                   = "ffmpeg-processor"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
-  cpu                      = 2048  # 2 vCPU
-  memory                   = 4096  # 4 GB
+  cpu                      = 2048 # 2 vCPU
+  memory                   = 4096 # 4 GB
 
   execution_role_arn = aws_iam_role.ecs_execution_role.arn
   task_role_arn      = aws_iam_role.ecs_task_role.arn
@@ -381,7 +379,7 @@ resource "aws_ecs_task_definition" "ffmpeg_processor" {
 
       # Enable performance logging
       dockerLabels = {
-        "purpose" = "video-processing"
+        "purpose"   = "video-processing"
         "component" = "ffmpeg"
       }
     }
@@ -603,9 +601,6 @@ resource "aws_iam_role_policy" "ecs_task_policy" {
     ]
   })
 }
-
-# Data source for current AWS account
-data "aws_caller_identity" "current" {}
 
 # Outputs
 output "state_machine_arn" {

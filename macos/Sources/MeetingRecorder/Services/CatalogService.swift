@@ -332,7 +332,7 @@ actor CatalogService {
             await Logger.shared.error("Failed to update session duration", metadata: [
                 "error": error.localizedDescription
             ])
-            throw CatalogServiceError.dynamoDBOperationFailed("UpdateItem", error)
+             throw CatalogServiceError.dynamoDBOperationFailed("UpdateItem", error)
         }
     }
 
