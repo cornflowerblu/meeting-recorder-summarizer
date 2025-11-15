@@ -3,7 +3,6 @@ Check Transcribe Status Lambda
 Supporting function for Step Functions workflow
 """
 
-import json
 from typing import Dict, Any
 
 import boto3
