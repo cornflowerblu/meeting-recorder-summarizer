@@ -72,9 +72,9 @@ resource "aws_lambda_function" "user_profile" {
   timeout       = 10
   memory_size   = 256
 
-  # Lambda deployment package
-  filename         = data.archive_file.user_profile_lambda.output_path
-  source_code_hash = data.archive_file.user_profile_lambda.output_base64sha256
+  # Lambda deployment package (ZIP file with code + dependencies)
+  filename         = "${path.module}/../../processing/lambdas/user_profile/deployment.zip"
+  source_code_hash = fileexists("${path.module}/../../processing/lambdas/user_profile/deployment.zip") ? filebase64sha256("${path.module}/../../processing/lambdas/user_profile/deployment.zip") : null
 
   environment {
     variables = {
@@ -92,13 +92,6 @@ resource "aws_lambda_function" "user_profile" {
     Name        = "${local.resource_prefix}-user-profile"
     Description = "EventBridge consumer for user events"
   })
-}
-
-# Package UserProfile Lambda code
-data "archive_file" "user_profile_lambda" {
-  type        = "zip"
-  source_file = "${path.module}/../../processing/lambdas/user_profile/handler.py"
-  output_path = "${path.module}/../../.build/user_profile.zip"
 }
 
 # CloudWatch Log Group for UserProfile Lambda

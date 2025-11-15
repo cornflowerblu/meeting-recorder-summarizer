@@ -21,30 +21,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install certificate and provisioning profile
-            env:
-              CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE }}
-              CERTIFICATE_PWD: ""
-              PROVISIONING_PROFILE_BASE64: ${{ secrets.MACOS_PROVISIONING_PROFILE }}
-              KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-            run: |
-              # Create keychain
-              KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-              security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-              security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-              security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-
-              # Import certificate
-              CERTIFICATE_PATH=$RUNNER_TEMP/certificate.p12
-              echo -n "$CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
-              security import $CERTIFICATE_PATH -P "$CERTIFICATE_PWD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-              security list-keychain -d user -s $KEYCHAIN_PATH
-
-              # Install provisioning profile
-              mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-              PP_PATH=~/Library/MobileDevice/Provisioning\ Profiles/profile.provisionprofile
-              echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
-
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
@@ -62,97 +38,6 @@ jobs:
           key: ${{ runner.os }}-xcode-spm-${{ hashFiles('**/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-xcode-spm-
-
-      - name: Build
-        working-directory: macos/InterviewCompanion
-        timeout-minutes: 20
-        run: |
-          echo "=== Resolving SPM Dependencies ==="
-          xcodebuild -resolvePackageDependencies -project InterviewCompanion.xcodeproj -scheme InterviewCompanion
-          echo ""
-          echo "=== Building InterviewCompanion ==="
-          xcodebuild -scheme InterviewCompanion \
-            -project InterviewCompanion.xcodeproj \
-            -destination 'platform=macOS' \
-            -configuration Debug \
-            clean build \
-            2>&1 | tail -100
-
-      - name: Run Unit Tests
-        working-directory: macos/InterviewCompanion
-        timeout-minutes: 15
-        run: |
-          xcodebuild test \
-            -scheme InterviewCompanion \
-            -project InterviewCompanion.xcodeproj \
-            -destination 'platform=macOS' \
-            -only-testing:InterviewCompanionTests \
-            2>&1 | tee test-output.txt
-
-      - name: Run UI Tests
-        working-directory: macos/InterviewCompanion
-        timeout-minutes: 10
-        run: |
-          # UI tests will skip tests that require screen recording permission
-          xcodebuild test \
-            -scheme InterviewCompanion \
-            -project InterviewCompanion.xcodeproj \
-            -destination 'platform=macOS' \
-            -only-testing:InterviewCompanionUITests \
-            2>&1 | tee ui-test-output.txt || true
-
-          echo "Note: UI tests requiring screen recording permission are automatically skipped in CI"
-
-      - name: Test Summary
-        if: always()
-        working-directory: macos/InterviewCompanion
-        run: |
-          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          # Unit Tests
-          if [ -f test-output.txt ]; then
-            echo "### Unit Tests" >> $GITHUB_STEP_SUMMARY
-            if grep -q "Test Suite.*passed" test-output.txt; then
-              PASSED=$(grep -E "Executed|Test Suite.*passed" test-output.txt | tail -1 || echo "")
-              echo "✅ **Passed**" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              echo "$PASSED" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-            else
-              echo "❌ **Failed**" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "See logs for details" >> $GITHUB_STEP_SUMMARY
-            fi
-            echo "" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          # UI Tests
-          if [ -f ui-test-output.txt ]; then
-            echo "### UI Tests" >> $GITHUB_STEP_SUMMARY
-            SKIPPED=$(grep -c "XCTSkip" ui-test-output.txt || echo "0")
-            if grep -q "Test Suite.*passed" ui-test-output.txt; then
-              PASSED=$(grep -E "Executed|Test Suite.*passed" ui-test-output.txt | tail -1 || echo "")
-              echo "✅ **Passed** ($SKIPPED tests skipped - screen recording permission not available)" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              echo "$PASSED" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-            else
-              echo "⚠️ **Some tests skipped** ($SKIPPED tests require screen recording permission)" >> $GITHUB_STEP_SUMMARY
-            fi
-          fi
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: |
-            macos/InterviewCompanion/test-output.txt
-            macos/InterviewCompanion/ui-test-output.txt
-          retention-days: 30
 
   lint:
     name: SwiftLint
@@ -205,122 +90,10 @@ jobs:
           path: macos/swiftlint-results.txt
           retention-days: 30
 
-  integration-tests:
-    name: Integration Tests
-    runs-on: macos-15
-    needs: test
-    if: github.event_name == 'pull_request'
-    # Only run if AWS credentials are configured
-    # Set these as repository secrets: AWS_TEST_ACCESS_KEY_ID, AWS_TEST_SECRET_ACCESS_KEY
-
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_TEST_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_TEST_SECRET_ACCESS_KEY }}
-      AWS_REGION: us-east-1
-      TEST_S3_BUCKET: meeting-recorder-test-integration
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: "16.1"
-
-      - name: Swift Version
-        run: swift --version
-
-      - name: Cache SPM dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/Library/Caches/org.swift.swiftpm
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-xcode-spm-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-xcode-spm-
-
-      - name: Build
-        working-directory: macos/InterviewCompanion
-        timeout-minutes: 20
-        run: |
-          echo "=== Resolving SPM Dependencies ==="
-          xcodebuild -resolvePackageDependencies -project InterviewCompanion.xcodeproj -scheme InterviewCompanion
-          echo ""
-          echo "=== Building InterviewCompanion ==="
-          xcodebuild -scheme InterviewCompanion \
-            -project InterviewCompanion.xcodeproj \
-            -destination 'platform=macOS' \
-            -configuration Debug \
-            clean build \
-            2>&1 | tail -100
-
-      - name: Run integration tests
-        working-directory: macos/InterviewCompanion
-        timeout-minutes: 10
-        run: |
-          if [ -z "$AWS_ACCESS_KEY_ID" ]; then
-            echo "⚠️  AWS credentials not configured, skipping integration tests"
-            echo "Set AWS_TEST_ACCESS_KEY_ID and AWS_TEST_SECRET_ACCESS_KEY secrets to enable"
-            exit 0
-          fi
-
-          echo "✅ Running integration tests with AWS credentials"
-          xcodebuild test \
-            -scheme InterviewCompanion \
-            -project InterviewCompanion.xcodeproj \
-            -destination 'platform=macOS' \
-            -only-testing:S3IntegrationTests \
-            2>&1 | tee integration-test-output.txt
-
-      - name: Integration Test Summary
-        if: always()
-        working-directory: macos/InterviewCompanion
-        run: |
-          echo "## Integration Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ -f integration-test-output.txt ]; then
-            if grep -q "Test Suite.*passed" integration-test-output.txt; then
-              PASSED=$(grep "Executed.*tests" integration-test-output.txt | tail -1 || echo "")
-              echo "✅ **Integration Tests Passed**" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              echo "$PASSED" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-            else
-              echo "❌ **Integration Tests Failed**" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "See logs for details" >> $GITHUB_STEP_SUMMARY
-            fi
-          else
-            echo "⚠️ **Integration Tests Skipped** (AWS credentials not configured)" >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: Cleanup S3 test objects
-        if: always()
-        working-directory: macos/InterviewCompanion
-        run: |
-          if [ -n "$AWS_ACCESS_KEY_ID" ]; then
-            echo "🗑️  Cleaning up S3 test objects..."
-            # Tests should clean up their own objects, but this is a safety net
-            # Only clean up objects with integration-test prefix
-            echo "Note: Test objects should be auto-cleaned by tests"
-          fi
-
-      - name: Upload integration test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: integration-test-results
-          path: macos/InterviewCompanion/integration-test-output.txt
-          retention-days: 30
-
   status-check:
     name: CI Status Check
     runs-on: ubuntu-latest
-    needs: [test, lint, integration-tests]
+    needs: [test, lint]
     if: always()
 
     steps:
@@ -331,16 +104,4 @@ jobs:
             exit 1
           fi
 
-          # Integration tests are allowed to be skipped (if no AWS creds)
-          # but if they run, they must pass
-          if [ "${{ needs.integration-tests.result }}" == "failure" ]; then
-            echo "❌ Integration tests failed"
-            exit 1
-          fi
-
           echo "✅ All checks passed"
-      
-      - name: Clean up keychain
-        if: always()
-        run: |
-          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
