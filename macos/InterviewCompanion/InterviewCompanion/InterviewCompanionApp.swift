@@ -4,20 +4,24 @@ import AWSDynamoDB
 import FirebaseCore
 import GoogleSignIn
 import FirebaseAuth
+import AppKit
 
 @main
 struct InterviewCompanionApp: App {
     @StateObject private var authService = AuthService()
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
-    // UI Testing bypass
-    private var isUITesting: Bool {
-        CommandLine.arguments.contains("--ui-testing")
-    }
+    // UI Testing bypass - use static property so it's evaluated once
+    static let isUITesting = ProcessInfo.processInfo.arguments.contains("--ui-testing")
 
     init() {
         // Configure Firebase on app launch
         // In Xcode app projects, resources are in Bundle.main
         configureFirebase()
+
+        if Self.isUITesting {
+            print("🧪 UI Testing mode enabled - bypassing authentication")
+        }
     }
 
     private func configureFirebase() {
@@ -90,7 +94,7 @@ struct InterviewCompanionApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if isUITesting {
+                if Self.isUITesting {
                     // Bypass authentication for UI tests
                     MainView(userId: "ui-test-user", authService: authService)
                 } else if authService.isAuthenticated, let userId = authService.userId {
@@ -232,4 +236,35 @@ struct MainView: View {
 
 #Preview("Sign In") {
     SignInView(authService: AuthService())
+}
+
+// MARK: - App Delegate
+
+/// AppDelegate to handle app activation and window management
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // Set activation policy to ensure we're a regular app (not accessory)
+        NSApp.setActivationPolicy(.regular)
+
+        // Activate the app and bring it to the front
+        NSApp.activate(ignoringOtherApps: true)
+
+        // Give the window a moment to appear, then bring it forward
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            if let window = NSApp.windows.first {
+                // Set window level to float above normal windows
+                window.level = .floating
+                window.makeKeyAndOrderFront(nil)
+
+                // Reset to normal level after a moment so it doesn't stay on top forever
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    window.level = .normal
+                    window.makeKeyAndOrderFront(nil)
+                }
+            }
+
+            // Activate again to be sure
+            NSApp.activate(ignoringOtherApps: true)
+        }
+    }
 }

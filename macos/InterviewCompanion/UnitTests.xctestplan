@@ -1,0 +1,22 @@
+{
+  "configurations": [
+    {
+      "id": "2DC77998-A978-4A31-AD58-867B00DF94CB",
+      "name": "Configuration 1",
+      "options": {}
+    }
+  ],
+  "defaultOptions": {
+    "testTimeoutsEnabled": true
+  },
+  "testTargets": [
+    {
+      "target": {
+        "containerPath": "container:InterviewCompanion.xcodeproj",
+        "identifier": "FDEE5D522EC7E40D002959B6",
+        "name": "InterviewCompanionTests"
+      }
+    }
+  ],
+  "version": 1
+}

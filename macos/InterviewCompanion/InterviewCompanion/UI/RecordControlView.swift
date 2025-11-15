@@ -23,6 +23,7 @@ struct RecordControlView: View {
     @State private var showConsent: Bool = false
     @State private var showError: Bool = false
     @State private var errorMessage: String? = nil
+    @State private var isPermissionError: Bool = false
     @State private var diskSpaceGB: Double = 0.0
 
     /// Recording indicator controller (managed by this view)
@@ -282,15 +283,34 @@ struct RecordControlView: View {
 
             Spacer()
 
+            // Show "Open Settings" button for permission errors
+            if isPermissionError {
+                Button("Open Settings") {
+                    openSystemSettings()
+                }
+                .buttonStyle(.borderedProminent)
+            }
+
             Button("Dismiss") {
                 showError = false
                 errorMessage = nil
+                isPermissionError = false
             }
             .buttonStyle(.borderless)
         }
         .padding()
         .background(Color.red.opacity(0.1))
         .cornerRadius(8)
+    }
+
+    private func openSystemSettings() {
+        // Open System Settings to Screen Recording permissions
+        // On macOS 13+, use Settings app; on older versions, use System Preferences
+        if #available(macOS 13.0, *) {
+            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
+        } else {
+            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
+        }
     }
 
     // MARK: - Computed Properties
@@ -385,6 +405,13 @@ struct RecordControlView: View {
     private func handleError(_ error: Error) {
         errorMessage = error.localizedDescription
         showError = true
+
+        // Check if this is a permission error
+        if let captureError = error as? CaptureError, case .permissionDenied = captureError {
+            isPermissionError = true
+        } else {
+            isPermissionError = false
+        }
 
         Logger.recording.error(
             "Recording error: \(error.localizedDescription)",

@@ -39,10 +39,7 @@ enum CaptureError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .permissionDenied:
-            return """
-                Screen recording permission denied. Please enable in System Preferences > \
-                Privacy & Security > Screen Recording.
-                """
+            return "Screen recording permission is required. Click 'Open Settings' to grant permission."
         case .captureSessionFailed(let reason):
             return "Screen capture failed: \(reason)"
         case .invalidState(let state):
