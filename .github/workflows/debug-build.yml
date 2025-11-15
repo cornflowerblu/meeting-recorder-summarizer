@@ -43,7 +43,7 @@ jobs:
           swift package --version
 
       - name: Try Build
-        working-directory: macos
+        working-directory: macos/InterviewCompanion
         run: |
           echo "=== Resolving Dependencies ==="
           swift package resolve
