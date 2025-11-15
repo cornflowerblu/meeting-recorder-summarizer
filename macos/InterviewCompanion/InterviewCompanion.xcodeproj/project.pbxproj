@@ -8,10 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		FD38BBD42EC81B58001EC309 /* AWSEventBridge in Frameworks */ = {isa = PBXBuildFile; productRef = FD38BBD32EC81B58001EC309 /* AWSEventBridge */; };
-		FD5BFF432EC8135B00566C0C /* IntegrationTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF422EC8135B00566C0C /* IntegrationTests.xctestplan */; };
 		FD5BFF452EC8140200566C0C /* UITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF442EC8140200566C0C /* UITests.xctestplan */; };
 		FD5BFF472EC8141F00566C0C /* UnitTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD5BFF462EC8141F00566C0C /* UnitTests.xctestplan */; };
-		FD7B51662EC8180000B126A1 /* AllTests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = FD7B51652EC8180000B126A1 /* AllTests.xctestplan */; };
 		FD7FD0AF2EC829CE007B6E02 /* AWSSSM in Frameworks */ = {isa = PBXBuildFile; productRef = FD7FD0AE2EC829CE007B6E02 /* AWSSSM */; };
 		FD7FD0B12EC82D95007B6E02 /* AWSDynamoDB in Frameworks */ = {isa = PBXBuildFile; productRef = FD7FD0B02EC82D95007B6E02 /* AWSDynamoDB */; };
 		FDEE5D722EC7E616002959B6 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = FDEE5D712EC7E616002959B6 /* FirebaseAuth */; };
@@ -38,10 +36,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		FD5BFF422EC8135B00566C0C /* IntegrationTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = IntegrationTests.xctestplan; sourceTree = "<group>"; };
 		FD5BFF442EC8140200566C0C /* UITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UITests.xctestplan; sourceTree = "<group>"; };
 		FD5BFF462EC8141F00566C0C /* UnitTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = UnitTests.xctestplan; sourceTree = "<group>"; };
-		FD7B51652EC8180000B126A1 /* AllTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AllTests.xctestplan; sourceTree = "<group>"; };
 		FDEE5D462EC7E40C002959B6 /* InterviewCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InterviewCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDEE5D532EC7E40D002959B6 /* InterviewCompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InterviewCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDEE5D5D2EC7E40D002959B6 /* InterviewCompanionUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = InterviewCompanionUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -120,10 +116,8 @@
 		FDEE5D3D2EC7E40C002959B6 = {
 			isa = PBXGroup;
 			children = (
-				FD7B51652EC8180000B126A1 /* AllTests.xctestplan */,
 				FD5BFF462EC8141F00566C0C /* UnitTests.xctestplan */,
 				FD5BFF442EC8140200566C0C /* UITests.xctestplan */,
-				FD5BFF422EC8135B00566C0C /* IntegrationTests.xctestplan */,
 				FDEE5D482EC7E40C002959B6 /* InterviewCompanion */,
 				FDEE5D562EC7E40D002959B6 /* InterviewCompanionTests */,
 				FDEE5D602EC7E40D002959B6 /* InterviewCompanionUITests */,
@@ -274,10 +268,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FD5BFF432EC8135B00566C0C /* IntegrationTests.xctestplan in Resources */,
 				FD5BFF452EC8140200566C0C /* UITests.xctestplan in Resources */,
 				FD5BFF472EC8141F00566C0C /* UnitTests.xctestplan in Resources */,
-				FD7B51662EC8180000B126A1 /* AllTests.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

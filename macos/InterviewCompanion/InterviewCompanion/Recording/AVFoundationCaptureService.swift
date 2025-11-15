@@ -32,8 +32,10 @@ class AVFoundationCaptureService: NSObject, ScreenCaptureService {
     // Chunk timing
     private var chunkDuration: TimeInterval { Config.shared.recording.segmentDuration }
     private var chunkStartTime: CMTime?
+    private var lastFrameTime: CMTime?  // Timestamp of last processed frame
     private var sessionStartTime: Date?
     private var totalDuration: TimeInterval = 0
+    private var accumulatedChunkDuration: TimeInterval = 0  // Time recorded in current chunk before any pauses
 
     // Video processing
     private let videoProcessingQueue = DispatchQueue(
@@ -128,6 +130,16 @@ class AVFoundationCaptureService: NSObject, ScreenCaptureService {
         guard !isPaused else {
             throw CaptureError.invalidState("Already paused")
         }
+
+        // Calculate elapsed time in current recording segment
+        if let startTime = chunkStartTime, let lastTime = lastFrameTime {
+            let elapsed = CMTimeSubtract(lastTime, startTime)
+            let elapsedSeconds = CMTimeGetSeconds(elapsed)
+            accumulatedChunkDuration += elapsedSeconds
+        }
+
+        // Reset chunk start time so resume can set a new reference
+        chunkStartTime = nil
 
         // Pause the asset writer (stop writing frames but keep session running)
         isPaused = true
@@ -243,7 +255,8 @@ class AVFoundationCaptureService: NSObject, ScreenCaptureService {
 
         self.assetWriter = writer
         self.videoInput = videoInput
-        self.chunkStartTime = CMTime.zero
+        self.chunkStartTime = nil  // Will be set to first frame's timestamp
+        self.accumulatedChunkDuration = 0  // Reset for new chunk
 
         // TODO: Connect capture output to writer input
         // This is a simplified implementation. In reality, you'd need to:
@@ -288,10 +301,14 @@ class AVFoundationCaptureService: NSObject, ScreenCaptureService {
     private func shouldRotateChunk(currentTime: CMTime) -> Bool {
         guard let startTime = chunkStartTime else { return false }
 
+        // Calculate elapsed time in current recording segment (since last pause or chunk start)
         let elapsed = CMTimeSubtract(currentTime, startTime)
         let elapsedSeconds = CMTimeGetSeconds(elapsed)
 
-        return elapsedSeconds >= chunkDuration
+        // Add accumulated time from before any pauses
+        let totalRecordedTime = accumulatedChunkDuration + elapsedSeconds
+
+        return totalRecordedTime >= chunkDuration
     }
 
     private func rotateChunk(at currentTime: CMTime) async {
@@ -327,12 +344,20 @@ extension AVFoundationCaptureService: AVCaptureVideoDataOutputSampleBufferDelega
                 return
             }
 
+            // Get current time for chunk rotation check
+            let presentationTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+
+            // Set chunk start time from first frame if not already set
+            if chunkStartTime == nil {
+                chunkStartTime = presentationTime
+            }
+
+            // Track last frame time for pause calculations
+            lastFrameTime = presentationTime
+
             // Write the sample buffer to the asset writer
             if videoInput.append(sampleBuffer) {
                 processedFrameCount += 1
-
-                // Get current time for chunk rotation check
-                let presentationTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
 
                 // Check if we need to rotate chunks
                 if shouldRotateChunk(currentTime: presentationTime) {
@@ -390,7 +415,7 @@ extension AVFoundationCaptureService {
 
         // Wait for input to be ready (with timeout for tests)
         var retries = 0
-        while !input.isReadyForMoreMediaData && retries < 50 {
+        while !input.isReadyForMoreMediaData && retries < 200 {
             try await Task.sleep(nanoseconds: 10_000_000) // 10ms
             retries += 1
         }
@@ -399,6 +424,17 @@ extension AVFoundationCaptureService {
             throw CaptureError.captureSessionFailed("Video input not ready after timeout")
         }
 
+        // Get presentation time for chunk tracking
+        let presentationTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+
+        // Set chunk start time from first frame if not already set
+        if chunkStartTime == nil {
+            chunkStartTime = presentationTime
+        }
+
+        // Track last frame time for pause calculations
+        lastFrameTime = presentationTime
+
         if !input.append(sampleBuffer) {
             throw CaptureError.captureSessionFailed("Failed to append sample buffer")
         }
@@ -406,7 +442,6 @@ extension AVFoundationCaptureService {
         processedFrameCount += 1
 
         // Check for chunk rotation
-        let presentationTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
         if shouldRotateChunk(currentTime: presentationTime) {
             await rotateChunk(at: presentationTime)
         }
