@@ -74,7 +74,6 @@ resource "aws_cloudwatch_event_rule" "chunk_uploaded" {
       object = {
         key = [{
           prefix = "users/"
-          }, {
           suffix = ".mp4"
         }]
       }

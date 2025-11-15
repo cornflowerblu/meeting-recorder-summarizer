@@ -392,7 +392,6 @@ resource "aws_ecs_task_definition" "ffmpeg_processor" {
 resource "aws_security_group" "ffmpeg_sg" {
   name_prefix = "ffmpeg-processor-"
   vpc_id      = local.vpc_id
-  # vpc_id      = var.vpc_id
 
   # Allow all outbound traffic for S3 and other AWS service access
   egress {

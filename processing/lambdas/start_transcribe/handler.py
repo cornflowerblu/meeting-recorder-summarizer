@@ -85,10 +85,11 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         )
         
         # Start transcription job with optimized settings
-        transcription_response = start_transcription_job(
+        start_transcription_job(
             job_name=transcription_job_name,
             audio_s3_uri=audio_s3_uri,
-            output_s3_uri=transcript_s3_uri,
+            output_s3_bucket=s3_bucket,
+            output_s3_key=transcript_s3_key,
             recording_id=recording_id
         )
         
@@ -171,7 +172,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 def start_transcription_job(
     job_name: str,
     audio_s3_uri: str,
-    output_s3_uri: str,
+    output_s3_bucket: str,
+    output_s3_key: str,
     recording_id: str
 ) -> Dict[str, Any]:
     """
@@ -180,7 +182,8 @@ def start_transcription_job(
     Args:
         job_name: Unique transcription job name
         audio_s3_uri: S3 URI for input audio file
-        output_s3_uri: S3 URI for output transcript
+        output_s3_bucket: S3 bucket name for output transcript
+        output_s3_key: S3 key for output transcript
         recording_id: Recording identifier for tracking
         
     Returns:
@@ -209,8 +212,8 @@ def start_transcription_job(
             },
             MediaFormat=media_format,
             MediaSampleRateHertz=media_sample_rate_hz,
-            OutputBucketName=output_s3_uri.split('/')[2],  # Extract bucket
-            OutputKey=output_s3_uri.split('/', 3)[3],      # Extract key
+            OutputBucketName=output_s3_bucket,
+            OutputKey=output_s3_key,
             Settings=transcription_settings,
             IdentifyLanguage=True,
             LanguageOptions=language_options,

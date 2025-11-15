@@ -278,14 +278,14 @@ def trigger_processing(recording_id: str, user_id: str, chunk_count: int) -> Non
         chunk_count: Total chunk count
     """
     if not PROCESSING_STATE_MACHINE_ARN:
-        logger.warning("PROCESSING_STATE_MACHINE_ARN not set, skipping Step Functions trigger")
+        logger.error("PROCESSING_STATE_MACHINE_ARN not set, cannot trigger processing pipeline")
         update_session_status(
             recording_id,
             user_id,
             'processing_trigger_failed',
-            {'error': 'PROCESSING_STATE_MACHINE_ARN not set'}
+            {'error': 'PROCESSING_STATE_MACHINE_ARN not configured'}
         )
-        return
+        raise ValueError("PROCESSING_STATE_MACHINE_ARN environment variable not set")
 
     execution_input = {
         'recordingId': recording_id,

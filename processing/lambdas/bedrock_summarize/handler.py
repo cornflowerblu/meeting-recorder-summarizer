@@ -397,6 +397,7 @@ def parse_claude_response(
                 'recording_id': recording_id,
                 'claude_response_preview': claude_text[:500],  # First 500 chars
                 'claude_response_full': claude_text,
+                'claude_response_length': len(claude_text),
                 'error': str(e),
                 'json_error_lineno': getattr(e, 'lineno', None),
                 'json_error_colno': getattr(e, 'colno', None),
