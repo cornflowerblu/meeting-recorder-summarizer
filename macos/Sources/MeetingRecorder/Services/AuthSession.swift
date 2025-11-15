@@ -81,7 +81,7 @@ actor AuthSession {
         let refreshToken = try loadFromKeychain(key: .firebaseRefreshToken)
         let userId = try loadFromKeychain(key: .firebaseUserId)
 
-        Task { await Logger.shared.debug("Firebase credentials loaded from keychain")
+        Task { await Logger.shared.debug("Firebase credentials loaded from keychain") }
 
         return FirebaseCredentials(
             idToken: idToken,
@@ -106,7 +106,7 @@ actor AuthSession {
         try deleteFromKeychain(key: .firebaseRefreshToken)
         try deleteFromKeychain(key: .firebaseUserId)
 
-        Task { await Logger.shared.info("Firebase credentials cleared from keychain")
+        Task { await Logger.shared.info("Firebase credentials cleared from keychain") }
     }
 
     // MARK: - AWS Credentials
@@ -196,7 +196,7 @@ actor AuthSession {
         try deleteFromKeychain(key: .awsSessionToken)
         try deleteFromKeychain(key: .awsCredentialsExpiration)
 
-        Task { await Logger.shared.info("AWS credentials cleared from keychain")
+        Task { await Logger.shared.info("AWS credentials cleared from keychain") }
     }
 
     // MARK: - Clear All
@@ -219,7 +219,7 @@ actor AuthSession {
             ]) }
         }
 
-        Task { await Logger.shared.info("All credentials cleared")
+        Task { await Logger.shared.info("All credentials cleared") }
     }
 
     // MARK: - Keychain Operations
