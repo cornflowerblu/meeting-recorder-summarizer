@@ -126,7 +126,7 @@ resource "aws_iam_role_policy" "macos_app_dynamodb" {
         Resource = aws_dynamodb_table.meetings.arn
         Condition = {
           "ForAllValues:StringLike" = {
-            "dynamodb:LeadingKeys" = ["$${aws:username}#*"]
+            "dynamodb:LeadingKeys" = ["$${aws:username}"]
           }
         }
       },
