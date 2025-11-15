@@ -55,25 +55,23 @@ description: "Task plan for 'Meeting Recorder with AI Intelligence'"
 
 **Independent Test**: User completes a 5-minute recording; indicator remains visible; DynamoDB shows pending session with duration and S3 chunk prefix.
 
-### Tests for User Story 1 (write first)
-
-- [ ] T015 [P] [US1] Add segmentation unit tests in `macos/Tests/MeetingRecorderTests/ScreenRecorderTests.swift`
-- [ ] T016 [P] [US1] Add upload queue persistence tests in `macos/Tests/MeetingRecorderTests/UploadQueueTests.swift`
-- [ ] T017 [P] [US1] Add consent + indicator UI test in `macos/Tests/MeetingRecorderUITests/IndicatorFlowUITests.swift`
-- [ ] T018 [P] [US1] Add catalog creation integration test in `macos/Tests/MeetingRecorderTests/CatalogServiceTests.swift`
+- [x] T015 [P] [US1] Add segmentation unit tests in `macos/Tests/MeetingRecorderTests/ScreenRecorderTests.swift`
+- [x] T016 [P] [US1] Add upload queue persistence tests in `macos/Tests/MeetingRecorderTests/UploadQueueTests.swift`
+- [x] T017 [P] [US1] Add consent + indicator UI test in `macos/Tests/MeetingRecorderUITests/IndicatorFlowUITests.swift`
+- [x] T018 [P] [US1] Add catalog creation integration test in `macos/Tests/MeetingRecorderTests/CatalogServiceTests.swift`
 
 ### Implementation for User Story 1
 
-- [ ] T019 [P] [US1] Build consent acknowledgement view in `macos/Sources/MeetingRecorder/UI/ConsentView.swift`
-- [ ] T020 [P] [US1] Build recording indicator overlay in `macos/Sources/MeetingRecorder/UI/RecordingIndicatorOverlay.swift`
-- [ ] T021 [P] [US1] Implement AVFoundation screen recorder in `macos/Sources/MeetingRecorder/Recording/ScreenRecorder.swift`
-- [ ] T022 [P] [US1] Implement chunk writer with checksum handling in `macos/Sources/MeetingRecorder/Recording/ChunkWriter.swift`
-- [ ] T023 [US1] Implement S3 multipart uploader in `macos/Sources/MeetingRecorder/Services/S3Uploader.swift`
-- [ ] T024 [US1] Implement background upload queue worker in `macos/Sources/MeetingRecorder/Services/UploadQueue.swift`
-- [ ] T025 [US1] Implement catalog session writer in `macos/Sources/MeetingRecorder/Services/CatalogService.swift`
-- [ ] T026 [US1] Build recording controls view in `macos/Sources/MeetingRecorder/UI/RecordControlView.swift`
-- [ ] T027 [US1] Build catalog list view showing pending sessions in `macos/Sources/MeetingRecorder/UI/CatalogListView.swift`
-- [ ] T028 [US1] Wire app navigation state in `macos/Sources/MeetingRecorder/App/MeetingRecorderApp.swift`
+- [x] T019 [P] [US1] Build consent acknowledgement view in `macos/Sources/MeetingRecorder/UI/ConsentView.swift`
+- [x] T020 [P] [US1] Build recording indicator overlay in `macos/Sources/MeetingRecorder/UI/RecordingIndicatorOverlay.swift`
+- [x] T021 [P] [US1] Implement AVFoundation screen recorder in `macos/Sources/MeetingRecorder/Recording/ScreenRecorder.swift`
+- [x] T022 [P] [US1] Implement chunk writer with checksum handling in `macos/Sources/MeetingRecorder/Recording/ChunkWriter.swift`
+- [x] T023 [US1] Implement S3 multipart uploader in `macos/Sources/MeetingRecorder/Services/S3Uploader.swift`
+- [x] T024 [US1] Implement background upload queue worker in `macos/Sources/MeetingRecorder/Services/UploadQueue.swift`
+- [x] T025 [US1] Implement catalog session writer in `macos/Sources/MeetingRecorder/Services/CatalogService.swift`
+- [x] T026 [US1] Build recording controls view in `macos/Sources/MeetingRecorder/UI/RecordControlView.swift`
+- [x] T027 [US1] Build catalog list view showing pending sessions in `macos/Sources/MeetingRecorder/UI/CatalogListView.swift`
+- [x] T028 [US1] Wire app navigation state in `macos/Sources/MeetingRecorder/App/MeetingRecorderApp.swift`
 
 **Checkpoint**: Recording, consent compliance, and catalog registration validated by tests.
 
