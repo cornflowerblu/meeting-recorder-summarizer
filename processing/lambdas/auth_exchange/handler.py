@@ -3,12 +3,14 @@ Firebase to AWS STS credentials exchange Lambda
 MR-17 (T010)
 
 Exchanges Firebase ID tokens for temporary AWS credentials using STS AssumeRoleWithWebIdentity.
+Also emits user.signed_in events to EventBridge for downstream processing.
 """
 
 import json
 import os
 import re
-from typing import Any, Dict
+from datetime import datetime
+from typing import Any, Dict, Optional
 
 import boto3
 from botocore.exceptions import ClientError
@@ -16,9 +18,11 @@ from botocore.exceptions import ClientError
 # Environment variables
 MACOS_APP_ROLE_ARN = os.environ.get("MACOS_APP_ROLE_ARN")
 SESSION_DURATION = int(os.environ.get("SESSION_DURATION", "3600"))  # 1 hour default
+EVENT_BUS_NAME = os.environ.get("EVENT_BUS_NAME", "default")
 
 # AWS clients
 sts_client = boto3.client("sts")
+eventbridge_client = boto3.client("events")
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -28,7 +32,11 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     Expected event body (JSON):
     {
         "id_token": "<firebase_id_token>",
-        "session_name": "<firebase_user_id>"  # REQUIRED: Firebase user ID for IAM isolation
+        "session_name": "<firebase_user_id>",  # REQUIRED: Firebase user ID for IAM isolation
+        "email": "<user@example.com>",         # OPTIONAL: For EventBridge events
+        "display_name": "<John Doe>",          # OPTIONAL: For EventBridge events
+        "photo_url": "<https://...>",          # OPTIONAL: For EventBridge events
+        "provider": "<google.com>"             # OPTIONAL: For EventBridge events
     }
 
     Returns:
@@ -111,6 +119,25 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         credentials = response["Credentials"]
         assumed_role_user = response["AssumedRoleUser"]
 
+        # Emit user.signed_in event to EventBridge (async, fire-and-forget)
+        # Extract optional user profile fields
+        user_email = body.get("email")
+        display_name = body.get("display_name")
+        photo_url = body.get("photo_url")
+        provider = body.get("provider")
+
+        try:
+            _emit_user_signed_in_event(
+                user_id=session_name,
+                email=user_email,
+                display_name=display_name,
+                photo_url=photo_url,
+                provider=provider
+            )
+        except Exception as e:
+            # Log error but don't fail the token exchange
+            print(f"Failed to emit user.signed_in event: {str(e)}")
+
         # Return success response
         return {
             "statusCode": 200,
@@ -154,6 +181,56 @@ def _parse_body(event: Dict[str, Any]) -> Dict[str, Any]:
 
     # If body is already a dict, return as-is
     return body
+
+
+def _emit_user_signed_in_event(
+    user_id: str,
+    email: Optional[str] = None,
+    display_name: Optional[str] = None,
+    photo_url: Optional[str] = None,
+    provider: Optional[str] = None
+) -> None:
+    """
+    Emit user.signed_in event to EventBridge.
+
+    This event triggers downstream processing like user profile creation,
+    analytics, welcome emails, etc.
+
+    Args:
+        user_id: Firebase user ID
+        email: User email address (optional)
+        display_name: User display name (optional)
+        photo_url: User photo URL (optional)
+        provider: Authentication provider (optional)
+    """
+    # Build event detail with all available user data
+    detail = {
+        "userId": user_id,
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    }
+
+    if email:
+        detail["email"] = email
+    if display_name:
+        detail["displayName"] = display_name
+    if photo_url:
+        detail["photoURL"] = photo_url
+    if provider:
+        detail["provider"] = provider
+
+    # Publish event to EventBridge
+    eventbridge_client.put_events(
+        Entries=[
+            {
+                "Source": "interview-companion.auth",
+                "DetailType": "user.signed_in",
+                "Detail": json.dumps(detail),
+                "EventBusName": EVENT_BUS_NAME
+            }
+        ]
+    )
+
+    print(f"Emitted user.signed_in event for user: {user_id}")
 
 
 def _error_response(status_code: int, message: str) -> Dict[str, Any]:
