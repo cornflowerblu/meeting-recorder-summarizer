@@ -1,6 +1,7 @@
 # Step Functions State Machine for AI Processing Pipeline
 # Implements the complete workflow from video processing to summary generation
 
+<<<<<<< Updated upstream
 # Data sources for VPC and subnets
 data "aws_vpc" "default" {
   count   = var.vpc_id == "" ? 1 : 0
@@ -24,6 +25,8 @@ locals {
   subnet_ids = length(var.private_subnet_ids) > 0 ? var.private_subnet_ids : data.aws_subnets.default[0].ids
 }
 
+=======
+>>>>>>> Stashed changes
 resource "aws_sfn_state_machine" "ai_processing_pipeline" {
   name     = "ai-processing-pipeline"
   role_arn = aws_iam_role.step_functions_role.arn
@@ -77,7 +80,11 @@ resource "aws_sfn_state_machine" "ai_processing_pipeline" {
           LaunchType = "FARGATE"
           NetworkConfiguration = {
             AwsvpcConfiguration = {
+<<<<<<< Updated upstream
               Subnets = local.subnet_ids
+=======
+              Subnets = var.private_subnet_ids
+>>>>>>> Stashed changes
               SecurityGroups = [aws_security_group.ffmpeg_sg.id]
               AssignPublicIp = "ENABLED"
             }
@@ -393,7 +400,11 @@ resource "aws_ecs_task_definition" "ffmpeg_processor" {
 # Security Group for ECS tasks
 resource "aws_security_group" "ffmpeg_sg" {
   name_prefix = "ffmpeg-processor-"
+<<<<<<< Updated upstream
   vpc_id      = local.vpc_id
+=======
+  vpc_id      = var.vpc_id
+>>>>>>> Stashed changes
 
   # Allow all outbound traffic for S3 and other AWS service access
   egress {
@@ -581,8 +592,13 @@ resource "aws_iam_role_policy" "ecs_task_policy" {
           "s3:ListBucket"
         ]
         Resource = [
+<<<<<<< Updated upstream
           aws_s3_bucket.recordings.arn,
           "${aws_s3_bucket.recordings.arn}/*"
+=======
+          var.s3_bucket_arn,
+          "${var.s3_bucket_arn}/*"
+>>>>>>> Stashed changes
         ]
       },
       {
@@ -591,7 +607,11 @@ resource "aws_iam_role_policy" "ecs_task_policy" {
           "dynamodb:UpdateItem",
           "dynamodb:GetItem"
         ]
+<<<<<<< Updated upstream
         Resource = aws_dynamodb_table.meetings.arn
+=======
+        Resource = var.dynamodb_table_arn
+>>>>>>> Stashed changes
       }
     ]
   })
