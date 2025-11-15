@@ -253,6 +253,19 @@ final class CatalogService: ObservableObject, @unchecked Sendable {
                 function: #function,
                 line: #line
             )
+            Logger.catalog.error(
+                "Error type: \(type(of: error)), Error: \(String(reflecting: error))",
+                file: #file,
+                function: #function,
+                line: #line
+            )
+            // Log the QueryInput for debugging
+            Logger.catalog.error(
+                "Query input - Table: \(input.tableName ?? "nil"), Index: \(input.indexName ?? "nil"), KeyCondition: \(input.keyConditionExpression ?? "nil")",
+                file: #file,
+                function: #function,
+                line: #line
+            )
             throw mapDynamoDBError(error)
         }
     }
