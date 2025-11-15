@@ -27,6 +27,13 @@ import os
 import json
 from datetime import datetime
 
+# AWS X-Ray SDK for distributed tracing
+from aws_xray_sdk.core import xray_recorder
+from aws_xray_sdk.core import patch_all
+
+# Patch all AWS SDK calls (auto-traces DynamoDB)
+patch_all()
+
 # Initialize DynamoDB client
 dynamodb = boto3.resource('dynamodb')
 users_table_name = os.environ['USERS_TABLE_NAME']
@@ -66,18 +73,27 @@ def handler(event, context):
     provider = detail.get('provider')
     timestamp = detail.get('timestamp')
 
+    # Add searchable X-Ray annotations for filtering traces
+    xray_recorder.put_annotation('user_id', user_id)
+    xray_recorder.put_annotation('event_source', 'EventBridge')
+
     # Validate timestamp
     if not timestamp:
         timestamp = datetime.utcnow().isoformat() + 'Z'
         print(f"WARNING: No timestamp in event, using current time: {timestamp}")
 
     try:
-        # Check if user exists to preserve createdAt
-        response = users_table.get_item(Key={'userId': user_id})
-        existing_user = response.get('Item')
+        # Check if user exists to preserve createdAt (DynamoDB call auto-traced by patch_all)
+        with xray_recorder.capture('dynamodb_get_user'):
+            response = users_table.get_item(Key={'userId': user_id})
+            existing_user = response.get('Item')
 
         # Use existing createdAt if user exists, otherwise use current timestamp
         created_at = existing_user.get('createdAt') if existing_user else timestamp
+        is_new_user = existing_user is None
+
+        # Add annotation for whether this is a new user
+        xray_recorder.put_annotation('action', 'created' if is_new_user else 'updated')
 
         # Build user item
         item = {
@@ -95,10 +111,12 @@ def handler(event, context):
         if provider:
             item['provider'] = provider
 
-        # Write to DynamoDB
-        users_table.put_item(Item=item)
+        # Write to DynamoDB (auto-traced by patch_all)
+        with xray_recorder.capture('dynamodb_put_user'):
+            users_table.put_item(Item=item)
 
-        is_new_user = not existing_user
+        # Add metadata (not searchable, but visible in trace details)
+        xray_recorder.put_metadata('user_email', email)
         print(f"User profile {'created' if is_new_user else 'updated'}: {user_id} ({email})")
 
         return {
